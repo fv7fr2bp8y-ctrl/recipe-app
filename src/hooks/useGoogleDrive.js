@@ -133,13 +133,12 @@ export function useGoogleDrive() {
     }
   }, [accessToken, getOrCreateFolder]);
 
-  // List image files in the Recipe App Photos folder
+  // List ALL image files in Drive (entire Drive, not just the app folder)
   const listDrivePhotos = useCallback(async () => {
     if (!accessToken) return [];
     try {
-      const folderId = await getOrCreateFolder(accessToken);
       const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and mimeType contains 'image/' and name != '${RECIPES_FILENAME}' and trashed=false&fields=files(id,name,mimeType)&orderBy=createdTime desc&pageSize=100`,
+        `https://www.googleapis.com/drive/v3/files?q=mimeType contains 'image/' and trashed=false&fields=files(id,name,mimeType)&orderBy=createdTime desc&pageSize=200`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       const { files } = await res.json();
