@@ -467,5 +467,5 @@ export function useRecipes() {
     setRecipes((prev) => prev.filter((r) => r.id !== id));
   };
 
-  return { recipes, addRecipe, updateRecipe, deleteRecipe };
+  return { recipes, setRecipes, addRecipe, updateRecipe, deleteRecipe };
 }

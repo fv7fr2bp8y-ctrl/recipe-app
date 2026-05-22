@@ -1,6 +1,6 @@
 import GoogleAuthButton from './GoogleAuthButton';
 
-export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSignOut, driveScopes }) {
+export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSignOut, driveScopes, syncing }) {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
@@ -12,6 +12,12 @@ export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSi
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {syncing && (
+            <span className="text-xs text-gray-400 flex items-center gap-1">
+              <span className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin inline-block" />
+              Sync...
+            </span>
+          )}
           <GoogleAuthButton
             isConnected={driveConnected}
             onSignIn={onDriveSignIn}

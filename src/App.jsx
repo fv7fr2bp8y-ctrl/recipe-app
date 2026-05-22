@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useRecipes } from './hooks/useRecipes';
 import { useGoogleDrive } from './hooks/useGoogleDrive';
@@ -11,14 +11,35 @@ import RecipeDetail from './components/RecipeDetail';
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function RecipeApp() {
-  const { recipes, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
-  const { accessToken, signIn, signOut, uploadImage, uploading, scopes } = useGoogleDrive();
+  const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes } = useRecipes();
+  const { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, scopes } = useGoogleDrive();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Всички');
   const [difficulty, setDifficulty] = useState('Всички');
   const [showForm, setShowForm] = useState(false);
   const [editRecipe, setEditRecipe] = useState(null);
   const [viewRecipe, setViewRecipe] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+
+  // Load from Drive when connected
+  useEffect(() => {
+    if (!accessToken) return;
+    setSyncing(true);
+    loadRecipesFromDrive()
+      .then((driveRecipes) => {
+        if (driveRecipes && driveRecipes.length > 0) {
+          setRecipes(driveRecipes);
+        }
+      })
+      .finally(() => setSyncing(false));
+  }, [accessToken]);
+
+  // Save to Drive whenever recipes change (debounced)
+  useEffect(() => {
+    if (!accessToken || syncing) return;
+    const timer = setTimeout(() => saveRecipesToDrive(recipes), 1500);
+    return () => clearTimeout(timer);
+  }, [recipes, accessToken]);
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
@@ -62,6 +83,7 @@ function RecipeApp() {
         onDriveSignIn={signIn}
         onDriveSignOut={signOut}
         driveScopes={scopes}
+        syncing={syncing}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -73,7 +95,12 @@ function RecipeApp() {
         />
 
         <div className="mt-6">
-          {filtered.length === 0 ? (
+          {syncing ? (
+            <div className="text-center py-16">
+              <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-gray-400 mt-3 text-sm">Зарежда от Google Drive...</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-16">
               <span className="text-5xl">🍽️</span>
               <p className="text-gray-400 mt-3">Няма намерени рецепти</p>
