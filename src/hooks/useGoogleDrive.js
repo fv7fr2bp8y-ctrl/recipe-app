@@ -133,5 +133,27 @@ export function useGoogleDrive() {
     }
   }, [accessToken, getOrCreateFolder]);
 
-  return { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, scopes: SCOPES };
+  // List image files in the Recipe App Photos folder
+  const listDrivePhotos = useCallback(async () => {
+    if (!accessToken) return [];
+    try {
+      const folderId = await getOrCreateFolder(accessToken);
+      const res = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and mimeType contains 'image/' and name != '${RECIPES_FILENAME}' and trashed=false&fields=files(id,name,mimeType)&orderBy=createdTime desc&pageSize=100`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      const { files } = await res.json();
+      return (files || []).map((f) => ({
+        id: f.id,
+        name: f.name,
+        url: `https://drive.google.com/thumbnail?id=${f.id}&sz=w800`,
+        thumb: `https://drive.google.com/thumbnail?id=${f.id}&sz=w200`,
+      }));
+    } catch (err) {
+      console.error('Drive list error:', err);
+      return [];
+    }
+  }, [accessToken, getOrCreateFolder]);
+
+  return { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, scopes: SCOPES };
 }

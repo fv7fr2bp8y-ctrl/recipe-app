@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import DrivePhotoPicker from './DrivePhotoPicker';
 
 const CATEGORIES = ['Основно ястие', 'Салата', 'Супа', 'Десерт', 'Закуска', 'Предястие'];
 const DIFFICULTIES = ['Лесно', 'Средно', 'Трудно'];
@@ -8,9 +9,10 @@ const empty = {
   time: '', servings: '', description: '', ingredients: [''], steps: [''], image: null,
 };
 
-export default function RecipeForm({ recipe, onSave, onClose, uploadImage, uploading, driveConnected }) {
+export default function RecipeForm({ recipe, onSave, onClose, uploadImage, uploading, driveConnected, listDrivePhotos }) {
   const [form, setForm] = useState(recipe ? { ...recipe, ingredients: [...recipe.ingredients], steps: [...recipe.steps] } : empty);
   const [errors, setErrors] = useState({});
+  const [showDrivePicker, setShowDrivePicker] = useState(false);
   const fileRef = useRef();
 
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
@@ -110,10 +112,27 @@ export default function RecipeForm({ recipe, onSave, onClose, uploadImage, uploa
               )}
             </div>
             {driveConnected && (
-              <p className="text-xs text-green-600 mt-1">✓ Снимката ще се запази в Google Drive</p>
+              <div className="flex items-center justify-between mt-1.5">
+                <p className="text-xs text-green-600">✓ Снимката ще се запази в Google Drive</p>
+                <button
+                  type="button"
+                  onClick={() => setShowDrivePicker(true)}
+                  className="text-xs text-primary-600 hover:underline flex items-center gap-1"
+                >
+                  ☁️ Избери от Drive
+                </button>
+              </div>
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} />
+
+          {showDrivePicker && (
+            <DrivePhotoPicker
+              listDrivePhotos={listDrivePhotos}
+              onSelect={(url) => set('image', url)}
+              onClose={() => setShowDrivePicker(false)}
+            />
+          )}
 
           {/* Title */}
           <div>

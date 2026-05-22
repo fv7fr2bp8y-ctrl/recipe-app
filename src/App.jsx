@@ -12,7 +12,7 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function RecipeApp() {
   const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes } = useRecipes();
-  const { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, scopes } = useGoogleDrive();
+  const { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, scopes } = useGoogleDrive();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Всички');
   const [difficulty, setDifficulty] = useState('Всички');
@@ -134,6 +134,7 @@ function RecipeApp() {
           uploadImage={uploadImage}
           uploading={uploading}
           driveConnected={!!accessToken}
+          listDrivePhotos={listDrivePhotos}
         />
       )}
 
