@@ -8,7 +8,7 @@ const empty = {
   time: '', servings: '', description: '', ingredients: [''], steps: [''], image: null,
 };
 
-export default function RecipeForm({ recipe, onSave, onClose }) {
+export default function RecipeForm({ recipe, onSave, onClose, uploadImage, uploading, driveConnected }) {
   const [form, setForm] = useState(recipe ? { ...recipe, ingredients: [...recipe.ingredients], steps: [...recipe.steps] } : empty);
   const [errors, setErrors] = useState({});
   const fileRef = useRef();
@@ -32,12 +32,18 @@ export default function RecipeForm({ recipe, onSave, onClose }) {
     });
   };
 
-  const handleImage = (e) => {
+  const handleImage = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => set('image', ev.target.result);
-    reader.readAsDataURL(file);
+
+    if (driveConnected && uploadImage) {
+      const url = await uploadImage(file);
+      if (url) set('image', url);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev) => set('image', ev.target.result);
+      reader.readAsDataURL(file);
+    }
   };
 
   const validate = () => {
@@ -73,26 +79,38 @@ export default function RecipeForm({ recipe, onSave, onClose }) {
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {/* Image */}
-          <div
-            className="relative h-36 bg-orange-50 rounded-xl border-2 border-dashed border-primary-200 flex items-center justify-center cursor-pointer hover:bg-orange-100 transition-colors overflow-hidden"
-            onClick={() => fileRef.current.click()}
-          >
-            {form.image ? (
-              <>
-                <img src={form.image} alt="" className="w-full h-full object-cover rounded-xl" />
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); set('image', null); }}
-                  className="absolute top-2 right-2 bg-white/80 rounded-full w-6 h-6 flex items-center justify-center text-xs text-gray-600 hover:bg-red-500 hover:text-white"
-                >
-                  ✕
-                </button>
-              </>
-            ) : (
-              <div className="text-center">
-                <span className="text-2xl">📷</span>
-                <p className="text-xs text-gray-400 mt-1">Добавете снимка</p>
-              </div>
+          <div>
+            <div
+              className="relative h-36 bg-orange-50 rounded-xl border-2 border-dashed border-primary-200 flex items-center justify-center cursor-pointer hover:bg-orange-100 transition-colors overflow-hidden"
+              onClick={() => !uploading && fileRef.current.click()}
+            >
+              {uploading ? (
+                <div className="text-center">
+                  <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="text-xs text-gray-400 mt-2">Качва се в Drive...</p>
+                </div>
+              ) : form.image ? (
+                <>
+                  <img src={form.image} alt="" className="w-full h-full object-cover rounded-xl" />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); set('image', null); }}
+                    className="absolute top-2 right-2 bg-white/80 rounded-full w-6 h-6 flex items-center justify-center text-xs text-gray-600 hover:bg-red-500 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </>
+              ) : (
+                <div className="text-center">
+                  <span className="text-2xl">{driveConnected ? '☁️' : '📷'}</span>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {driveConnected ? 'Качи в Google Drive' : 'Добавете снимка'}
+                  </p>
+                </div>
+              )}
+            </div>
+            {driveConnected && (
+              <p className="text-xs text-green-600 mt-1">✓ Снимката ще се запази в Google Drive</p>
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleImage} />
@@ -150,8 +168,7 @@ export default function RecipeForm({ recipe, onSave, onClose }) {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Време (минути) *</label>
               <input
-                type="number"
-                min="1"
+                type="number" min="1"
                 value={form.time}
                 onChange={(e) => set('time', e.target.value)}
                 placeholder="30"
@@ -162,8 +179,7 @@ export default function RecipeForm({ recipe, onSave, onClose }) {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Порции *</label>
               <input
-                type="number"
-                min="1"
+                type="number" min="1"
                 value={form.servings}
                 onChange={(e) => set('servings', e.target.value)}
                 placeholder="4"
@@ -184,23 +200,11 @@ export default function RecipeForm({ recipe, onSave, onClose }) {
                   placeholder={`Съставка ${idx + 1}`}
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
                 />
-                <button
-                  type="button"
-                  onClick={() => removeListItem('ingredients', idx)}
-                  className="text-gray-300 hover:text-red-400 transition-colors px-1"
-                >
-                  ✕
-                </button>
+                <button type="button" onClick={() => removeListItem('ingredients', idx)} className="text-gray-300 hover:text-red-400 transition-colors px-1">✕</button>
               </div>
             ))}
             {errors.ingredients && <p className="text-red-500 text-xs mb-1">{errors.ingredients}</p>}
-            <button
-              type="button"
-              onClick={() => addListItem('ingredients')}
-              className="text-primary-600 text-xs hover:underline"
-            >
-              + Добави съставка
-            </button>
+            <button type="button" onClick={() => addListItem('ingredients')} className="text-primary-600 text-xs hover:underline">+ Добави съставка</button>
           </div>
 
           {/* Steps */}
@@ -216,37 +220,18 @@ export default function RecipeForm({ recipe, onSave, onClose }) {
                   rows={2}
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 resize-none"
                 />
-                <button
-                  type="button"
-                  onClick={() => removeListItem('steps', idx)}
-                  className="text-gray-300 hover:text-red-400 transition-colors px-1 mt-1"
-                >
-                  ✕
-                </button>
+                <button type="button" onClick={() => removeListItem('steps', idx)} className="text-gray-300 hover:text-red-400 transition-colors px-1 mt-1">✕</button>
               </div>
             ))}
             {errors.steps && <p className="text-red-500 text-xs mb-1">{errors.steps}</p>}
-            <button
-              type="button"
-              onClick={() => addListItem('steps')}
-              className="text-primary-600 text-xs hover:underline"
-            >
-              + Добави стъпка
-            </button>
+            <button type="button" onClick={() => addListItem('steps')} className="text-primary-600 text-xs hover:underline">+ Добави стъпка</button>
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-            >
+            <button type="button" onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
               Отказ
             </button>
-            <button
-              type="submit"
-              className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-lg text-sm font-medium transition-colors"
-            >
+            <button type="submit" className="flex-1 bg-primary-500 hover:bg-primary-600 text-white py-2.5 rounded-lg text-sm font-medium transition-colors">
               {recipe ? 'Запази промените' : 'Създай рецепта'}
             </button>
           </div>

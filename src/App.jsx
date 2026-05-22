@@ -1,13 +1,18 @@
 import { useState, useMemo } from 'react';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useRecipes } from './hooks/useRecipes';
+import { useGoogleDrive } from './hooks/useGoogleDrive';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import RecipeCard from './components/RecipeCard';
 import RecipeForm from './components/RecipeForm';
 import RecipeDetail from './components/RecipeDetail';
 
-export default function App() {
+const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+function RecipeApp() {
   const { recipes, addRecipe, updateRecipe, deleteRecipe } = useRecipes();
+  const { accessToken, signIn, signOut, uploadImage, uploading, scopes } = useGoogleDrive();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Всички');
   const [difficulty, setDifficulty] = useState('Всички');
@@ -51,7 +56,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#fef9f0]">
-      <Header onAdd={() => { setEditRecipe(null); setShowForm(true); }} />
+      <Header
+        onAdd={() => { setEditRecipe(null); setShowForm(true); }}
+        driveConnected={!!accessToken}
+        onDriveSignIn={signIn}
+        onDriveSignOut={signOut}
+        driveScopes={scopes}
+      />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         <SearchBar
@@ -93,6 +104,9 @@ export default function App() {
           recipe={editRecipe}
           onSave={handleSave}
           onClose={() => { setShowForm(false); setEditRecipe(null); }}
+          uploadImage={uploadImage}
+          uploading={uploading}
+          driveConnected={!!accessToken}
         />
       )}
 
@@ -104,5 +118,13 @@ export default function App() {
         />
       )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <GoogleOAuthProvider clientId={CLIENT_ID}>
+      <RecipeApp />
+    </GoogleOAuthProvider>
   );
 }
