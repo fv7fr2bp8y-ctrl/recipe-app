@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 
 const FOLDER_NAME = 'Recipe App Photos';
 const RECIPES_FILENAME = 'recipes.json';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly';
 
 export function useGoogleDrive() {
   const [accessToken, setAccessToken] = useState(null);
