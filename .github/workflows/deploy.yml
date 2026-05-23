@@ -17,9 +17,13 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Fetch photos from Google Drive
+        run: curl -sL "${{ secrets.VITE_PHOTOS_SCRIPT_URL }}" -o public/photos.json
       - run: npm run build
         env:
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
+          VITE_PHOTOS_SCRIPT_URL: ${{ secrets.VITE_PHOTOS_SCRIPT_URL }}
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

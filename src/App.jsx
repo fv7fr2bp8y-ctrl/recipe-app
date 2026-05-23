@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { useRecipes } from './hooks/useRecipes';
+import { useRecipes, mergeWithSamples } from './hooks/useRecipes';
 import { useGoogleDrive } from './hooks/useGoogleDrive';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
@@ -12,7 +12,7 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function RecipeApp() {
   const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes } = useRecipes();
-  const { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, scopes } = useGoogleDrive();
+  const { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, makePhotoPublic, scopes } = useGoogleDrive();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Всички');
   const [difficulty, setDifficulty] = useState('Всички');
@@ -28,7 +28,7 @@ function RecipeApp() {
     loadRecipesFromDrive()
       .then((driveRecipes) => {
         if (driveRecipes && driveRecipes.length > 0) {
-          setRecipes(driveRecipes);
+          setRecipes(mergeWithSamples(driveRecipes));
         }
       })
       .finally(() => setSyncing(false));
@@ -135,6 +135,7 @@ function RecipeApp() {
           uploading={uploading}
           driveConnected={!!accessToken}
           listDrivePhotos={listDrivePhotos}
+          makePhotoPublic={makePhotoPublic}
         />
       )}
 

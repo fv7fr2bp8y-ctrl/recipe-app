@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export default function DrivePhotoPicker({ listDrivePhotos, onSelect, onClose }) {
+export default function DrivePhotoPicker({ listDrivePhotos, makePhotoPublic, onSelect, onClose }) {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +36,7 @@ export default function DrivePhotoPicker({ listDrivePhotos, onSelect, onClose })
               {photos.map((photo) => (
                 <button
                   key={photo.id}
-                  onClick={() => { onSelect(photo.url); onClose(); }}
+                  onClick={async () => { await makePhotoPublic?.(photo.id); onSelect(photo.url); onClose(); }}
                   className="aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary-500 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <img

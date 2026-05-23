@@ -2,7 +2,8 @@ import { useState, useCallback, useRef } from 'react';
 
 const FOLDER_NAME = 'Recipe App Photos';
 const RECIPES_FILENAME = 'recipes.json';
-const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly';
+const PHOTOS_SCRIPT_URL = import.meta.env.VITE_PHOTOS_SCRIPT_URL;
+const SCOPES = 'https://www.googleapis.com/auth/drive.file';
 
 export function useGoogleDrive() {
   const [accessToken, setAccessToken] = useState(null);
@@ -74,29 +75,23 @@ export function useGoogleDrive() {
     }
   }, [accessToken, getOrCreateFolder]);
 
-  // Save all recipes to a JSON file in Drive (upsert)
   const saveRecipesToDrive = useCallback(async (recipes) => {
     if (!accessToken) return;
     try {
       const folderId = await getOrCreateFolder(accessToken);
-
-      // Check if recipes.json already exists
       const search = await fetch(
         `https://www.googleapis.com/drive/v3/files?q=name='${RECIPES_FILENAME}' and '${folderId}' in parents and trashed=false&fields=files(id)`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       const { files } = await search.json();
-      const content = JSON.stringify(recipes);
-      const blob = new Blob([content], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(recipes)], { type: 'application/json' });
 
       if (files.length > 0) {
-        // Update existing file
         await fetch(
           `https://www.googleapis.com/upload/drive/v3/files/${files[0].id}?uploadType=media`,
           { method: 'PATCH', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: blob }
         );
       } else {
-        // Create new file
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify({ name: RECIPES_FILENAME, parents: [folderId] })], { type: 'application/json' }));
         form.append('file', blob);
@@ -110,7 +105,6 @@ export function useGoogleDrive() {
     }
   }, [accessToken, getOrCreateFolder]);
 
-  // Load recipes from Drive
   const loadRecipesFromDrive = useCallback(async () => {
     if (!accessToken) return null;
     try {
@@ -133,26 +127,28 @@ export function useGoogleDrive() {
     }
   }, [accessToken, getOrCreateFolder]);
 
-  // List ALL image files in Drive (entire Drive, not just the app folder)
+  // Зарежда снимките от статичния photos.json (без CORS проблеми)
   const listDrivePhotos = useCallback(async () => {
-    if (!accessToken) return [];
     try {
-      const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=mimeType contains 'image/' and trashed=false&fields=files(id,name,mimeType)&orderBy=createdTime desc&pageSize=200`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      const { files } = await res.json();
-      return (files || []).map((f) => ({
-        id: f.id,
-        name: f.name,
-        url: `https://drive.google.com/thumbnail?id=${f.id}&sz=w800`,
-        thumb: `https://drive.google.com/thumbnail?id=${f.id}&sz=w200`,
-      }));
+      const res = await fetch(import.meta.env.BASE_URL + 'photos.json');
+      const photos = await res.json();
+      return Array.isArray(photos) ? photos : [];
     } catch (err) {
       console.error('Drive list error:', err);
       return [];
     }
-  }, [accessToken, getOrCreateFolder]);
+  }, []);
 
-  return { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, scopes: SCOPES };
+  const makePhotoPublic = useCallback(async (fileId) => {
+    if (!accessToken) return;
+    try { await makePublic(accessToken, fileId); } catch (_) {}
+  }, [accessToken]);
+
+  return {
+    accessToken, signIn, signOut,
+    uploadImage, uploading,
+    saveRecipesToDrive, loadRecipesFromDrive,
+    listDrivePhotos, makePhotoPublic,
+    scopes: SCOPES,
+  };
 }
