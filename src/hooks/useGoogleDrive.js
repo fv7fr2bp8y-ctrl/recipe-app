@@ -3,19 +3,31 @@ import { useState, useCallback, useRef } from 'react';
 const FOLDER_NAME = 'Recipe App Photos';
 const RECIPES_FILENAME = 'recipes.json';
 const PHOTOS_SCRIPT_URL = import.meta.env.VITE_PHOTOS_SCRIPT_URL;
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 
 export function useGoogleDrive() {
   const [accessToken, setAccessToken] = useState(null);
+  const [userEmail, setUserEmail] = useState(null);
   const [uploading, setUploading] = useState(false);
   const folderIdRef = useRef(null);
 
-  const signIn = useCallback((tokenResponse) => {
-    setAccessToken(tokenResponse.access_token);
+  const signIn = useCallback(async (tokenResponse) => {
+    const token = tokenResponse.access_token;
+    setAccessToken(token);
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const info = await res.json();
+      setUserEmail(info.email || null);
+    } catch (err) {
+      console.error('Failed to fetch user email:', err);
+    }
   }, []);
 
   const signOut = useCallback(() => {
     setAccessToken(null);
+    setUserEmail(null);
     folderIdRef.current = null;
   }, []);
 
@@ -145,7 +157,7 @@ export function useGoogleDrive() {
   }, [accessToken]);
 
   return {
-    accessToken, signIn, signOut,
+    accessToken, userEmail, signIn, signOut,
     uploadImage, uploading,
     saveRecipesToDrive, loadRecipesFromDrive,
     listDrivePhotos, makePhotoPublic,

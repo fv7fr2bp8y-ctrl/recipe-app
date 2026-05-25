@@ -9,10 +9,12 @@ import RecipeForm from './components/RecipeForm';
 import RecipeDetail from './components/RecipeDetail';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
 
 function RecipeApp() {
   const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes } = useRecipes();
-  const { accessToken, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, makePhotoPublic, scopes } = useGoogleDrive();
+  const { accessToken, userEmail, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, makePhotoPublic, scopes } = useGoogleDrive();
+  const isAdmin = !!userEmail && userEmail.toLowerCase() === ADMIN_EMAIL;
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Всички');
   const [difficulty, setDifficulty] = useState('Всички');
@@ -21,9 +23,9 @@ function RecipeApp() {
   const [viewRecipe, setViewRecipe] = useState(null);
   const [syncing, setSyncing] = useState(false);
 
-  // Load from Drive when connected
+  // Load from Drive when admin connects
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken || !isAdmin) return;
     setSyncing(true);
     loadRecipesFromDrive()
       .then((driveRecipes) => {
@@ -32,14 +34,14 @@ function RecipeApp() {
         }
       })
       .finally(() => setSyncing(false));
-  }, [accessToken]);
+  }, [accessToken, isAdmin]);
 
-  // Save to Drive whenever recipes change (debounced)
+  // Save to Drive whenever recipes change (admin only, debounced)
   useEffect(() => {
-    if (!accessToken || syncing) return;
+    if (!accessToken || !isAdmin || syncing) return;
     const timer = setTimeout(() => saveRecipesToDrive(recipes), 1500);
     return () => clearTimeout(timer);
-  }, [recipes, accessToken]);
+  }, [recipes, accessToken, isAdmin]);
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
@@ -84,6 +86,7 @@ function RecipeApp() {
         onDriveSignOut={signOut}
         driveScopes={scopes}
         syncing={syncing}
+        isAdmin={isAdmin}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -119,6 +122,7 @@ function RecipeApp() {
                   recipe={recipe}
                   onClick={() => setViewRecipe(recipe)}
                   onDelete={handleDelete}
+                  canEdit={isAdmin}
                 />
               ))}
             </div>
@@ -144,6 +148,7 @@ function RecipeApp() {
           recipe={viewRecipe}
           onEdit={handleEdit}
           onClose={() => setViewRecipe(null)}
+          canEdit={isAdmin}
         />
       )}
     </div>

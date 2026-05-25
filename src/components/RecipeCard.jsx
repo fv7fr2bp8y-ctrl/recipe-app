@@ -13,7 +13,7 @@ const CATEGORY_ICONS = {
   'Предястие': '🫙',
 };
 
-export default function RecipeCard({ recipe, onClick, onDelete }) {
+export default function RecipeCard({ recipe, onClick, onDelete, canEdit }) {
   const icon = CATEGORY_ICONS[recipe.category] || '🍴';
 
   return (
@@ -27,13 +27,15 @@ export default function RecipeCard({ recipe, onClick, onDelete }) {
         ) : (
           <span className="text-6xl opacity-60">{icon}</span>
         )}
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(recipe.id); }}
-          className="absolute top-2 right-2 bg-white/80 hover:bg-red-500 hover:text-white text-gray-500 rounded-full w-7 h-7 flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
-          title="Изтрий"
-        >
-          🗑
-        </button>
+        {canEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(recipe.id); }}
+            className="absolute top-2 right-2 bg-white/80 hover:bg-red-500 hover:text-white text-gray-500 rounded-full w-7 h-7 flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
+            title="Изтрий"
+          >
+            🗑
+          </button>
+        )}
       </div>
 
       <div className="p-4">

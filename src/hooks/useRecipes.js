@@ -528,18 +528,33 @@ export const mergeWithSamples = (existing) => {
 };
 
 export function useRecipes() {
-  const [recipes, setRecipes] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? mergeWithSamples(JSON.parse(stored)) : sampleRecipes;
-    } catch {
-      return sampleRecipes;
-    }
-  });
+  const [recipes, setRecipes] = useState(sampleRecipes);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+    fetch(import.meta.env.BASE_URL + 'recipes.json')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((published) => {
+        if (cancelled) return;
+        if (Array.isArray(published) && published.length > 0) {
+          setRecipes(mergeWithSamples(published));
+        } else {
+          try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) setRecipes(mergeWithSamples(JSON.parse(stored)));
+          } catch {}
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoaded(true); });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(recipes));
-  }, [recipes]);
+  }, [recipes, loaded]);
 
   const addRecipe = (recipe) => {
     const newRecipe = { ...recipe, id: Date.now().toString(), createdAt: new Date().toISOString() };

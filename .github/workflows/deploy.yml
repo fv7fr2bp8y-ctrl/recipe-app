@@ -18,12 +18,15 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Fetch photos from Google Drive
-        run: curl -sL "${{ secrets.VITE_PHOTOS_SCRIPT_URL }}" -o public/photos.json
+        run: curl -sL "${{ secrets.VITE_PHOTOS_SCRIPT_URL }}?type=photos" -o public/photos.json
+      - name: Fetch recipes from Google Drive
+        run: curl -sL "${{ secrets.VITE_PHOTOS_SCRIPT_URL }}?type=recipes" -o public/recipes.json
       - run: npm run build
         env:
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
           VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
           VITE_PHOTOS_SCRIPT_URL: ${{ secrets.VITE_PHOTOS_SCRIPT_URL }}
+          VITE_ADMIN_EMAIL: ${{ secrets.VITE_ADMIN_EMAIL }}
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
