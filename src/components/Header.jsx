@@ -7,8 +7,8 @@ export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSi
         <div className="flex items-center gap-3">
           <span className="text-3xl">🍳</span>
           <div>
-            <h1 className="text-xl font-bold text-gray-800 leading-none">Моите Рецепти</h1>
-            <p className="text-xs text-gray-500">Кулинарна колекция</p>
+            <h1 className="text-xl font-bold text-gray-800 leading-none tracking-wider">TASTEMASTER</h1>
+            <p className="text-xs text-gray-500 tracking-wide">Recipe Atelier</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
