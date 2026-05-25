@@ -537,7 +537,11 @@ export function useRecipes() {
       .then((res) => (res.ok ? res.json() : null))
       .then((published) => {
         if (cancelled) return;
-        if (Array.isArray(published) && published.length > 0) {
+        const looksLikeRecipes = Array.isArray(published)
+          && published.length > 0
+          && published[0]
+          && typeof published[0].title === 'string';
+        if (looksLikeRecipes) {
           setRecipes(mergeWithSamples(published));
         } else {
           try {
