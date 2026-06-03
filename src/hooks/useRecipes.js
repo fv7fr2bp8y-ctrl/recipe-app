@@ -591,7 +591,7 @@ const sampleRecipes = [
 export const mergeWithSamples = (existing) => {
   const ids = new Set(existing.map((r) => r.id));
   const missing = sampleRecipes.filter((r) => !ids.has(r.id));
-  return missing.length > 0 ? [...existing, ...missing] : existing;
+  return missing.length > 0 ? [...missing, ...existing] : existing;
 };
 
 export function useRecipes() {
