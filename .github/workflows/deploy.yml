@@ -19,8 +19,6 @@ jobs:
       - run: npm ci
       - name: Fetch photos from Google Drive
         run: curl -sL "${{ secrets.VITE_PHOTOS_SCRIPT_URL }}?type=photos" -o public/photos.json
-      - name: Fetch recipes from Google Drive
-        run: curl -sL "${{ secrets.VITE_PHOTOS_SCRIPT_URL }}?type=recipes" -o public/recipes.json
       - run: npm run build
         env:
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
