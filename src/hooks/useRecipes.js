@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'culinary-recipes-v2';
-const SCRIPT_URL = import.meta.env.VITE_PHOTOS_SCRIPT_URL;
 
 const sampleRecipes = [
   {
@@ -680,21 +679,7 @@ export function useRecipes() {
       Array.isArray(data) && data.length > 0
       && data[0] && typeof data[0].title === 'string';
 
-    // Чете наживо от Google Drive (Apps Script). Така промените от admin
-    // панела се виждат на сайта при следващо зареждане, без нов деплой.
-    const fetchLive = async () => {
-      if (!SCRIPT_URL) return null;
-      try {
-        const res = await fetch(`${SCRIPT_URL}?type=recipes`);
-        if (!res.ok) return null;
-        const data = await res.json();
-        return looksLikeRecipes(data) ? data : null;
-      } catch {
-        return null;
-      }
-    };
-
-    // Резервен вариант — комитнатият public/recipes.json (при CORS/мрежов проблем).
+    // Източник на истината е комитнатият public/recipes.json в repo-то.
     const fetchStatic = async () => {
       try {
         const res = await fetch(import.meta.env.BASE_URL + 'recipes.json');
@@ -707,7 +692,7 @@ export function useRecipes() {
     };
 
     (async () => {
-      const data = (await fetchLive()) || (await fetchStatic());
+      const data = await fetchStatic();
       if (cancelled) return;
       if (data) {
         setRecipes(data);
