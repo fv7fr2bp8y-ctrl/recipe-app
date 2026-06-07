@@ -643,13 +643,6 @@ const sampleRecipes = [
   },
 ];
 
-// Добавя нови sample рецепти, ако вече не съществуват (по id)
-export const mergeWithSamples = (existing) => {
-  const ids = new Set(existing.map((r) => r.id));
-  const missing = sampleRecipes.filter((r) => !ids.has(r.id));
-  return missing.length > 0 ? [...missing, ...existing] : existing;
-};
-
 export function useRecipes() {
   const [recipes, setRecipes] = useState(sampleRecipes);
   const [loaded, setLoaded] = useState(false);
@@ -665,11 +658,11 @@ export function useRecipes() {
           && published[0]
           && typeof published[0].title === 'string';
         if (looksLikeRecipes) {
-          setRecipes(mergeWithSamples(published));
+          setRecipes(published);
         } else {
           try {
             const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) setRecipes(mergeWithSamples(JSON.parse(stored)));
+            if (stored) setRecipes(JSON.parse(stored));
           } catch {}
         }
       })
