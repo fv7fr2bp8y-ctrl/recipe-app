@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'culinary-recipes-v2';
+const SCRIPT_URL = import.meta.env.VITE_PHOTOS_SCRIPT_URL;
 
 const sampleRecipes = [
   {
@@ -674,25 +675,52 @@ export function useRecipes() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(import.meta.env.BASE_URL + 'recipes.json')
-      .then((res) => (res.ok ? res.json() : null))
-      .then((published) => {
-        if (cancelled) return;
-        const looksLikeRecipes = Array.isArray(published)
-          && published.length > 0
-          && published[0]
-          && typeof published[0].title === 'string';
-        if (looksLikeRecipes) {
-          setRecipes(published);
-        } else {
-          try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) setRecipes(JSON.parse(stored));
-          } catch {}
-        }
-      })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setLoaded(true); });
+
+    const looksLikeRecipes = (data) =>
+      Array.isArray(data) && data.length > 0
+      && data[0] && typeof data[0].title === 'string';
+
+    // Чете наживо от Google Drive (Apps Script). Така admin промените се
+    // виждат веднага, без нужда от нов деплой.
+    const fetchLive = async () => {
+      if (!SCRIPT_URL) return null;
+      try {
+        const res = await fetch(`${SCRIPT_URL}?type=recipes`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        return looksLikeRecipes(data) ? data : null;
+      } catch {
+        return null;
+      }
+    };
+
+    // Резервен вариант — комитнатият public/recipes.json. Гарантира, че
+    // сайтът никога не остава без рецепти (напр. при CORS/мрежов проблем).
+    const fetchStatic = async () => {
+      try {
+        const res = await fetch(import.meta.env.BASE_URL + 'recipes.json');
+        if (!res.ok) return null;
+        const data = await res.json();
+        return looksLikeRecipes(data) ? data : null;
+      } catch {
+        return null;
+      }
+    };
+
+    (async () => {
+      const data = (await fetchLive()) || (await fetchStatic());
+      if (cancelled) return;
+      if (data) {
+        setRecipes(data);
+      } else {
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) setRecipes(JSON.parse(stored));
+        } catch {}
+      }
+      setLoaded(true);
+    })();
+
     return () => { cancelled = true; };
   }, []);
 
