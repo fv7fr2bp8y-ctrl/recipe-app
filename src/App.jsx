@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { useRecipes, mergeWithSamples } from './hooks/useRecipes';
+import { useRecipes } from './hooks/useRecipes';
 import { useGoogleDrive } from './hooks/useGoogleDrive';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
@@ -30,7 +30,7 @@ function RecipeApp() {
     loadRecipesFromDrive()
       .then((driveRecipes) => {
         if (driveRecipes && driveRecipes.length > 0) {
-          setRecipes(mergeWithSamples(driveRecipes));
+          setRecipes(driveRecipes);
         }
       })
       .finally(() => setSyncing(false));
@@ -45,6 +45,7 @@ function RecipeApp() {
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
+      if (!r.image) return false;
       const matchSearch = r.title.toLowerCase().includes(search.toLowerCase()) ||
         r.description?.toLowerCase().includes(search.toLowerCase()) ||
         r.ingredients.some((i) => i.toLowerCase().includes(search.toLowerCase()));
