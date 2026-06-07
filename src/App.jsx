@@ -30,7 +30,21 @@ function RecipeApp() {
     loadRecipesFromDrive()
       .then((driveRecipes) => {
         if (driveRecipes && driveRecipes.length > 0) {
-          setRecipes(driveRecipes);
+          // Еднократно сливане: при първо влизане добавяме рецептите, които
+          // ги има в кода, но липсват в Drive (напр. новодобавените). Така
+          // нищо не се губи, а съществуващите в Drive имат предимство.
+          if (!localStorage.getItem('drive-seeded-v1')) {
+            const driveIds = new Set(driveRecipes.map((r) => r.id));
+            const missing = recipes.filter((r) => !driveIds.has(r.id));
+            setRecipes(missing.length ? [...driveRecipes, ...missing] : driveRecipes);
+            localStorage.setItem('drive-seeded-v1', '1');
+          } else {
+            setRecipes(driveRecipes);
+          }
+        } else {
+          // Празен Drive — текущите рецепти (от public/recipes.json) ще се
+          // запишат в Drive от save-ефекта по-долу.
+          localStorage.setItem('drive-seeded-v1', '1');
         }
       })
       .finally(() => setSyncing(false));
