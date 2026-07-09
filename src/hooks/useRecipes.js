@@ -856,7 +856,7 @@ const sampleRecipes = [
       'Добави спагетите и малко вода от пастата. Разбъркай добре.',
       'Финал: масло, черен пипер, магданоз и малко лимонова кора. Не прекалявай със солта — мидите са солени.',
     ],
-    image: null,
+    image: 'https://drive.google.com/thumbnail?id=1s-CVQa_wAv-HNB4kbGn4rH4IgYOl4FLF&sz=w800',
     createdAt: '2025-01-01T10:24:00.000Z',
   },
   {
