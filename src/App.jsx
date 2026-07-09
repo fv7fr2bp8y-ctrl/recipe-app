@@ -136,6 +136,7 @@ function RecipeApp() {
         driveScopes={scopes}
         syncing={syncing}
         isAdmin={isAdmin}
+        googleEnabled={!!CLIENT_ID}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -215,6 +216,10 @@ function RecipeApp() {
 }
 
 export default function App() {
+  if (!CLIENT_ID) {
+    return <RecipeApp />;
+  }
+
   return (
     <GoogleOAuthProvider clientId={CLIENT_ID}>
       <RecipeApp />

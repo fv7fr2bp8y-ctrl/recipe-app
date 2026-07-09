@@ -1,6 +1,6 @@
 import GoogleAuthButton from './GoogleAuthButton';
 
-export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSignOut, driveScopes, syncing, isAdmin }) {
+export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSignOut, driveScopes, syncing, isAdmin, googleEnabled }) {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
@@ -18,12 +18,14 @@ export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSi
               Sync...
             </span>
           )}
-          <GoogleAuthButton
-            isConnected={driveConnected}
-            onSignIn={onDriveSignIn}
-            onSignOut={onDriveSignOut}
-            scopes={driveScopes}
-          />
+          {googleEnabled && (
+            <GoogleAuthButton
+              isConnected={driveConnected}
+              onSignIn={onDriveSignIn}
+              onSignOut={onDriveSignOut}
+              scopes={driveScopes}
+            />
+          )}
           {isAdmin && (
             <button
               onClick={onAdd}
