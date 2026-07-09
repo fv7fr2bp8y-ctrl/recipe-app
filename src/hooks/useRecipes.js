@@ -10,6 +10,36 @@ const APP_LABELS = {
   'Healthy Gut': 'Healthy Gut',
 };
 
+const COUNTRY_RULES = [
+  ['Турция', /турск|менемен|istanbul|акури|akuri/i],
+  ['Индия', /индий|масала|доса|поха|мумбай|mumbai|чана|гарам|kari|curry/i],
+  ['Япония', /япон|тамагояки|осака|okonomiyaki|нори|мисо/i],
+  ['Ливан', /ливан|левантий|бейрут|beirut|manoushe|заатар/i],
+  ['Египет', /египет|кайро|cairo|ful|фул/i],
+  ['Мексико', /мексикан|чилакилес|tostada|тако|тортила/i],
+  ['Гърция', /гръц|гигантес|страпацада|копър и лимон/i],
+  ['Испания', /испан|сан себастиан|баск|tortilla pintxo|пиперада/i],
+  ['Виетнам', /виетнам|ханой|banh|bún|бун|оризови нудли/i],
+  ['Перу', /перуан|лима|ceviche|андск|киноа/i],
+  ['Италия', /италиан|рим|maritozzo|ризото|фетучини|vongole/i],
+  ['Мароко', /марок|тажин|ras el hanout/i],
+  ['Етиопия', /етиоп|мисир|бербере|теф/i],
+  ['Тайланд', /тайланд|зелено къри|жасминов ориз/i],
+  ['Корея', /корей|бибимбап|кимчи|гочуджанг/i],
+  ['Франция', /френск|сен жак|brioche|бриош/i],
+  ['Исландия', /исланд|рейкявик|skyr/i],
+  ['Швеция', /стокхолм|stockholm|швед|rösti|rosti/i],
+  ['Великобритания', /лондон|british|kedgeree/i],
+  ['Сингапур', /сингапур|kaya/i],
+  ['Грузия', /тбилиси|грузин|хачапури/i],
+  ['Канада', /монреал|canadian|smoked meat/i],
+  ['Нова Зеландия', /окланд|auckland|новозеланд/i],
+  ['Дубай', /дубай|шафранови/i],
+  ['Скандинавия', /скандинав|nordic|северна/i],
+];
+
+const isTrue = (value) => String(value || '').toUpperCase() === 'TRUE';
+
 const parseCsv = (text) => {
   const rows = [];
   let row = [];
@@ -87,16 +117,42 @@ const difficultyFromTime = (minutes) => {
   return 'Трудно';
 };
 
+const inferCountry = (row) => {
+  const explicit = row.country_bg || row.country || row.origin_country_bg || row.origin_country;
+  if (explicit) return explicit;
+
+  const text = [
+    row.canonical_name_bg,
+    row.tag,
+    row.description_bg,
+    row.prompt_bg,
+    row.image_prompt,
+    row.seo_title_bg,
+  ].filter(Boolean).join(' ');
+
+  return COUNTRY_RULES.find(([, pattern]) => pattern.test(text))?.[0] || 'Световна кухня';
+};
+
 const mapMasterRow = (row) => {
   const time = Number(row.time_min) || 30;
   const category = APP_LABELS[row.app_primary] || row.app_primary || row.meal_type || 'Рецепти';
+  const diets = {
+    breakfast: isTrue(row.is_breakfast),
+    healthyGut: isTrue(row.is_healthy_gut),
+    glutenFree: isTrue(row.is_gluten_free),
+    dairyFree: isTrue(row.is_dairy_free),
+    meatFree: isTrue(row.is_meat_free),
+    plantBased: isTrue(row.is_plant_based),
+  };
 
   return {
     id: row.global_id,
     title: row.canonical_name_bg,
     category,
+    collection: category,
     mealType: row.meal_type,
     appPrimary: row.app_primary,
+    country: inferCountry(row),
     difficulty: difficultyFromTime(time),
     time,
     servings: 2,
@@ -105,7 +161,16 @@ const mapMasterRow = (row) => {
     steps: splitSteps(row.steps_bg),
     image: imageFromDrive(row),
     imageStatus: row.image_status,
+    diets,
+    isBreakfast: diets.breakfast,
+    isHealthyGut: diets.healthyGut,
+    isGlutenFree: diets.glutenFree,
+    isDairyFree: diets.dairyFree,
+    isMeatFree: diets.meatFree,
+    isPlantBased: diets.plantBased,
     tag: row.tag,
+    allergenNotes: row.allergen_notes,
+    nutritionNotes: row.nutrition_notes,
     createdAt: row.created_at || '2026-07-09T00:00:00.000Z',
   };
 };

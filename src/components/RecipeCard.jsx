@@ -15,6 +15,12 @@ const CATEGORY_ICONS = {
 
 export default function RecipeCard({ recipe, onClick, onDelete, canEdit }) {
   const icon = CATEGORY_ICONS[recipe.category] || '🍴';
+  const badges = [
+    recipe.isGlutenFree && 'без глутен',
+    recipe.isDairyFree && 'без млечни',
+    recipe.isMeatFree && 'без месо',
+    recipe.isPlantBased && 'растително',
+  ].filter(Boolean).slice(0, 3);
 
   return (
     <div
@@ -25,7 +31,10 @@ export default function RecipeCard({ recipe, onClick, onDelete, canEdit }) {
         {recipe.image ? (
           <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-6xl opacity-60">{icon}</span>
+          <div className="text-center px-4">
+            <span className="block text-xs uppercase tracking-[0.22em] text-primary-700/70 mb-2">очаква снимка</span>
+            <span className="block text-5xl opacity-50">{icon}</span>
+          </div>
         )}
         {canEdit && (
           <button
@@ -53,12 +62,20 @@ export default function RecipeCard({ recipe, onClick, onDelete, canEdit }) {
           </span>
           <span className="text-xs text-gray-400">⏱ {recipe.time} мин</span>
           <span className="text-xs text-gray-400">👤 {recipe.servings} порции</span>
+          {recipe.country && (
+            <span className="text-xs text-gray-400">{recipe.country}</span>
+          )}
         </div>
 
-        <div className="mt-2">
+        <div className="mt-2 flex flex-wrap gap-1.5">
           <span className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full">
             {icon} {recipe.category}
           </span>
+          {badges.map((badge) => (
+            <span key={badge} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">
+              {badge}
+            </span>
+          ))}
         </div>
       </div>
     </div>

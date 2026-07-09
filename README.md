@@ -2,19 +2,20 @@
 
 Лично приложение за управление на рецепти, достъпно на [tastemaster.eu](https://tastemaster.eu).
 
-Изградено с React + Vite и Tailwind CSS. Рецептите се съхраняват във файла `public/recipes.json` в това repo и се публикуват при всеки деплой.
+Изградено с React + Vite и Tailwind CSS. Публичният каталог чете основно от Google Sheet master таблицата `FreeFrom365_All_Apps_Master`, а `public/recipes.json` остава legacy fallback.
 
 ---
 
 ## Функционалности
 
-- Преглед на рецепти с търсене по заглавие, съставки и описание
-- Филтриране по категория и трудност
+- Преглед на всички curated рецепти от master таблицата
+- Търсене по заглавие, съставки, описание, държава и тагове
+- Филтриране по каталог, държава, трудност и режими: без глутен, без млечни, без месо, растително, Healthy Gut
 - Детайлен изглед на всяка рецепта
 - Admin режим — добавяне, редактиране и изтриване на рецепти
 - Качване на снимки в Google Drive
 - Избор на снимка от фото галерия
-- Рецептите се публикуват от `public/recipes.json` (виж "Как работи")
+- Рецептите се публикуват от Google Sheet master таблицата; `public/recipes.json` се ползва само като fallback
 
 ## Категории
 
@@ -42,12 +43,14 @@
 
 ## Как работи
 
-### Източник на истината — `public/recipes.json`
-Рецептите живеят във файла `public/recipes.json`, който е комитнат в repo-то. Това е единственият източник за публичния сайт. За да добавиш, промениш или премахнеш рецепта (или да оправиш снимка), редактирай този файл и push-ни в `main` — деплоят се случва автоматично.
+### Източник на истината — Google Sheet master таблицата
+Основният публичен каталог чете CSV export от `FreeFrom365_All_Apps_Master` / таб `Master_Recipes`.
 
-Всяка рецепта има полета: `id`, `title`, `category`, `difficulty`, `time`, `servings`, `description`, `ingredients` (масив), `steps` (масив), `image` (URL или `null`), `createdAt`.
+Минималните важни колони са: `global_id`, `canonical_name_bg`, `app_primary`, `meal_type`, `time_min`, `tag`, `description_bg`, `ingredients_bg`, `steps_bg`, `image_url`, `image_drive_id`, `image_status`, `status`, `recipe_quality`, `is_breakfast`, `is_healthy_gut`, `is_gluten_free`, `is_dairy_free`, `is_meat_free`, `is_plant_based`.
 
-> Рецепти без снимка (`image: null`) не се показват в списъка на сайта.
+Препоръчани нови колони за държави: `country_bg` и по желание `region_bg`. Кодът вече ги поддържа. Докато липсват, сайтът извлича държава от името, таговете и prompt-а.
+
+TasteMaster показва всички `status=ready` + `recipe_quality=curated` рецепти, включително тези без снимка. При липсваща снимка се показва чист placeholder.
 
 Снимките се хостват в Google Drive (папка "Recipe App Photos", публично достъпни) и се реферират в `image` като `https://drive.google.com/thumbnail?id=<FILE_ID>&sz=w800`.
 
@@ -84,13 +87,13 @@ VITE_ADMIN_EMAIL=...
 Деплоят се случва автоматично при push в `main` чрез GitHub Actions:
 
 1. Изтегля актуалните снимки от Google Drive (Apps Script) → `public/photos.json` (за галерията при admin)
-2. Build с `vite build` (използва комитнатия `public/recipes.json`)
-3. Публикува в `gh-pages` клон → [tastemaster.eu](https://tastemaster.eu)
+2. Build с `vite build`
+3. Публикува във Vercel → [tastemaster.eu](https://tastemaster.eu)
 
 ```bash
-# Ръчен деплой (ако е нужен)
+# Ръчен build/deploy (ако е нужен)
 npm run build
-npm run deploy
+vercel deploy --prod --yes
 ```
 
 ---

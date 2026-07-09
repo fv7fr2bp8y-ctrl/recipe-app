@@ -5,6 +5,14 @@ const DIFFICULTY_COLORS = {
 };
 
 export default function RecipeDetail({ recipe, onEdit, onClose, canEdit }) {
+  const badges = [
+    recipe.isGlutenFree && 'без глутен',
+    recipe.isDairyFree && 'без млечни',
+    recipe.isMeatFree && 'без месо',
+    recipe.isPlantBased && 'растително',
+    recipe.isHealthyGut && 'Healthy Gut',
+  ].filter(Boolean);
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto py-6">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4 my-auto">
@@ -13,7 +21,9 @@ export default function RecipeDetail({ recipe, onEdit, onClose, canEdit }) {
           {recipe.image ? (
             <img src={recipe.image} alt={recipe.title} className="w-full h-56 object-cover rounded-t-2xl" />
           ) : (
-            <div className="h-32 bg-gradient-to-br from-primary-100 to-orange-50 rounded-t-2xl" />
+            <div className="h-40 bg-gradient-to-br from-primary-100 to-orange-50 rounded-t-2xl flex items-center justify-center">
+              <span className="text-xs uppercase tracking-[0.22em] text-primary-800/60">очаква снимка</span>
+            </div>
           )}
           <button
             onClick={onClose}
@@ -48,6 +58,12 @@ export default function RecipeDetail({ recipe, onEdit, onClose, canEdit }) {
             <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">⏱ {recipe.time} мин</span>
             <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full">👤 {recipe.servings} порции</span>
             <span className="text-xs bg-primary-50 text-primary-700 px-3 py-1 rounded-full">{recipe.category}</span>
+            {recipe.country && (
+              <span className="text-xs bg-stone-100 text-stone-700 px-3 py-1 rounded-full">{recipe.country}</span>
+            )}
+            {badges.map((badge) => (
+              <span key={badge} className="text-xs bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full">{badge}</span>
+            ))}
           </div>
 
           {/* Ingredients */}

@@ -11,6 +11,14 @@ import RecipeDetail from './components/RecipeDetail';
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
 
+const DIET_FILTERS = [
+  { key: 'glutenFree', label: 'Без глутен' },
+  { key: 'dairyFree', label: 'Без млечни' },
+  { key: 'meatFree', label: 'Без месо' },
+  { key: 'plantBased', label: 'Растително' },
+  { key: 'healthyGut', label: 'Healthy Gut' },
+];
+
 function RecipeApp() {
   const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes, loading, source } = useRecipes();
   const { accessToken, userEmail, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, makePhotoPublic, scopes } = useGoogleDrive();
@@ -18,6 +26,8 @@ function RecipeApp() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Всички');
   const [difficulty, setDifficulty] = useState('Всички');
+  const [country, setCountry] = useState('Всички');
+  const [dietFilters, setDietFilters] = useState({});
   const [showForm, setShowForm] = useState(false);
   const [editRecipe, setEditRecipe] = useState(null);
   const [viewRecipe, setViewRecipe] = useState(null);
@@ -43,22 +53,50 @@ function RecipeApp() {
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
-      if (!r.image) return false;
-      const query = search.toLowerCase();
+      const query = search.toLowerCase().trim();
       const ingredients = Array.isArray(r.ingredients) ? r.ingredients : [];
-      const matchSearch = r.title.toLowerCase().includes(query) ||
-        r.description?.toLowerCase().includes(query) ||
-        ingredients.some((i) => i.toLowerCase().includes(query));
-      const matchCat = category === 'Всички' || r.category === category;
+      const searchable = [
+        r.title,
+        r.description,
+        r.country,
+        r.tag,
+        r.mealType,
+        r.collection,
+        r.allergenNotes,
+        r.nutritionNotes,
+        ...ingredients,
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matchSearch = !query || searchable.includes(query);
+      const matchCat = category === 'Всички' || r.collection === category || r.category === category;
       const matchDiff = difficulty === 'Всички' || r.difficulty === difficulty;
-      return matchSearch && matchCat && matchDiff;
+      const matchCountry = country === 'Всички' || r.country === country;
+      const matchDiet = DIET_FILTERS.every(({ key }) => !dietFilters[key] || r.diets?.[key]);
+      return matchSearch && matchCat && matchDiff && matchCountry && matchDiet;
     });
-  }, [recipes, search, category, difficulty]);
+  }, [recipes, search, category, difficulty, country, dietFilters]);
 
   const categories = useMemo(() => {
-    const values = [...new Set(recipes.map((r) => r.category).filter(Boolean))];
+    const values = [...new Set(recipes.map((r) => r.collection || r.category).filter(Boolean))];
     return ['Всички', ...values];
   }, [recipes]);
+
+  const countries = useMemo(() => {
+    const values = [...new Set(recipes.map((r) => r.country).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b, 'bg'));
+    return ['Всички', ...values];
+  }, [recipes]);
+
+  const toggleDietFilter = (key) => {
+    setDietFilters((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setCategory('Всички');
+    setDifficulty('Всички');
+    setCountry('Всички');
+    setDietFilters({});
+  };
 
   const difficulties = useMemo(() => {
     const values = [...new Set(recipes.map((r) => r.difficulty).filter(Boolean))];
@@ -105,7 +143,13 @@ function RecipeApp() {
           search={search} setSearch={setSearch}
           category={category} setCategory={setCategory}
           difficulty={difficulty} setDifficulty={setDifficulty}
+          country={country} setCountry={setCountry}
+          countries={countries}
+          dietFilters={dietFilters}
+          dietFilterOptions={DIET_FILTERS}
+          onToggleDiet={toggleDietFilter}
           count={filtered.length}
+          totalCount={recipes.length}
           categories={categories}
           difficulties={difficulties}
         />
@@ -123,7 +167,7 @@ function RecipeApp() {
               <span className="text-5xl">🍽️</span>
               <p className="text-gray-400 mt-3">Няма намерени рецепти</p>
               <button
-                onClick={() => { setSearch(''); setCategory('Всички'); setDifficulty('Всички'); }}
+                onClick={clearFilters}
                 className="mt-3 text-primary-600 text-sm hover:underline"
               >
                 Изчисти филтрите
