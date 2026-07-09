@@ -125,6 +125,24 @@ const fetchMasterRecipes = async () => {
     .map(mapMasterRow);
 };
 
+const normalizeRecipeTitle = (title) => (title || '')
+  .toLowerCase()
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const mergeRecipeSets = (primary, legacy) => {
+  const seenTitles = new Set(primary.map((recipe) => normalizeRecipeTitle(recipe.title)));
+  const seenIds = new Set(primary.map((recipe) => recipe.id));
+  const additions = legacy
+    .filter((recipe) => {
+      const titleKey = normalizeRecipeTitle(recipe.title);
+      return titleKey && !seenTitles.has(titleKey) && !seenIds.has(recipe.id);
+    })
+    .map((recipe) => ({ ...recipe, source: recipe.source || 'legacy' }));
+
+  return [...primary, ...additions];
+};
+
 const sampleRecipes = [
   {
     id: 'r28',
@@ -839,8 +857,10 @@ export function useRecipes() {
         const masterRecipes = await fetchMasterRecipes();
         if (cancelled) return;
         if (masterRecipes.length > 0) {
-          setRecipes(masterRecipes);
-          setSource('master-sheet');
+          const legacyRecipes = await fetchStatic();
+          if (cancelled) return;
+          setRecipes(legacyRecipes ? mergeRecipeSets(masterRecipes, legacyRecipes) : masterRecipes);
+          setSource(legacyRecipes ? 'master-sheet+legacy' : 'master-sheet');
           return;
         }
         await loadFallback();
