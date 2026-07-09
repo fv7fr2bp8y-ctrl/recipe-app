@@ -1,7 +1,17 @@
 const CATEGORIES = ['Всички', 'Основно ястие', 'Салата', 'Супа', 'Десерт', 'Закуска', 'Предястие'];
 const DIFFICULTIES = ['Всички', 'Лесно', 'Средно', 'Трудно'];
 
-export default function SearchBar({ search, setSearch, category, setCategory, difficulty, setDifficulty, count }) {
+export default function SearchBar({
+  search,
+  setSearch,
+  category,
+  setCategory,
+  difficulty,
+  setDifficulty,
+  count,
+  categories = CATEGORIES,
+  difficulties = DIFFICULTIES,
+}) {
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 space-y-3">
       <div className="relative">
@@ -25,7 +35,7 @@ export default function SearchBar({ search, setSearch, category, setCategory, di
 
       <div className="flex flex-wrap gap-2">
         <div className="flex flex-wrap gap-1.5">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setCategory(cat)}
@@ -43,7 +53,7 @@ export default function SearchBar({ search, setSearch, category, setCategory, di
 
       <div className="flex items-center justify-between">
         <div className="flex gap-1.5">
-          {DIFFICULTIES.map((d) => (
+          {difficulties.map((d) => (
             <button
               key={d}
               onClick={() => setDifficulty(d)}

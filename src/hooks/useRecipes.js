@@ -1,6 +1,129 @@
 import { useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'culinary-recipes-v2';
+const MASTER_SHEET_CSV_URL = import.meta.env.VITE_MASTER_RECIPES_CSV_URL
+  || 'https://docs.google.com/spreadsheets/d/1wxcQ28CslNUa_7-hrhkIKEuO6fF2HAkfSrKxRYmIRek/export?format=csv&gid=1571845576';
+
+const APP_LABELS = {
+  Breakfast: 'Brunch',
+  Brunch: 'Brunch',
+  'Healthy Gut': 'Healthy Gut',
+};
+
+const parseCsv = (text) => {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (quoted) {
+      if (char === '"' && next === '"') {
+        field += '"';
+        i += 1;
+      } else if (char === '"') {
+        quoted = false;
+      } else {
+        field += char;
+      }
+      continue;
+    }
+
+    if (char === '"') quoted = true;
+    else if (char === ',') {
+      row.push(field);
+      field = '';
+    } else if (char === '\n') {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+    } else if (char !== '\r') {
+      field += char;
+    }
+  }
+
+  if (field || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+
+  return rows.filter((r) => r.some((cell) => cell.trim()));
+};
+
+const splitList = (value) => (value || '')
+  .split(/\s*(?:;|\n)\s*/)
+  .map((item) => item.trim())
+  .filter(Boolean);
+
+const splitSteps = (value) => {
+  const normalized = (value || '').trim();
+  if (!normalized) return [];
+  const delimited = splitList(normalized);
+  if (delimited.length > 1) return delimited;
+  return (normalized.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [normalized])
+    .map((step) => step.trim())
+    .filter(Boolean);
+};
+
+const driveFileIdFromUrl = (url) => {
+  if (!url) return '';
+  const match = url.match(/\/d\/([^/]+)\//) || url.match(/[?&]id=([^&]+)/);
+  return match?.[1] || '';
+};
+
+const imageFromDrive = (row) => {
+  const fileId = row.image_drive_id || driveFileIdFromUrl(row.image_url);
+  if (fileId) return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
+  return row.image_url || null;
+};
+
+const difficultyFromTime = (minutes) => {
+  if (minutes <= 25) return 'Лесно';
+  if (minutes <= 45) return 'Средно';
+  return 'Трудно';
+};
+
+const mapMasterRow = (row) => {
+  const time = Number(row.time_min) || 30;
+  const category = APP_LABELS[row.app_primary] || row.app_primary || row.meal_type || 'Рецепти';
+
+  return {
+    id: row.global_id,
+    title: row.canonical_name_bg,
+    category,
+    mealType: row.meal_type,
+    appPrimary: row.app_primary,
+    difficulty: difficultyFromTime(time),
+    time,
+    servings: 2,
+    description: row.description_bg || row.tag || '',
+    ingredients: splitList(row.ingredients_bg),
+    steps: splitSteps(row.steps_bg),
+    image: imageFromDrive(row),
+    imageStatus: row.image_status,
+    tag: row.tag,
+    createdAt: row.created_at || '2026-07-09T00:00:00.000Z',
+  };
+};
+
+const fetchMasterRecipes = async () => {
+  const response = await fetch(MASTER_SHEET_CSV_URL, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`Master sheet failed: ${response.status}`);
+
+  const csv = await response.text();
+  const [headers, ...rows] = parseCsv(csv);
+  if (!headers?.length) return [];
+
+  return rows
+    .map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] || ''])))
+    .filter((row) => row.global_id && row.canonical_name_bg)
+    .filter((row) => row.status === 'ready' && row.recipe_quality === 'curated')
+    .map(mapMasterRow);
+};
 
 const sampleRecipes = [
   {
@@ -670,6 +793,7 @@ const sampleRecipes = [
 
 export function useRecipes() {
   const [recipes, setRecipes] = useState(sampleRecipes);
+  const [source, setSource] = useState('samples');
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -679,7 +803,6 @@ export function useRecipes() {
       Array.isArray(data) && data.length > 0
       && data[0] && typeof data[0].title === 'string';
 
-    // Източник на истината е комитнатият public/recipes.json в repo-то.
     const fetchStatic = async () => {
       try {
         const res = await fetch(import.meta.env.BASE_URL + 'recipes.json');
@@ -691,18 +814,41 @@ export function useRecipes() {
       }
     };
 
-    (async () => {
+    const loadFallback = async () => {
       const data = await fetchStatic();
       if (cancelled) return;
       if (data) {
         setRecipes(data);
-      } else {
-        try {
-          const stored = localStorage.getItem(STORAGE_KEY);
-          if (stored) setRecipes(JSON.parse(stored));
-        } catch {}
+        setSource('published-json');
+        return;
       }
-      setLoaded(true);
+
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          setRecipes(JSON.parse(stored));
+          setSource('local-storage');
+        }
+      } catch {
+        setSource('samples');
+      }
+    };
+
+    (async () => {
+      try {
+        const masterRecipes = await fetchMasterRecipes();
+        if (cancelled) return;
+        if (masterRecipes.length > 0) {
+          setRecipes(masterRecipes);
+          setSource('master-sheet');
+          return;
+        }
+        await loadFallback();
+      } catch {
+        await loadFallback();
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
     })();
 
     return () => { cancelled = true; };
@@ -727,5 +873,5 @@ export function useRecipes() {
     setRecipes((prev) => prev.filter((r) => r.id !== id));
   };
 
-  return { recipes, setRecipes, addRecipe, updateRecipe, deleteRecipe };
+  return { recipes, setRecipes, addRecipe, updateRecipe, deleteRecipe, source, loading: !loaded };
 }

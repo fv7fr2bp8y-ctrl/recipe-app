@@ -2,7 +2,6 @@ import { useState, useCallback, useRef } from 'react';
 
 const FOLDER_NAME = 'Recipe App Photos';
 const RECIPES_FILENAME = 'recipes.json';
-const PHOTOS_SCRIPT_URL = import.meta.env.VITE_PHOTOS_SCRIPT_URL;
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 
 export function useGoogleDrive() {
@@ -153,7 +152,11 @@ export function useGoogleDrive() {
 
   const makePhotoPublic = useCallback(async (fileId) => {
     if (!accessToken) return;
-    try { await makePublic(accessToken, fileId); } catch (_) {}
+    try {
+      await makePublic(accessToken, fileId);
+    } catch (err) {
+      console.error('Drive permission error:', err);
+    }
   }, [accessToken]);
 
   return {

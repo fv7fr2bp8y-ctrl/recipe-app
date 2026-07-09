@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useRecipes } from './hooks/useRecipes';
 import { useGoogleDrive } from './hooks/useGoogleDrive';
@@ -12,7 +12,7 @@ const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
 
 function RecipeApp() {
-  const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes } = useRecipes();
+  const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes, loading, source } = useRecipes();
   const { accessToken, userEmail, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, makePhotoPublic, scopes } = useGoogleDrive();
   const isAdmin = !!userEmail && userEmail.toLowerCase() === ADMIN_EMAIL;
   const [search, setSearch] = useState('');
@@ -21,39 +21,49 @@ function RecipeApp() {
   const [showForm, setShowForm] = useState(false);
   const [editRecipe, setEditRecipe] = useState(null);
   const [viewRecipe, setViewRecipe] = useState(null);
-  const [syncing, setSyncing] = useState(false);
+  const syncing = false;
 
   // Load from Drive when admin connects
   useEffect(() => {
-    if (!accessToken || !isAdmin) return;
-    setSyncing(true);
+    if (!accessToken || !isAdmin || loading || source === 'master-sheet') return;
     loadRecipesFromDrive()
       .then((driveRecipes) => {
         if (driveRecipes && driveRecipes.length > 0) {
           setRecipes(driveRecipes);
         }
-      })
-      .finally(() => setSyncing(false));
-  }, [accessToken, isAdmin]);
+      });
+  }, [accessToken, isAdmin, loading, source, loadRecipesFromDrive, setRecipes]);
 
   // Save to Drive whenever recipes change (admin only, debounced)
   useEffect(() => {
-    if (!accessToken || !isAdmin || syncing) return;
+    if (!accessToken || !isAdmin || loading || source === 'master-sheet') return;
     const timer = setTimeout(() => saveRecipesToDrive(recipes), 1500);
     return () => clearTimeout(timer);
-  }, [recipes, accessToken, isAdmin]);
+  }, [recipes, accessToken, isAdmin, loading, source, saveRecipesToDrive]);
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
       if (!r.image) return false;
-      const matchSearch = r.title.toLowerCase().includes(search.toLowerCase()) ||
-        r.description?.toLowerCase().includes(search.toLowerCase()) ||
-        r.ingredients.some((i) => i.toLowerCase().includes(search.toLowerCase()));
+      const query = search.toLowerCase();
+      const ingredients = Array.isArray(r.ingredients) ? r.ingredients : [];
+      const matchSearch = r.title.toLowerCase().includes(query) ||
+        r.description?.toLowerCase().includes(query) ||
+        ingredients.some((i) => i.toLowerCase().includes(query));
       const matchCat = category === 'Всички' || r.category === category;
       const matchDiff = difficulty === 'Всички' || r.difficulty === difficulty;
       return matchSearch && matchCat && matchDiff;
     });
   }, [recipes, search, category, difficulty]);
+
+  const categories = useMemo(() => {
+    const values = [...new Set(recipes.map((r) => r.category).filter(Boolean))];
+    return ['Всички', ...values];
+  }, [recipes]);
+
+  const difficulties = useMemo(() => {
+    const values = [...new Set(recipes.map((r) => r.difficulty).filter(Boolean))];
+    return ['Всички', ...values];
+  }, [recipes]);
 
   const handleSave = (data) => {
     if (editRecipe) {
@@ -96,13 +106,17 @@ function RecipeApp() {
           category={category} setCategory={setCategory}
           difficulty={difficulty} setDifficulty={setDifficulty}
           count={filtered.length}
+          categories={categories}
+          difficulties={difficulties}
         />
 
         <div className="mt-6">
-          {syncing ? (
+          {syncing || loading ? (
             <div className="text-center py-16">
               <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-gray-400 mt-3 text-sm">Зарежда от Google Drive...</p>
+              <p className="text-gray-400 mt-3 text-sm">
+                {loading ? 'Зарежда рецептите от master таблицата...' : 'Зарежда от Google Drive...'}
+              </p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
