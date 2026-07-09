@@ -37,7 +37,7 @@
 - [Tailwind CSS 3](https://tailwindcss.com/)
 - [Google OAuth (@react-oauth/google)](https://github.com/MomenSherif/react-oauth-google)
 - [Google Drive API v3](https://developers.google.com/drive/api/v3/about-sdk)
-- GitHub Pages
+- Vercel
 
 ---
 
@@ -55,12 +55,12 @@ TasteMaster показва всички `status=ready` + `recipe_quality=curated
 Снимките се хостват в Google Drive (папка "Recipe App Photos", публично достъпни) и се реферират в `image` като `https://drive.google.com/thumbnail?id=<FILE_ID>&sz=w800`.
 
 ### Потребители (без вход)
-Виждат рецептите от `public/recipes.json`.
+Виждат curated рецептите от master таблицата. Ако таблицата не се зареди, сайтът пада към legacy fallback.
 
 ### Admin (с Google вход)
 - Влиза с Google акаунт
 - Качва снимки в папка "Recipe App Photos" (стават публично достъпни)
-- Може да редактира рецепти в текущата сесия (preview); за публикуване промяната трябва да влезе в `public/recipes.json` и да се push-не в `main`.
+- Може да редактира legacy/локални рецепти в текущата сесия. Master таблицата остава основният източник за публичния каталог.
 
 ---
 
@@ -84,11 +84,10 @@ VITE_ADMIN_EMAIL=...
 
 ## Деплой
 
-Деплоят се случва автоматично при push в `main` чрез GitHub Actions:
+Деплоят е във Vercel:
 
-1. Изтегля актуалните снимки от Google Drive (Apps Script) → `public/photos.json` (за галерията при admin)
-2. Build с `vite build`
-3. Публикува във Vercel → [tastemaster.eu](https://tastemaster.eu)
+1. Build с `vite build`
+2. Публикува във Vercel → [tastemaster.eu](https://tastemaster.eu)
 
 ```bash
 # Ръчен build/deploy (ако е нужен)
