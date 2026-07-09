@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 const STORAGE_KEY = 'culinary-recipes-v2';
 const MASTER_SHEET_CSV_URL = import.meta.env.VITE_MASTER_RECIPES_CSV_URL
   || 'https://docs.google.com/spreadsheets/d/1wxcQ28CslNUa_7-hrhkIKEuO6fF2HAkfSrKxRYmIRek/export?format=csv&gid=1571845576';
+const FETCH_TIMEOUT_MS = 8000;
 
 const APP_LABELS = {
   Breakfast: 'Brunch',
@@ -39,6 +40,17 @@ const COUNTRY_RULES = [
 ];
 
 const isTrue = (value) => String(value || '').toUpperCase() === 'TRUE';
+
+const fetchWithTimeout = async (url, options = {}) => {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+};
 
 const parseCsv = (text) => {
   const rows = [];
@@ -176,7 +188,7 @@ const mapMasterRow = (row) => {
 };
 
 const fetchMasterRecipes = async () => {
-  const response = await fetch(MASTER_SHEET_CSV_URL, { cache: 'no-store' });
+  const response = await fetchWithTimeout(MASTER_SHEET_CSV_URL, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Master sheet failed: ${response.status}`);
 
   const csv = await response.text();
@@ -888,7 +900,7 @@ export function useRecipes() {
 
     const fetchStatic = async () => {
       try {
-        const res = await fetch(import.meta.env.BASE_URL + 'recipes.json');
+        const res = await fetchWithTimeout(import.meta.env.BASE_URL + 'recipes.json');
         if (!res.ok) return null;
         const data = await res.json();
         return looksLikeRecipes(data) ? data : null;
