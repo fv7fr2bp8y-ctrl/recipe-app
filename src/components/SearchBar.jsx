@@ -78,10 +78,10 @@ export default function SearchBar({
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-        <div>
+      <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+        <div className="min-w-0">
           <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Държави</p>
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
+          <div className="flex max-w-full gap-1.5 overflow-x-auto pb-1">
             {countries.map((item) => (
               <button
                 key={item}
