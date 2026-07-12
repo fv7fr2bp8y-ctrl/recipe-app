@@ -7,6 +7,9 @@ import SearchBar from './components/SearchBar';
 import RecipeCard from './components/RecipeCard';
 import RecipeForm from './components/RecipeForm';
 import RecipeDetail from './components/RecipeDetail';
+import DailyRecipe from './components/DailyRecipe';
+import PremiumGate from './components/PremiumGate';
+import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
@@ -31,7 +34,16 @@ function RecipeApp() {
   const [showForm, setShowForm] = useState(false);
   const [editRecipe, setEditRecipe] = useState(null);
   const [viewRecipe, setViewRecipe] = useState(null);
+  const [showPremium, setShowPremium] = useState(false);
   const syncing = false;
+  const {
+    premiumActive,
+    freeViewsRemaining,
+    limitReached,
+    viewedRecipeIds,
+    canOpenRecipe,
+    registerRecipeView,
+  } = useFreemiumAccess(isAdmin);
 
   // Load from Drive when admin connects
   useEffect(() => {
@@ -103,6 +115,27 @@ function RecipeApp() {
     return ['Всички', ...values];
   }, [recipes]);
 
+  const dailyRecipe = useMemo(() => {
+    const available = recipes.filter((recipe) => recipe.image);
+    if (available.length === 0) return recipes[0] || null;
+    const now = new Date();
+    const dayNumber = Math.floor(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+    ) / 86400000);
+    return available[dayNumber % available.length];
+  }, [recipes]);
+
+  const openRecipe = (recipe) => {
+    if (!canOpenRecipe(recipe.id)) {
+      setShowPremium(true);
+      return;
+    }
+    registerRecipeView(recipe.id);
+    setViewRecipe(recipe);
+  };
+
   const handleSave = (data) => {
     if (editRecipe) {
       updateRecipe(editRecipe.id, data);
@@ -140,6 +173,31 @@ function RecipeApp() {
       />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
+        {!loading && (
+          <DailyRecipe
+            recipe={dailyRecipe}
+            onOpen={openRecipe}
+            locked={limitReached}
+          />
+        )}
+
+        {!premiumActive && !loading && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border border-orange-200 bg-white px-4 py-3 text-sm text-stone-600">
+            <span>
+              {limitReached
+                ? 'Безплатният достъп е изчерпан.'
+                : `Остават ${freeViewsRemaining} безплатни рецепти.`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowPremium(true)}
+              className="font-semibold text-orange-700 hover:text-orange-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+            >
+              TasteMaster365 Premium
+            </button>
+          </div>
+        )}
+
         <SearchBar
           search={search} setSearch={setSearch}
           category={category} setCategory={setCategory}
@@ -180,9 +238,10 @@ function RecipeApp() {
                 <RecipeCard
                   key={recipe.id}
                   recipe={recipe}
-                  onClick={() => setViewRecipe(recipe)}
+                  onClick={() => openRecipe(recipe)}
                   onDelete={handleDelete}
                   canEdit={isAdmin}
+                  locked={limitReached && !viewedRecipeIds.includes(String(recipe.id))}
                 />
               ))}
             </div>
@@ -210,6 +269,10 @@ function RecipeApp() {
           onClose={() => setViewRecipe(null)}
           canEdit={isAdmin}
         />
+      )}
+
+      {showPremium && (
+        <PremiumGate onClose={() => setShowPremium(false)} />
       )}
     </div>
   );

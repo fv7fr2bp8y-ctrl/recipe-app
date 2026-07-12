@@ -5,9 +5,11 @@ export default function Header({ onAdd, driveConnected, onDriveSignIn, onDriveSi
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">🍳</span>
+          <span className="flex h-10 w-10 items-center justify-center border border-orange-300 text-xs font-bold tracking-wider text-orange-700" aria-hidden="true">
+            TM
+          </span>
           <div>
-            <h1 className="text-xl font-bold text-gray-800 leading-none tracking-wider">TASTEMASTER</h1>
+            <h1 className="text-xl font-bold text-gray-800 leading-none tracking-wider">TasteMaster365</h1>
             <p className="text-xs text-gray-500 tracking-wide">Recipe Atelier</p>
           </div>
         </div>

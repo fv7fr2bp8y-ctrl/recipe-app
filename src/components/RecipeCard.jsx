@@ -13,7 +13,7 @@ const CATEGORY_ICONS = {
   'Предястие': '🫙',
 };
 
-export default function RecipeCard({ recipe, onClick, onDelete, canEdit }) {
+export default function RecipeCard({ recipe, onClick, onDelete, canEdit, locked = false }) {
   const icon = CATEGORY_ICONS[recipe.category] || '🍴';
   const badges = [
     recipe.isGlutenFree && 'без глутен',
@@ -34,6 +34,13 @@ export default function RecipeCard({ recipe, onClick, onDelete, canEdit }) {
           <div className="text-center px-4">
             <span className="block text-xs uppercase tracking-[0.22em] text-primary-700/70 mb-2">очаква снимка</span>
             <span className="block text-5xl opacity-50">{icon}</span>
+          </div>
+        )}
+        {locked && (
+          <div className="absolute inset-0 flex items-center justify-center bg-stone-950/45 backdrop-blur-[1px]">
+            <span className="border border-white/70 bg-stone-950/60 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">
+              Premium
+            </span>
           </div>
         )}
         {canEdit && (
