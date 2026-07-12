@@ -127,11 +127,12 @@ export const getMessages = (language) => MESSAGES[language] || MESSAGES.bg;
 
 export function localizeRecipe(recipe, language) {
   const translation = recipe.translations?.[language] || recipe.translations?.bg || {};
+  const sourceCountry = recipe.countryKey || recipe.country;
   return {
     ...recipe,
     ...translation,
     country: language === 'bg'
-      ? BG_COUNTRY_LABELS[recipe.countryKey] || translation.country || recipe.country
+      ? BG_COUNTRY_LABELS[sourceCountry] || translation.country || recipe.country
       : translation.country || recipe.country,
     difficultyKey: recipe.difficulty,
     difficulty: DIFFICULTY[language]?.[recipe.difficulty] || recipe.difficulty,
