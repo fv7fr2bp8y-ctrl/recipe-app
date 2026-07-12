@@ -5,7 +5,6 @@ import { useGoogleDrive } from './hooks/useGoogleDrive';
 import Header from './components/Header';
 import SearchBar from './components/SearchBar';
 import RecipeCard from './components/RecipeCard';
-import RecipeForm from './components/RecipeForm';
 import RecipeDetail from './components/RecipeDetail';
 import DailyRecipe from './components/DailyRecipe';
 import PremiumGate from './components/PremiumGate';
@@ -28,8 +27,8 @@ function RecipeApp() {
   const account = useAccount();
   const refreshAccount = account.refresh;
   const catalogRefreshKey = `${account.user?.id || 'guest'}:${account.premium}`;
-  const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes, loading, source, error: catalogError } = useRecipes(catalogRefreshKey);
-  const { accessToken, userEmail, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, makePhotoPublic, scopes } = useGoogleDrive();
+  const { recipes, loading, error: catalogError } = useRecipes(catalogRefreshKey);
+  const { accessToken, userEmail, signIn, signOut, scopes } = useGoogleDrive();
   const accountEmail = account.user?.email?.toLowerCase();
   const isAdmin = Boolean(
     (accountEmail && accountEmail === ADMIN_EMAIL)
@@ -40,8 +39,6 @@ function RecipeApp() {
   const [difficulty, setDifficulty] = useState('Всички');
   const [country, setCountry] = useState('Всички');
   const [dietFilters, setDietFilters] = useState({});
-  const [showForm, setShowForm] = useState(false);
-  const [editRecipe, setEditRecipe] = useState(null);
   const [viewRecipe, setViewRecipe] = useState(null);
   const [showPremium, setShowPremium] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
@@ -52,24 +49,6 @@ function RecipeApp() {
     canOpenRecipe,
     registerRecipeView,
   } = useFreemiumAccess(recipes, isAdmin || account.premium);
-
-  // Load from Drive when admin connects
-  useEffect(() => {
-    if (!accessToken || !isAdmin || loading || source === 'secure-api') return;
-    loadRecipesFromDrive()
-      .then((driveRecipes) => {
-        if (driveRecipes && driveRecipes.length > 0) {
-          setRecipes(driveRecipes);
-        }
-      });
-  }, [accessToken, isAdmin, loading, source, loadRecipesFromDrive, setRecipes]);
-
-  // Save to Drive whenever recipes change (admin only, debounced)
-  useEffect(() => {
-    if (!accessToken || !isAdmin || loading || source === 'secure-api') return;
-    const timer = setTimeout(() => saveRecipesToDrive(recipes), 1500);
-    return () => clearTimeout(timer);
-  }, [recipes, accessToken, isAdmin, loading, source, saveRecipesToDrive]);
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
@@ -159,33 +138,9 @@ function RecipeApp() {
     setViewRecipe(recipe);
   };
 
-  const handleSave = (data) => {
-    if (editRecipe) {
-      updateRecipe(editRecipe.id, data);
-      if (viewRecipe?.id === editRecipe.id) setViewRecipe({ ...viewRecipe, ...data });
-    } else {
-      addRecipe(data);
-    }
-    setShowForm(false);
-    setEditRecipe(null);
-  };
-
-  const handleEdit = () => {
-    setEditRecipe(viewRecipe);
-    setShowForm(true);
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm('Сигурни ли сте, че искате да изтриете тази рецепта?')) {
-      deleteRecipe(id);
-      if (viewRecipe?.id === id) setViewRecipe(null);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-[#fef9f0]">
       <Header
-        onAdd={() => { setEditRecipe(null); setShowForm(true); }}
         driveConnected={!!accessToken}
         onDriveSignIn={signIn}
         onDriveSignOut={signOut}
@@ -272,8 +227,6 @@ function RecipeApp() {
                   key={recipe.id}
                   recipe={recipe}
                   onClick={() => openRecipe(recipe)}
-                  onDelete={handleDelete}
-                  canEdit={isAdmin}
                   locked={Boolean(recipe.locked)}
                 />
               ))}
@@ -282,25 +235,10 @@ function RecipeApp() {
         </div>
       </main>
 
-      {showForm && (
-        <RecipeForm
-          recipe={editRecipe}
-          onSave={handleSave}
-          onClose={() => { setShowForm(false); setEditRecipe(null); }}
-          uploadImage={uploadImage}
-          uploading={uploading}
-          driveConnected={!!accessToken}
-          listDrivePhotos={listDrivePhotos}
-          makePhotoPublic={makePhotoPublic}
-        />
-      )}
-
-      {viewRecipe && !showForm && (
+      {viewRecipe && (
         <RecipeDetail
           recipe={viewRecipe}
-          onEdit={handleEdit}
           onClose={() => setViewRecipe(null)}
-          canEdit={isAdmin}
         />
       )}
 

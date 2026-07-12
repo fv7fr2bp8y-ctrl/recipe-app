@@ -27,27 +27,8 @@ export function useRecipes(refreshKey = 0) {
     return () => window.clearTimeout(timer);
   }, [load, refreshKey]);
 
-  const addRecipe = (recipe) => {
-    const newRecipe = { ...recipe, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-    setRecipes((current) => [newRecipe, ...current]);
-    return newRecipe;
-  };
-  const updateRecipe = (id, updates) => {
-    setRecipes((current) => current.map((recipe) => (
-      recipe.id === id ? { ...recipe, ...updates } : recipe
-    )));
-  };
-  const deleteRecipe = (id) => {
-    setRecipes((current) => current.filter((recipe) => recipe.id !== id));
-  };
-
   return {
     recipes,
-    setRecipes,
-    addRecipe,
-    updateRecipe,
-    deleteRecipe,
-    source: 'secure-api',
     loading: !loaded,
     error,
     reload: load,

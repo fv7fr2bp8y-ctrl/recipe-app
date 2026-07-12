@@ -69,12 +69,12 @@ TasteMaster показва всички `status=ready` + `recipe_quality=curated
 - С активен Stripe абонамент: целият каталог.
 - При отмяна или изтекъл абонамент webhook-ът актуализира entitlement-а и каталогът отново се заключва.
 
-Пълният стар `recipes.json` е преместен извън `public/`, за да не заобикаля API проверката.
+Master Google таблицата е единственият източник на рецепти. Приложението няма fallback към стар `recipes.json`, локален каталог или Drive копие; ако таблицата не е достъпна, каталогът показва грешка вместо стари данни.
 
 ### Admin (с Google вход)
 - Влиза с Google акаунт
 - Качва снимки в папка "Recipe App Photos" (стават публично достъпни)
-- Може да редактира legacy/локални рецепти в текущата сесия. Master таблицата остава основният източник за публичния каталог.
+- Рецептите и метаданните се редактират само в master таблицата.
 
 ---
 
@@ -154,13 +154,12 @@ src/
 │   ├── SearchBar.jsx        # Търсене и филтри
 │   ├── RecipeCard.jsx       # Карта за рецепта в грида
 │   ├── RecipeDetail.jsx     # Модален детайлен изглед
-│   ├── RecipeForm.jsx       # Форма за добавяне/редактиране
 │   ├── DrivePhotoPicker.jsx # Избор на снимка от галерия
 │   └── GoogleAuthButton.jsx # Бутон за Google OAuth
 └── hooks/
     ├── useRecipes.js        # защитен fetch от /api/recipes
     ├── useAccount.js        # TasteMaster сесия + Checkout/Portal
-    └── useGoogleDrive.js    # OAuth, upload, Drive sync
+    └── useGoogleDrive.js    # OAuth и качване на снимки
 api/
 ├── auth/                    # register, login, Google admin session, me, logout
 ├── billing/                 # checkout, portal, webhook

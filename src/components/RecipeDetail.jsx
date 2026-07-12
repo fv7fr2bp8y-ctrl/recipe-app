@@ -4,7 +4,7 @@ const DIFFICULTY_COLORS = {
   'Трудно': 'bg-red-100 text-red-700',
 };
 
-export default function RecipeDetail({ recipe, onEdit, onClose, canEdit }) {
+export default function RecipeDetail({ recipe, onClose }) {
   const badges = [
     recipe.isGlutenFree && 'без глутен',
     recipe.isDairyFree && 'без млечни',
@@ -36,14 +36,6 @@ export default function RecipeDetail({ recipe, onEdit, onClose, canEdit }) {
         <div className="p-5">
           <div className="flex items-start justify-between gap-2 mb-2">
             <h2 className="text-xl font-bold text-gray-800">{recipe.title}</h2>
-            {canEdit && (
-              <button
-                onClick={onEdit}
-                className="text-xs border border-gray-200 text-gray-500 hover:border-primary-400 hover:text-primary-600 px-3 py-1 rounded-lg transition-colors shrink-0"
-              >
-                ✏️ Редактирай
-              </button>
-            )}
           </div>
 
           {recipe.description && (

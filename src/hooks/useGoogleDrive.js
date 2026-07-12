@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 
 const FOLDER_NAME = 'Recipe App Photos';
-const RECIPES_FILENAME = 'recipes.json';
 const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email';
 
 export function useGoogleDrive() {
@@ -86,58 +85,6 @@ export function useGoogleDrive() {
     }
   }, [accessToken, getOrCreateFolder]);
 
-  const saveRecipesToDrive = useCallback(async (recipes) => {
-    if (!accessToken) return;
-    try {
-      const folderId = await getOrCreateFolder(accessToken);
-      const search = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name='${RECIPES_FILENAME}' and '${folderId}' in parents and trashed=false&fields=files(id)`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      const { files } = await search.json();
-      const blob = new Blob([JSON.stringify(recipes)], { type: 'application/json' });
-
-      if (files.length > 0) {
-        await fetch(
-          `https://www.googleapis.com/upload/drive/v3/files/${files[0].id}?uploadType=media`,
-          { method: 'PATCH', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }, body: blob }
-        );
-      } else {
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify({ name: RECIPES_FILENAME, parents: [folderId] })], { type: 'application/json' }));
-        form.append('file', blob);
-        await fetch(
-          'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',
-          { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` }, body: form }
-        );
-      }
-    } catch (err) {
-      console.error('Drive save error:', err);
-    }
-  }, [accessToken, getOrCreateFolder]);
-
-  const loadRecipesFromDrive = useCallback(async () => {
-    if (!accessToken) return null;
-    try {
-      const folderId = await getOrCreateFolder(accessToken);
-      const search = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name='${RECIPES_FILENAME}' and '${folderId}' in parents and trashed=false&fields=files(id)`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      const { files } = await search.json();
-      if (!files.length) return null;
-
-      const res = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${files[0].id}?alt=media`,
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      return await res.json();
-    } catch (err) {
-      console.error('Drive load error:', err);
-      return null;
-    }
-  }, [accessToken, getOrCreateFolder]);
-
   // Зарежда снимките от статичния photos.json (без CORS проблеми)
   const listDrivePhotos = useCallback(async () => {
     try {
@@ -162,7 +109,6 @@ export function useGoogleDrive() {
   return {
     accessToken, userEmail, signIn, signOut,
     uploadImage, uploading,
-    saveRecipesToDrive, loadRecipesFromDrive,
     listDrivePhotos, makePhotoPublic,
     scopes: SCOPES,
   };
