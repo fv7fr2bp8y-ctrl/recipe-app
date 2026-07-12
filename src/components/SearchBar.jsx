@@ -1,3 +1,5 @@
+import { Search, X } from 'lucide-react';
+
 const CATEGORIES = ['Всички', 'Основно ястие', 'Салата', 'Супа', 'Десерт', 'Закуска', 'Предястие'];
 const DIFFICULTIES = ['Всички', 'Лесно', 'Средно', 'Трудно'];
 
@@ -18,14 +20,17 @@ export default function SearchBar({
   totalCount,
   categories = CATEGORIES,
   difficulties = DIFFICULTIES,
+  messages,
+  allValue = '__all__',
 }) {
+  const optionLabel = (value) => value === allValue ? messages.all : value;
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+        <Search size={18} strokeWidth={1.5} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
         <input
           type="text"
-          placeholder="Търси рецепта, съставка, държава..."
+          placeholder={messages.search}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent"
@@ -35,13 +40,13 @@ export default function SearchBar({
             onClick={() => setSearch('')}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
-            ✕
+            <X size={16} strokeWidth={1.5} />
           </button>
         )}
       </div>
 
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Каталог</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">{messages.catalog}</p>
         <div className="flex flex-wrap gap-1.5">
           {categories.map((cat) => (
           <button
@@ -53,14 +58,14 @@ export default function SearchBar({
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            {cat}
+            {optionLabel(cat)}
           </button>
         ))}
         </div>
       </div>
 
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Режими</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">{messages.diets}</p>
         <div className="flex flex-wrap gap-1.5">
           {dietFilterOptions.map(({ key, label }) => (
             <button
@@ -80,7 +85,7 @@ export default function SearchBar({
 
       <div>
         <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Държави</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">{messages.countries}</p>
           <div className="flex max-w-full gap-1.5 overflow-x-auto pb-1">
             {countries.map((item) => (
               <button
@@ -92,7 +97,7 @@ export default function SearchBar({
                     : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                 }`}
               >
-                {item}
+                {optionLabel(item)}
               </button>
             ))}
           </div>
@@ -100,7 +105,7 @@ export default function SearchBar({
       </div>
 
       <div>
-        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">Трудност</p>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">{messages.difficulty}</p>
         <div className="flex flex-wrap gap-1.5">
           {difficulties.map((d) => (
             <button
@@ -112,15 +117,15 @@ export default function SearchBar({
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              {d}
+              {optionLabel(d)}
             </button>
           ))}
         </div>
       </div>
 
       <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-        <span className="text-xs text-gray-400">{count} от {totalCount || count} рецепти</span>
-        <span className="text-xs text-gray-400">TasteMaster</span>
+        <span className="text-xs text-gray-400">{count} / {totalCount || count} {messages.recipes}</span>
+        <span className="text-xs text-gray-400">TasteMaster365</span>
       </div>
     </div>
   );

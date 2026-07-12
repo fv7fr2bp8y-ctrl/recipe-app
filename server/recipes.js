@@ -1,4 +1,6 @@
-import { FREE_RECIPE_LIMIT, MASTER_SHEET_CSV_URL } from './config.js';
+import { FREE_RECIPE_IDS, MASTER_SHEET_CSV_URL } from './config.js';
+
+const LANGUAGES = ['bg', 'en', 'de', 'es', 'fr', 'ru'];
 
 const APP_LABELS = {
   Breakfast: 'Brunch',
@@ -75,6 +77,25 @@ function mapRow(row) {
     meatFree: isTrue(row.is_meat_free),
     plantBased: isTrue(row.is_plant_based),
   };
+  const translations = Object.fromEntries(LANGUAGES.map((language) => {
+    const isBulgarian = language === 'bg';
+    const title = isBulgarian ? row.canonical_name_bg : row[`name_${language}`];
+    const description = isBulgarian ? row.description_bg : row[`description_${language}`];
+    const ingredients = isBulgarian
+      ? row.ingredients_qty_bg || row.ingredients_bg
+      : row[`ingredients_qty_${language}`] || row[`ingredients_${language}`];
+    const steps = isBulgarian ? row.steps_bg : row[`steps_${language}`];
+    const tag = isBulgarian ? row.tag : row[`tag_${language}`];
+    const country = isBulgarian ? row.country_bg : row[`country_${language}`];
+    return [language, {
+      title: title || row.canonical_name_bg,
+      description: description || row.description_bg || row.tag || '',
+      ingredients: splitList(ingredients || row.ingredients_qty_bg || row.ingredients_bg),
+      steps: splitSteps(steps || row.steps_bg),
+      tag: tag || row.tag || '',
+      country: country || row.country_bg || row.country_en || 'Световна кухня',
+    }];
+  }));
   return {
     id: row.global_id,
     title: row.canonical_name_bg,
@@ -93,6 +114,7 @@ function mapRow(row) {
     tag: row.tag,
     allergenNotes: row.allergen_notes,
     nutritionNotes: row.nutrition_notes,
+    translations,
   };
 }
 
@@ -109,6 +131,14 @@ function lockedPreview(recipe) {
     image: recipe.image,
     diets: recipe.diets,
     tag: recipe.tag,
+    translations: Object.fromEntries(Object.entries(recipe.translations).map(([language, translation]) => (
+      [language, {
+        title: translation.title,
+        description: translation.description,
+        tag: translation.tag,
+        country: translation.country,
+      }]
+    ))),
     locked: true,
   };
 }
@@ -133,7 +163,14 @@ export async function loadMasterRecipes() {
 export async function catalogForAccess(hasPremium) {
   const recipes = await loadMasterRecipes();
   if (hasPremium) return recipes.map((recipe) => ({ ...recipe, locked: false }));
-  return recipes.map((recipe, index) => (
-    index < FREE_RECIPE_LIMIT ? { ...recipe, locked: false } : lockedPreview(recipe)
-  ));
+  const freeIds = new Set(FREE_RECIPE_IDS);
+  const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
+  const freeRecipes = FREE_RECIPE_IDS
+    .map((id) => byId.get(id))
+    .filter(Boolean)
+    .map((recipe) => ({ ...recipe, locked: false }));
+  const premiumPreviews = recipes
+    .filter((recipe) => !freeIds.has(recipe.id))
+    .map(lockedPreview);
+  return [...freeRecipes, ...premiumPreviews];
 }

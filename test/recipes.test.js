@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { FREE_RECIPE_IDS } from '../server/config.js';
 
 const headers = [
   'global_id', 'canonical_name_bg', 'app_primary', 'meal_type', 'time_min', 'tag',
@@ -9,9 +10,9 @@ const headers = [
   'country_en', 'servings', 'ingredients_qty_bg',
 ];
 
-function row(index) {
+function row(index, id) {
   return [
-    `T-${index}`, `Рецепта ${index}`, 'Brunch', 'закуска', '20', 'тест',
+    id, `Рецепта ${index}`, 'Brunch', 'закуска', '20', 'тест',
     `Описание ${index}`, 'яйца; сол', 'Смеси. Изпечи.', '', '', 'ready',
     'ready', 'curated', 'TRUE', 'FALSE', 'FALSE', 'FALSE', 'TRUE', 'FALSE',
     'Bulgaria', '2', '2 яйца; 1 щипка сол',
@@ -20,7 +21,12 @@ function row(index) {
 
 global.fetch = async () => ({
   ok: true,
-  text: async () => [headers.join(','), ...Array.from({ length: 14 }, (_, index) => row(index + 1))].join('\n'),
+  text: async () => [
+    headers.join(','),
+    row(1, 'LOCKED-FIRST'),
+    ...FREE_RECIPE_IDS.map((id, index) => row(index + 2, id)),
+    row(14, 'LOCKED-LAST'),
+  ].join('\n'),
 });
 
 test('free catalog exposes full details for 12 recipes only', async () => {
@@ -29,6 +35,7 @@ test('free catalog exposes full details for 12 recipes only', async () => {
   assert.equal(catalog.length, 14);
   assert.equal(catalog.filter((recipe) => !recipe.locked).length, 12);
   assert.deepEqual(catalog[0].ingredients, ['2 яйца', '1 щипка сол']);
+  assert.deepEqual(catalog.filter((recipe) => !recipe.locked).map((recipe) => recipe.id), FREE_RECIPE_IDS);
   assert.equal(catalog[12].locked, true);
   assert.equal('ingredients' in catalog[12], false);
   assert.equal('steps' in catalog[12], false);

@@ -9,46 +9,58 @@ import RecipeDetail from './components/RecipeDetail';
 import DailyRecipe from './components/DailyRecipe';
 import PremiumGate from './components/PremiumGate';
 import AccountDialog from './components/AccountDialog';
+import Footer from './components/Footer';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
+import { getMessages, localizeRecipe } from './i18n';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
-
-const DIET_FILTERS = [
-  { key: 'glutenFree', label: 'Без глутен' },
-  { key: 'dairyFree', label: 'Без млечни' },
-  { key: 'meatFree', label: 'Без месо' },
-  { key: 'plantBased', label: 'Растително' },
-  { key: 'healthyGut', label: 'Healthy Gut' },
-];
+const ALL_FILTER = '__all__';
 
 function RecipeApp() {
   const account = useAccount();
   const refreshAccount = account.refresh;
   const catalogRefreshKey = `${account.user?.id || 'guest'}:${account.premium}`;
-  const { recipes, loading, error: catalogError } = useRecipes(catalogRefreshKey);
+  const { recipes: sourceRecipes, loading, error: catalogError } = useRecipes(catalogRefreshKey);
   const { accessToken, userEmail, signIn, signOut, scopes } = useGoogleDrive();
   const accountEmail = account.user?.email?.toLowerCase();
   const isAdmin = Boolean(
     (accountEmail && accountEmail === ADMIN_EMAIL)
     || (userEmail && userEmail.toLowerCase() === ADMIN_EMAIL),
   );
+  const [language, setLanguage] = useState(() => localStorage.getItem('tastemaster-language') || 'bg');
+  const messages = getMessages(language);
+  const recipes = useMemo(() => sourceRecipes.map((recipe) => localizeRecipe(recipe, language)), [sourceRecipes, language]);
+  const dietFilterOptions = useMemo(() => [
+    { key: 'glutenFree', label: messages.glutenFree },
+    { key: 'dairyFree', label: messages.dairyFree },
+    { key: 'meatFree', label: messages.meatFree },
+    { key: 'plantBased', label: messages.plantBased },
+    { key: 'healthyGut', label: messages.healthyGut },
+  ], [messages]);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('Всички');
-  const [difficulty, setDifficulty] = useState('Всички');
-  const [country, setCountry] = useState('Всички');
+  const [category, setCategory] = useState(ALL_FILTER);
+  const [difficulty, setDifficulty] = useState(ALL_FILTER);
+  const [country, setCountry] = useState(ALL_FILTER);
   const [dietFilters, setDietFilters] = useState({});
-  const [viewRecipe, setViewRecipe] = useState(null);
+  const [viewRecipeId, setViewRecipeId] = useState(() => new URLSearchParams(window.location.search).get('recipe'));
   const [showPremium, setShowPremium] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
+  const [toast, setToast] = useState('');
   const syncing = false;
   const {
     premiumActive,
-    freeViewsRemaining,
     canOpenRecipe,
     registerRecipeView,
   } = useFreemiumAccess(recipes, isAdmin || account.premium);
+  const linkedRecipe = recipes.find((recipe) => recipe.id === viewRecipeId) || null;
+  const viewRecipe = linkedRecipe && canOpenRecipe(linkedRecipe.id) ? linkedRecipe : null;
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    localStorage.setItem('tastemaster-language', language);
+  }, [language]);
 
   const filtered = useMemo(() => {
     return recipes.filter((r) => {
@@ -66,23 +78,23 @@ function RecipeApp() {
         ...ingredients,
       ].filter(Boolean).join(' ').toLowerCase();
       const matchSearch = !query || searchable.includes(query);
-      const matchCat = category === 'Всички' || r.collection === category || r.category === category;
-      const matchDiff = difficulty === 'Всички' || r.difficulty === difficulty;
-      const matchCountry = country === 'Всички' || r.country === country;
-      const matchDiet = DIET_FILTERS.every(({ key }) => !dietFilters[key] || r.diets?.[key]);
+      const matchCat = category === ALL_FILTER || r.collection === category || r.category === category;
+      const matchDiff = difficulty === ALL_FILTER || r.difficulty === difficulty;
+      const matchCountry = country === ALL_FILTER || r.country === country;
+      const matchDiet = dietFilterOptions.every(({ key }) => !dietFilters[key] || r.diets?.[key]);
       return matchSearch && matchCat && matchDiff && matchCountry && matchDiet;
     });
-  }, [recipes, search, category, difficulty, country, dietFilters]);
+  }, [recipes, search, category, difficulty, country, dietFilters, dietFilterOptions]);
 
   const categories = useMemo(() => {
     const values = [...new Set(recipes.map((r) => r.collection || r.category).filter(Boolean))];
-    return ['Всички', ...values];
+    return [ALL_FILTER, ...values];
   }, [recipes]);
 
   const countries = useMemo(() => {
     const values = [...new Set(recipes.map((r) => r.country).filter(Boolean))]
       .sort((a, b) => a.localeCompare(b, 'bg'));
-    return ['Всички', ...values];
+    return [ALL_FILTER, ...values];
   }, [recipes]);
 
   const toggleDietFilter = (key) => {
@@ -91,15 +103,15 @@ function RecipeApp() {
 
   const clearFilters = () => {
     setSearch('');
-    setCategory('Всички');
-    setDifficulty('Всички');
-    setCountry('Всички');
+    setCategory(ALL_FILTER);
+    setDifficulty(ALL_FILTER);
+    setCountry(ALL_FILTER);
     setDietFilters({});
   };
 
   const difficulties = useMemo(() => {
     const values = [...new Set(recipes.map((r) => r.difficulty).filter(Boolean))];
-    return ['Всички', ...values];
+    return [ALL_FILTER, ...values];
   }, [recipes]);
 
   const dailyRecipe = useMemo(() => {
@@ -135,7 +147,32 @@ function RecipeApp() {
       return;
     }
     registerRecipeView(recipe.id);
-    setViewRecipe(recipe);
+    setViewRecipeId(recipe.id);
+    window.history.replaceState({}, '', `?recipe=${encodeURIComponent(recipe.id)}`);
+  };
+
+  const share = async (recipe = null) => {
+    const url = new URL(window.location.origin);
+    if (recipe) url.searchParams.set('recipe', recipe.id);
+    const data = {
+      title: recipe ? `${recipe.title} · TasteMaster365` : 'TasteMaster365',
+      text: recipe?.description || messages.tagline,
+      url: url.toString(),
+    };
+    try {
+      if (navigator.share) await navigator.share(data);
+      else {
+        await navigator.clipboard.writeText(data.url);
+        setToast(messages.copied);
+        window.setTimeout(() => setToast(''), 2200);
+      }
+    } catch (error) {
+      if (error?.name !== 'AbortError') {
+        await navigator.clipboard.writeText(data.url);
+        setToast(messages.copied);
+        window.setTimeout(() => setToast(''), 2200);
+      }
+    }
   };
 
   return (
@@ -154,6 +191,10 @@ function RecipeApp() {
         accountLoading={account.loading || account.actionLoading}
         premium={account.premium}
         onManageBilling={account.manageBilling}
+        language={language}
+        onLanguageChange={setLanguage}
+        onShare={() => share()}
+        messages={messages}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -161,23 +202,11 @@ function RecipeApp() {
           <DailyRecipe
             recipe={dailyRecipe}
             onOpen={openRecipe}
+            onShare={share}
             locked={Boolean(dailyRecipe?.locked)}
+            language={language}
+            messages={messages}
           />
-        )}
-
-        {!premiumActive && !loading && (
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border border-orange-200 bg-white px-4 py-3 text-sm text-stone-600">
-            <span>
-              {freeViewsRemaining} рецепти са достъпни безплатно. Останалият каталог е Premium.
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowPremium(true)}
-              className="font-semibold text-orange-700 hover:text-orange-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
-            >
-              TasteMaster365 Premium
-            </button>
-          </div>
         )}
 
         <SearchBar
@@ -187,12 +216,14 @@ function RecipeApp() {
           country={country} setCountry={setCountry}
           countries={countries}
           dietFilters={dietFilters}
-          dietFilterOptions={DIET_FILTERS}
+          dietFilterOptions={dietFilterOptions}
           onToggleDiet={toggleDietFilter}
           count={filtered.length}
           totalCount={recipes.length}
           categories={categories}
           difficulties={difficulties}
+          messages={messages}
+          allValue={ALL_FILTER}
         />
 
         {catalogError ? (
@@ -206,18 +237,18 @@ function RecipeApp() {
             <div className="text-center py-16">
               <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-gray-400 mt-3 text-sm">
-                {loading ? 'Зарежда защитения каталог...' : 'Зарежда от Google Drive...'}
+                {messages.loading}
               </p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-16">
-              <span className="text-5xl">🍽️</span>
-              <p className="text-gray-400 mt-3">Няма намерени рецепти</p>
+              <span className="text-2xl text-orange-400" aria-hidden="true">◆</span>
+              <p className="text-gray-400 mt-3">{messages.noResults}</p>
               <button
                 onClick={clearFilters}
                 className="mt-3 text-primary-600 text-sm hover:underline"
               >
-                Изчисти филтрите
+                {messages.clear}
               </button>
             </div>
           ) : (
@@ -228,6 +259,7 @@ function RecipeApp() {
                   recipe={recipe}
                   onClick={() => openRecipe(recipe)}
                   locked={Boolean(recipe.locked)}
+                  messages={messages}
                 />
               ))}
             </div>
@@ -235,10 +267,14 @@ function RecipeApp() {
         </div>
       </main>
 
+      <Footer messages={messages} />
+
       {viewRecipe && (
         <RecipeDetail
           recipe={viewRecipe}
-          onClose={() => setViewRecipe(null)}
+          onClose={() => { setViewRecipeId(null); window.history.replaceState({}, '', window.location.pathname); }}
+          onShare={share}
+          messages={messages}
         />
       )}
 
@@ -252,6 +288,7 @@ function RecipeApp() {
           premium={account.premium}
           loading={account.actionLoading}
           error={account.error}
+          messages={messages}
         />
       )}
       {showAccount && (
@@ -265,8 +302,10 @@ function RecipeApp() {
           }}
           loading={account.actionLoading}
           error={account.error}
+          messages={messages}
         />
       )}
+      {toast && <div className="fixed bottom-6 left-1/2 z-[80] -translate-x-1/2 bg-stone-900 px-5 py-3 text-xs font-semibold uppercase tracking-[0.16em] text-white shadow-xl">{toast}</div>}
     </div>
   );
 }

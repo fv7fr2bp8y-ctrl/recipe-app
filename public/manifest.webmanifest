@@ -1,0 +1,13 @@
+{
+  "name": "TasteMaster365",
+  "short_name": "TasteMaster",
+  "description": "Рецепти от света за всеки ден.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffaf2",
+  "theme_color": "#fffaf2",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

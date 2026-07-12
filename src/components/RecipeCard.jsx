@@ -4,17 +4,7 @@ const DIFFICULTY_COLORS = {
   'Трудно': 'bg-red-100 text-red-700',
 };
 
-const CATEGORY_ICONS = {
-  'Основно ястие': '🍽️',
-  'Салата': '🥗',
-  'Супа': '🍲',
-  'Десерт': '🍰',
-  'Закуска': '🥐',
-  'Предястие': '🫙',
-};
-
-export default function RecipeCard({ recipe, onClick, onDelete, canEdit, locked = false }) {
-  const icon = CATEGORY_ICONS[recipe.category] || '🍴';
+export default function RecipeCard({ recipe, onClick, locked = false, messages }) {
   const badges = [
     recipe.isGlutenFree && 'без глутен',
     recipe.isDairyFree && 'без млечни',
@@ -29,11 +19,11 @@ export default function RecipeCard({ recipe, onClick, onDelete, canEdit, locked 
     >
       <div className="relative h-44 bg-gradient-to-br from-primary-100 to-orange-50 flex items-center justify-center overflow-hidden">
         {recipe.image ? (
-          <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover" />
+          <img src={recipe.image} alt={recipe.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         ) : (
           <div className="text-center px-4">
-            <span className="block text-xs uppercase tracking-[0.22em] text-primary-700/70 mb-2">очаква снимка</span>
-            <span className="block text-5xl opacity-50">{icon}</span>
+            <span className="block text-xs uppercase tracking-[0.22em] text-primary-700/70 mb-2">{messages.imagePending}</span>
+            <img src="/tastemaster-mark.svg" alt="" className="mx-auto mt-3 h-12 w-12 opacity-30" />
           </div>
         )}
         {locked && (
@@ -42,15 +32,6 @@ export default function RecipeCard({ recipe, onClick, onDelete, canEdit, locked 
               Premium
             </span>
           </div>
-        )}
-        {canEdit && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(recipe.id); }}
-            className="absolute top-2 right-2 bg-white/80 hover:bg-red-500 hover:text-white text-gray-500 rounded-full w-7 h-7 flex items-center justify-center text-xs transition-colors opacity-0 group-hover:opacity-100"
-            title="Изтрий"
-          >
-            🗑
-          </button>
         )}
       </div>
 
@@ -64,11 +45,11 @@ export default function RecipeCard({ recipe, onClick, onDelete, canEdit, locked 
         )}
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[recipe.difficulty] || 'bg-gray-100 text-gray-600'}`}>
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${DIFFICULTY_COLORS[recipe.difficultyKey] || 'bg-gray-100 text-gray-600'}`}>
             {recipe.difficulty}
           </span>
-          <span className="text-xs text-gray-400">⏱ {recipe.time} мин</span>
-          <span className="text-xs text-gray-400">👤 {recipe.servings} порции</span>
+          <span className="text-xs text-gray-400">{recipe.time} {messages.minutes}</span>
+          <span className="text-xs text-gray-400">{recipe.servings} {messages.servings}</span>
           {recipe.country && (
             <span className="text-xs text-gray-400">{recipe.country}</span>
           )}
@@ -76,7 +57,7 @@ export default function RecipeCard({ recipe, onClick, onDelete, canEdit, locked 
 
         <div className="mt-2 flex flex-wrap gap-1.5">
           <span className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full">
-            {icon} {recipe.category}
+            {recipe.category}
           </span>
           {badges.map((badge) => (
             <span key={badge} className="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">

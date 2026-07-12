@@ -9,6 +9,7 @@ export default function PremiumGate({
   premium,
   loading,
   error,
+  messages,
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/55 p-4 backdrop-blur-sm">
@@ -22,19 +23,18 @@ export default function PremiumGate({
           TasteMaster365 Premium
         </p>
         <h2 id="premium-title" className="mt-3 text-2xl font-semibold text-stone-900">
-          {premium ? 'Premium е активен' : 'Отключи целия каталог'}
+          {premium ? messages.premiumActive : messages.unlockTitle}
         </h2>
         <p className="mt-3 text-sm leading-6 text-stone-600">
-          {FREE_RECIPE_LIMIT} рецепти са достъпни безплатно. Premium отключва всички рецепти,
-          хранителни режими, държави и всяко ново попълнение.
+          {FREE_RECIPE_LIMIT} {messages.recipes}. {messages.premiumCopy}
         </p>
         <div className="mt-6 border-y border-orange-200 py-4">
           <div className="flex items-baseline justify-between gap-4">
-            <span className="text-sm text-stone-600">Месечен абонамент</span>
+            <span className="text-sm text-stone-600">{messages.monthly}</span>
             <strong className="text-xl text-stone-900">€1.99</strong>
           </div>
           <p className="mt-2 text-xs leading-5 text-stone-500">
-            Защитено плащане чрез Stripe. Можеш да прекратиш абонамента по всяко време.
+            {messages.cancelAnytime}
           </p>
         </div>
 
@@ -47,7 +47,7 @@ export default function PremiumGate({
             disabled={loading}
             className="mt-6 w-full bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800 disabled:opacity-60"
           >
-            Управление на абонамента
+            {messages.manage}
           </button>
         ) : authenticated ? (
           <button
@@ -56,7 +56,7 @@ export default function PremiumGate({
             disabled={loading}
             className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
           >
-            {loading ? 'Отваряне на Stripe...' : 'Отключи TasteMaster365'}
+            {loading ? messages.wait : messages.unlock}
           </button>
         ) : (
           <button
@@ -65,7 +65,7 @@ export default function PremiumGate({
             disabled={loading}
             className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
           >
-            Вход или нов профил
+            {messages.loginOrRegister}
           </button>
         )}
 
@@ -74,7 +74,7 @@ export default function PremiumGate({
           onClick={onClose}
           className="mt-3 w-full px-4 py-2 text-sm text-stone-500 hover:text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
         >
-          Назад към каталога
+          {messages.backCatalog}
         </button>
       </div>
     </div>

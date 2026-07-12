@@ -1,5 +1,20 @@
 export const FREE_RECIPE_LIMIT = 12;
 
+export const FREE_RECIPE_IDS = [
+  'BR-E001',
+  'BR-E004',
+  'BR-E008',
+  'BR-E011',
+  'BR-C001',
+  'BR-C002',
+  'BR-C003',
+  'BR-C005',
+  'BR-C008',
+  'BR-C012',
+  'FF-C003',
+  'FF-C004',
+];
+
 export const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID
   || 'price_1TsOCpDbRc9nb2mVhLaqc9fk';
 

@@ -1,0 +1,98 @@
+export const LANGUAGES = [
+  { code: 'bg', label: 'Български', short: 'BG' },
+  { code: 'en', label: 'English', short: 'EN' },
+  { code: 'de', label: 'Deutsch', short: 'DE' },
+  { code: 'es', label: 'Español', short: 'ES' },
+  { code: 'fr', label: 'Français', short: 'FR' },
+  { code: 'ru', label: 'Русский', short: 'RU' },
+];
+
+const MESSAGES = {
+  bg: {
+    tagline: 'Рецепти от света', daily: 'Рецепта на деня', open: 'Отвори рецептата', premium: 'Виж Premium',
+    search: 'Търси рецепта, съставка, държава...', catalog: 'Каталог', diets: 'Режими', countries: 'Държави', difficulty: 'Трудност',
+    all: 'Всички', recipes: 'рецепти', ingredients: 'Съставки', steps: 'Начин на приготвяне', minutes: 'мин', servings: 'порции',
+    noResults: 'Няма намерени рецепти', clear: 'Изчисти филтрите', loading: 'Зарежда каталога...', imagePending: 'Снимката се подготвя',
+    share: 'Сподели', language: 'Език', copied: 'Линкът е копиран', contact: 'Контакт', rights: '© 2026 New Age Studio. Всички права запазени.',
+    note: 'Рецепти за вдъхновение. Съобразявайте съставките с личните си нужди и алергии.', login: 'Вход', logout: 'Изход',
+    premiumActive: 'Premium е активен', unlockTitle: 'Отключи целия каталог', premiumCopy: 'Premium отключва всички рецепти, режими, държави и всяко ново попълнение.', monthly: 'Месечен абонамент', cancelAnytime: 'Защитено плащане чрез Stripe. Можеш да прекратиш по всяко време.', manage: 'Управление на абонамента', unlock: 'Отключи TasteMaster365', loginOrRegister: 'Вход или нов профил', backCatalog: 'Назад към каталога',
+    newProfile: 'Нов профил', welcome: 'Добре дошъл отново', createProfile: 'Създай TasteMaster профил', name: 'Име', email: 'Имейл', password: 'Парола', minChars: 'Поне 10 знака.', wait: 'Моля, изчакай...', create: 'Създай профил', help: 'Помощ за профил', back: 'Назад',
+    glutenFree: 'Без глутен', dairyFree: 'Без млечни', meatFree: 'Без месо', plantBased: 'Растително', healthyGut: 'Healthy Gut',
+  },
+  en: {
+    tagline: 'Recipes from the world', daily: 'Recipe of the day', open: 'Open recipe', premium: 'View Premium',
+    search: 'Search recipes, ingredients, countries...', catalog: 'Catalogue', diets: 'Diets', countries: 'Countries', difficulty: 'Difficulty',
+    all: 'All', recipes: 'recipes', ingredients: 'Ingredients', steps: 'Method', minutes: 'min', servings: 'servings',
+    noResults: 'No recipes found', clear: 'Clear filters', loading: 'Loading the catalogue...', imagePending: 'Image coming soon',
+    share: 'Share', language: 'Language', copied: 'Link copied', contact: 'Contact', rights: '© 2026 New Age Studio. All rights reserved.',
+    note: 'Recipes for inspiration. Adjust ingredients to your needs and allergies.', login: 'Sign in', logout: 'Sign out',
+    premiumActive: 'Premium is active', unlockTitle: 'Unlock the full catalogue', premiumCopy: 'Premium unlocks every recipe, diet, country and all future additions.', monthly: 'Monthly subscription', cancelAnytime: 'Secure payment with Stripe. Cancel at any time.', manage: 'Manage subscription', unlock: 'Unlock TasteMaster365', loginOrRegister: 'Sign in or create account', backCatalog: 'Back to catalogue',
+    newProfile: 'Create account', welcome: 'Welcome back', createProfile: 'Create your TasteMaster account', name: 'Name', email: 'Email', password: 'Password', minChars: 'At least 10 characters.', wait: 'Please wait...', create: 'Create account', help: 'Account support', back: 'Back',
+    glutenFree: 'Gluten free', dairyFree: 'Dairy free', meatFree: 'Meat free', plantBased: 'Plant based', healthyGut: 'Healthy Gut',
+  },
+  de: {
+    tagline: 'Rezepte aus aller Welt', daily: 'Rezept des Tages', open: 'Rezept öffnen', premium: 'Premium ansehen',
+    search: 'Rezepte, Zutaten, Länder suchen...', catalog: 'Katalog', diets: 'Ernährungsweisen', countries: 'Länder', difficulty: 'Schwierigkeit',
+    all: 'Alle', recipes: 'Rezepte', ingredients: 'Zutaten', steps: 'Zubereitung', minutes: 'Min.', servings: 'Portionen',
+    noResults: 'Keine Rezepte gefunden', clear: 'Filter löschen', loading: 'Katalog wird geladen...', imagePending: 'Bild folgt',
+    share: 'Teilen', language: 'Sprache', copied: 'Link kopiert', contact: 'Kontakt', rights: '© 2026 New Age Studio. Alle Rechte vorbehalten.',
+    note: 'Rezepte zur Inspiration. Bitte Zutaten an persönliche Bedürfnisse und Allergien anpassen.', login: 'Anmelden', logout: 'Abmelden',
+    premiumActive: 'Premium ist aktiv', unlockTitle: 'Gesamten Katalog freischalten', premiumCopy: 'Premium schaltet alle Rezepte, Ernährungsweisen, Länder und Neuheiten frei.', monthly: 'Monatsabo', cancelAnytime: 'Sichere Zahlung über Stripe. Jederzeit kündbar.', manage: 'Abo verwalten', unlock: 'TasteMaster365 freischalten', loginOrRegister: 'Anmelden oder Konto erstellen', backCatalog: 'Zurück zum Katalog',
+    newProfile: 'Neues Konto', welcome: 'Willkommen zurück', createProfile: 'TasteMaster-Konto erstellen', name: 'Name', email: 'E-Mail', password: 'Passwort', minChars: 'Mindestens 10 Zeichen.', wait: 'Bitte warten...', create: 'Konto erstellen', help: 'Kontohilfe', back: 'Zurück',
+    glutenFree: 'Glutenfrei', dairyFree: 'Milchfrei', meatFree: 'Fleischfrei', plantBased: 'Pflanzlich', healthyGut: 'Healthy Gut',
+  },
+  es: {
+    tagline: 'Recetas del mundo', daily: 'Receta del día', open: 'Abrir receta', premium: 'Ver Premium',
+    search: 'Buscar recetas, ingredientes, países...', catalog: 'Catálogo', diets: 'Dietas', countries: 'Países', difficulty: 'Dificultad',
+    all: 'Todos', recipes: 'recetas', ingredients: 'Ingredientes', steps: 'Preparación', minutes: 'min', servings: 'raciones',
+    noResults: 'No se encontraron recetas', clear: 'Borrar filtros', loading: 'Cargando el catálogo...', imagePending: 'Imagen próximamente',
+    share: 'Compartir', language: 'Idioma', copied: 'Enlace copiado', contact: 'Contacto', rights: '© 2026 New Age Studio. Todos los derechos reservados.',
+    note: 'Recetas para inspirarte. Ajusta los ingredientes a tus necesidades y alergias.', login: 'Entrar', logout: 'Salir',
+    premiumActive: 'Premium está activo', unlockTitle: 'Desbloquea todo el catálogo', premiumCopy: 'Premium desbloquea todas las recetas, dietas, países y novedades.', monthly: 'Suscripción mensual', cancelAnytime: 'Pago seguro con Stripe. Cancela cuando quieras.', manage: 'Gestionar suscripción', unlock: 'Desbloquear TasteMaster365', loginOrRegister: 'Entrar o crear cuenta', backCatalog: 'Volver al catálogo',
+    newProfile: 'Nueva cuenta', welcome: 'Bienvenido de nuevo', createProfile: 'Crea tu cuenta TasteMaster', name: 'Nombre', email: 'Correo', password: 'Contraseña', minChars: 'Al menos 10 caracteres.', wait: 'Espera un momento...', create: 'Crear cuenta', help: 'Ayuda de cuenta', back: 'Volver',
+    glutenFree: 'Sin gluten', dairyFree: 'Sin lácteos', meatFree: 'Sin carne', plantBased: 'Vegetal', healthyGut: 'Healthy Gut',
+  },
+  fr: {
+    tagline: 'Recettes du monde', daily: 'Recette du jour', open: 'Ouvrir la recette', premium: 'Voir Premium',
+    search: 'Rechercher recettes, ingrédients, pays...', catalog: 'Catalogue', diets: 'Régimes', countries: 'Pays', difficulty: 'Difficulté',
+    all: 'Tous', recipes: 'recettes', ingredients: 'Ingrédients', steps: 'Préparation', minutes: 'min', servings: 'portions',
+    noResults: 'Aucune recette trouvée', clear: 'Effacer les filtres', loading: 'Chargement du catalogue...', imagePending: 'Image à venir',
+    share: 'Partager', language: 'Langue', copied: 'Lien copié', contact: 'Contact', rights: '© 2026 New Age Studio. Tous droits réservés.',
+    note: 'Recettes pour inspiration. Adaptez les ingrédients à vos besoins et allergies.', login: 'Connexion', logout: 'Déconnexion',
+    premiumActive: 'Premium est actif', unlockTitle: 'Débloquez tout le catalogue', premiumCopy: 'Premium débloque toutes les recettes, régimes, pays et nouveautés.', monthly: 'Abonnement mensuel', cancelAnytime: 'Paiement sécurisé par Stripe. Résiliable à tout moment.', manage: "Gérer l'abonnement", unlock: 'Débloquer TasteMaster365', loginOrRegister: 'Connexion ou nouveau compte', backCatalog: 'Retour au catalogue',
+    newProfile: 'Nouveau compte', welcome: 'Bon retour', createProfile: 'Créez votre compte TasteMaster', name: 'Nom', email: 'E-mail', password: 'Mot de passe', minChars: 'Au moins 10 caractères.', wait: 'Veuillez patienter...', create: 'Créer un compte', help: 'Aide au compte', back: 'Retour',
+    glutenFree: 'Sans gluten', dairyFree: 'Sans produits laitiers', meatFree: 'Sans viande', plantBased: 'Végétal', healthyGut: 'Healthy Gut',
+  },
+  ru: {
+    tagline: 'Рецепты со всего мира', daily: 'Рецепт дня', open: 'Открыть рецепт', premium: 'Смотреть Premium',
+    search: 'Поиск рецептов, ингредиентов, стран...', catalog: 'Каталог', diets: 'Рационы', countries: 'Страны', difficulty: 'Сложность',
+    all: 'Все', recipes: 'рецептов', ingredients: 'Ингредиенты', steps: 'Приготовление', minutes: 'мин', servings: 'порции',
+    noResults: 'Рецепты не найдены', clear: 'Сбросить фильтры', loading: 'Загрузка каталога...', imagePending: 'Изображение готовится',
+    share: 'Поделиться', language: 'Язык', copied: 'Ссылка скопирована', contact: 'Контакт', rights: '© 2026 New Age Studio. Все права защищены.',
+    note: 'Рецепты для вдохновения. Учитывайте свои потребности и аллергии.', login: 'Войти', logout: 'Выйти',
+    premiumActive: 'Premium активен', unlockTitle: 'Открыть весь каталог', premiumCopy: 'Premium открывает все рецепты, рационы, страны и новые поступления.', monthly: 'Ежемесячная подписка', cancelAnytime: 'Безопасная оплата через Stripe. Отмена в любое время.', manage: 'Управление подпиской', unlock: 'Открыть TasteMaster365', loginOrRegister: 'Войти или создать профиль', backCatalog: 'Назад к каталогу',
+    newProfile: 'Новый профиль', welcome: 'С возвращением', createProfile: 'Создать профиль TasteMaster', name: 'Имя', email: 'Эл. почта', password: 'Пароль', minChars: 'Не менее 10 символов.', wait: 'Подождите...', create: 'Создать профиль', help: 'Помощь с профилем', back: 'Назад',
+    glutenFree: 'Без глютена', dairyFree: 'Без молочных продуктов', meatFree: 'Без мяса', plantBased: 'Растительное', healthyGut: 'Healthy Gut',
+  },
+};
+
+const DIFFICULTY = {
+  bg: { 'Лесно': 'Лесно', 'Средно': 'Средно', 'Трудно': 'Трудно' },
+  en: { 'Лесно': 'Easy', 'Средно': 'Medium', 'Трудно': 'Hard' },
+  de: { 'Лесно': 'Leicht', 'Средно': 'Mittel', 'Трудно': 'Schwer' },
+  es: { 'Лесно': 'Fácil', 'Средно': 'Media', 'Трудно': 'Difícil' },
+  fr: { 'Лесно': 'Facile', 'Средно': 'Moyenne', 'Трудно': 'Difficile' },
+  ru: { 'Лесно': 'Легко', 'Средно': 'Средне', 'Трудно': 'Сложно' },
+};
+
+export const getMessages = (language) => MESSAGES[language] || MESSAGES.bg;
+
+export function localizeRecipe(recipe, language) {
+  const translation = recipe.translations?.[language] || recipe.translations?.bg || {};
+  return {
+    ...recipe,
+    ...translation,
+    difficultyKey: recipe.difficulty,
+    difficulty: DIFFICULTY[language]?.[recipe.difficulty] || recipe.difficulty,
+  };
+}
