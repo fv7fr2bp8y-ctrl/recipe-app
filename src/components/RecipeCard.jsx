@@ -14,6 +14,7 @@ export default function RecipeCard({ recipe, onClick, locked = false, messages }
 
   return (
     <div
+      data-recipe-card
       className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
       onClick={onClick}
     >
@@ -23,7 +24,7 @@ export default function RecipeCard({ recipe, onClick, locked = false, messages }
         ) : (
           <div className="text-center px-4">
             <span className="block text-xs uppercase tracking-[0.22em] text-primary-700/70 mb-2">{messages.imagePending}</span>
-            <img src="/tastemaster-mark.svg" alt="" className="mx-auto mt-3 h-12 w-12 opacity-30" />
+            <img src="/tastemaster-logo.png" alt="" className="mx-auto mt-3 h-12 w-12 object-contain opacity-30" />
           </div>
         )}
         {locked && (

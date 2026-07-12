@@ -17,6 +17,7 @@ import { getMessages, localizeRecipe } from './i18n';
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
 const ALL_FILTER = '__all__';
+const PAGE_SIZE = 48;
 
 function RecipeApp() {
   const account = useAccount();
@@ -48,6 +49,7 @@ function RecipeApp() {
   const [showPremium, setShowPremium] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
   const [toast, setToast] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const syncing = false;
   const {
     premiumActive,
@@ -99,6 +101,7 @@ function RecipeApp() {
 
   const toggleDietFilter = (key) => {
     setDietFilters((prev) => ({ ...prev, [key]: !prev[key] }));
+    setVisibleCount(PAGE_SIZE);
   };
 
   const clearFilters = () => {
@@ -107,6 +110,7 @@ function RecipeApp() {
     setDifficulty(ALL_FILTER);
     setCountry(ALL_FILTER);
     setDietFilters({});
+    setVisibleCount(PAGE_SIZE);
   };
 
   const difficulties = useMemo(() => {
@@ -176,7 +180,7 @@ function RecipeApp() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fef9f0]">
+    <div className="min-h-screen bg-[#f6fbfa]">
       <Header
         driveConnected={!!accessToken}
         onDriveSignIn={signIn}
@@ -192,7 +196,7 @@ function RecipeApp() {
         premium={account.premium}
         onManageBilling={account.manageBilling}
         language={language}
-        onLanguageChange={setLanguage}
+        onLanguageChange={(nextLanguage) => { setLanguage(nextLanguage); setVisibleCount(PAGE_SIZE); }}
         onShare={() => share()}
         messages={messages}
       />
@@ -210,10 +214,10 @@ function RecipeApp() {
         )}
 
         <SearchBar
-          search={search} setSearch={setSearch}
-          category={category} setCategory={setCategory}
-          difficulty={difficulty} setDifficulty={setDifficulty}
-          country={country} setCountry={setCountry}
+          search={search} setSearch={(value) => { setSearch(value); setVisibleCount(PAGE_SIZE); }}
+          category={category} setCategory={(value) => { setCategory(value); setVisibleCount(PAGE_SIZE); }}
+          difficulty={difficulty} setDifficulty={(value) => { setDifficulty(value); setVisibleCount(PAGE_SIZE); }}
+          country={country} setCountry={(value) => { setCountry(value); setVisibleCount(PAGE_SIZE); }}
           countries={countries}
           dietFilters={dietFilters}
           dietFilterOptions={dietFilterOptions}
@@ -253,7 +257,7 @@ function RecipeApp() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filtered.map((recipe) => (
+              {filtered.slice(0, visibleCount).map((recipe) => (
                 <RecipeCard
                   key={recipe.id}
                   recipe={recipe}
@@ -262,6 +266,17 @@ function RecipeApp() {
                   messages={messages}
                 />
               ))}
+            </div>
+          )}
+          {!loading && filtered.length > visibleCount && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+                className="border border-primary-500 bg-white px-7 py-3 text-sm font-semibold text-primary-700 transition-colors hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+              >
+                {messages.loadMore} · {Math.min(PAGE_SIZE, filtered.length - visibleCount)}
+              </button>
             </div>
           )}
         </div>
