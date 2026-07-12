@@ -11,7 +11,7 @@ export default function Header({
   isAdmin,
   googleEnabled,
   accountUser,
-  onAccountToken,
+  onAccountLogin,
   onAccountLogout,
   accountLoading,
   premium,
@@ -36,7 +36,7 @@ export default function Header({
               Sync...
             </span>
           )}
-          {googleEnabled && accountUser && premium && (
+          {accountUser && premium && (
             <button
               type="button"
               onClick={onManageBilling}
@@ -45,14 +45,12 @@ export default function Header({
               Premium
             </button>
           )}
-          {googleEnabled && (
-            <AccountButton
-              user={accountUser}
-              onToken={onAccountToken}
-              onLogout={onAccountLogout}
-              loading={accountLoading}
-            />
-          )}
+          <AccountButton
+            user={accountUser}
+            onLogin={onAccountLogin}
+            onLogout={onAccountLogout}
+            loading={accountLoading}
+          />
           {googleEnabled && isAdmin && (
             <GoogleAuthButton
               isConnected={driveConnected}

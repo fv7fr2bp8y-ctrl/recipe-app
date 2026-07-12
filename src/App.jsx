@@ -9,6 +9,7 @@ import RecipeForm from './components/RecipeForm';
 import RecipeDetail from './components/RecipeDetail';
 import DailyRecipe from './components/DailyRecipe';
 import PremiumGate from './components/PremiumGate';
+import AccountDialog from './components/AccountDialog';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
 
@@ -43,6 +44,7 @@ function RecipeApp() {
   const [editRecipe, setEditRecipe] = useState(null);
   const [viewRecipe, setViewRecipe] = useState(null);
   const [showPremium, setShowPremium] = useState(false);
+  const [showAccount, setShowAccount] = useState(false);
   const syncing = false;
   const {
     premiumActive,
@@ -192,7 +194,7 @@ function RecipeApp() {
         isAdmin={isAdmin}
         googleEnabled={!!CLIENT_ID}
         accountUser={account.user}
-        onAccountToken={account.authenticate}
+        onAccountLogin={() => setShowAccount(true)}
         onAccountLogout={account.logout}
         accountLoading={account.loading || account.actionLoading}
         premium={account.premium}
@@ -306,10 +308,23 @@ function RecipeApp() {
         <PremiumGate
           onClose={() => setShowPremium(false)}
           authenticated={Boolean(account.user)}
-          onGoogleToken={account.authenticate}
+          onLoginRequest={() => setShowAccount(true)}
           onSubscribe={account.subscribe}
           onManageBilling={account.manageBilling}
           premium={account.premium}
+          loading={account.actionLoading}
+          error={account.error}
+        />
+      )}
+      {showAccount && (
+        <AccountDialog
+          onClose={() => setShowAccount(false)}
+          onLogin={async (credentials) => {
+            if (await account.login(credentials)) setShowAccount(false);
+          }}
+          onRegister={async (details) => {
+            if (await account.register(details)) setShowAccount(false);
+          }}
           loading={account.actionLoading}
           error={account.error}
         />

@@ -1,21 +1,15 @@
 import { FREE_RECIPE_LIMIT } from '../hooks/useFreemiumAccess';
-import { useGoogleLogin } from '@react-oauth/google';
 
 export default function PremiumGate({
   onClose,
   authenticated,
-  onGoogleToken,
+  onLoginRequest,
   onSubscribe,
   onManageBilling,
   premium,
   loading,
   error,
 }) {
-  const googleLogin = useGoogleLogin({
-    onSuccess: onGoogleToken,
-    scope: 'openid email profile',
-  });
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/55 p-4 backdrop-blur-sm">
       <div
@@ -67,11 +61,11 @@ export default function PremiumGate({
         ) : (
           <button
             type="button"
-            onClick={() => googleLogin()}
+            onClick={onLoginRequest}
             disabled={loading}
             className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
           >
-            Вход с Google за продължаване
+            Вход или нов профил
           </button>
         )}
 

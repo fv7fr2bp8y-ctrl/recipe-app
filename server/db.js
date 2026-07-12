@@ -22,6 +22,7 @@ export function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
+      await sql`ALTER TABLE tm_users ADD COLUMN IF NOT EXISTS password_hash TEXT`;
       await sql`CREATE TABLE IF NOT EXISTS tm_entitlements (
         user_id TEXT PRIMARY KEY REFERENCES tm_users(id) ON DELETE CASCADE,
         stripe_subscription_id TEXT UNIQUE,
@@ -52,6 +53,22 @@ export async function upsertUser(user) {
       name = EXCLUDED.name,
       picture = EXCLUDED.picture,
       updated_at = NOW()
+    RETURNING *
+  `;
+  return rows[0];
+}
+
+export async function getUserByEmail(email) {
+  await ensureSchema();
+  const rows = await db()`SELECT * FROM tm_users WHERE email = ${email} LIMIT 1`;
+  return rows[0] || null;
+}
+
+export async function createPasswordUser({ id, email, name, passwordHash }) {
+  await ensureSchema();
+  const rows = await db()`
+    INSERT INTO tm_users (id, email, name, password_hash, updated_at)
+    VALUES (${id}, ${email}, ${name || ''}, ${passwordHash}, NOW())
     RETURNING *
   `;
   return rows[0];

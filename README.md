@@ -13,7 +13,7 @@
 - Филтриране по каталог, държава, трудност и режими: без глутен, без млечни, без месо, растително, Healthy Gut
 - Детайлен изглед на всяка рецепта
 - Рецепта на деня с постоянен избор за текущата UTC дата
-- Google профил с подписана HttpOnly сесия
+- Профил с имейл и парола, scrypt password hashing и подписана HttpOnly сесия
 - Stripe Checkout абонамент за €1.99 месечно
 - Stripe webhook и entitlement, пазен в Postgres
 - Stripe Customer Portal за управление и прекратяване на абонамента
@@ -40,7 +40,7 @@
 - [React 19](https://react.dev/)
 - [Vite 8](https://vitejs.dev/)
 - [Tailwind CSS 3](https://tailwindcss.com/)
-- [Google OAuth (@react-oauth/google)](https://github.com/MomenSherif/react-oauth-google)
+- [Google OAuth (@react-oauth/google)](https://github.com/MomenSherif/react-oauth-google) само за администраторския Drive достъп
 - [Google Drive API v3](https://developers.google.com/drive/api/v3/about-sdk)
 - [Stripe Checkout](https://docs.stripe.com/payments/checkout/build-subscriptions)
 - [Neon serverless Postgres](https://neon.tech/docs/serverless/serverless-driver)
@@ -65,7 +65,7 @@ TasteMaster показва всички `status=ready` + `recipe_quality=curated
 ### Достъп
 
 - Без вход: 12 рецепти с пълни съставки и стъпки; останалите са previews без защитените полета.
-- С Google вход, без абонамент: същите 12 рецепти и възможност за Stripe Checkout.
+- С TasteMaster профил, без абонамент: същите 12 рецепти и възможност за Stripe Checkout.
 - С активен Stripe абонамент: целият каталог.
 - При отмяна или изтекъл абонамент webhook-ът актуализира entitlement-а и каталогът отново се заключва.
 
@@ -103,7 +103,7 @@ STRIPE_PRICE_ID=price_1TsOCpDbRc9nb2mVhLaqc9fk
 
 ### Premium достъп
 
-Premium не се пази в `localStorage`. Google access token се проверява server-side и се заменя с подписана `HttpOnly`, `Secure`, `SameSite=Lax` сесия. Stripe webhook записва статуса на абонамента в Postgres; `/api/recipes` проверява entitlement-а при всяко зареждане.
+Premium не се пази в `localStorage`. Паролите се хешират със scrypt и никога не се връщат към браузъра. След вход сървърът издава подписана `HttpOnly`, `Secure`, `SameSite=Lax` сесия. Stripe webhook записва статуса на абонамента в Postgres; `/api/recipes` проверява entitlement-а при всяко зареждане.
 
 #### Stripe Dashboard
 
@@ -124,7 +124,7 @@ Premium не се пази в `localStorage`. Google access token се пров�
 2. Добави `DATABASE_URL` за Production, Preview и Development.
 3. Добави останалите server-only стойности от `.env.example`.
 4. При първата заявка таблиците `tm_users`, `tm_entitlements` и `tm_stripe_events` се създават автоматично.
-5. В Google Cloud OAuth добави `https://tastemaster.eu` като Authorized JavaScript origin.
+5. Google OAuth е нужен само за администраторския Drive импорт. Клиентският вход и Stripe не зависят от него.
 
 ---
 
@@ -149,7 +149,8 @@ vercel deploy --prod --yes
 src/
 ├── App.jsx                  # Главен компонент, state, логика
 ├── components/
-│   ├── Header.jsx           # Навигация, Google Auth, бутон за нова рецепта
+│   ├── Header.jsx           # Навигация, профил и администраторски инструменти
+│   ├── AccountDialog.jsx    # Вход и регистрация с имейл/парола
 │   ├── SearchBar.jsx        # Търсене и филтри
 │   ├── RecipeCard.jsx       # Карта за рецепта в грида
 │   ├── RecipeDetail.jsx     # Модален детайлен изглед
@@ -158,10 +159,10 @@ src/
 │   └── GoogleAuthButton.jsx # Бутон за Google OAuth
 └── hooks/
     ├── useRecipes.js        # защитен fetch от /api/recipes
-    ├── useAccount.js        # Google сесия + Checkout/Portal
+    ├── useAccount.js        # TasteMaster сесия + Checkout/Portal
     └── useGoogleDrive.js    # OAuth, upload, Drive sync
 api/
-├── auth/                    # session, me, logout
+├── auth/                    # register, login, Google admin session, me, logout
 ├── billing/                 # checkout, portal, webhook
 └── recipes.js               # server-side каталог и paywall
 server/                      # DB, Stripe, session и recipe helpers

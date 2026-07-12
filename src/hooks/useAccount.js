@@ -32,21 +32,23 @@ export function useAccount() {
     return () => window.clearTimeout(timer);
   }, [refresh]);
 
-  const authenticate = useCallback(async (googleResponse) => {
+  const authenticate = useCallback(async (path, payload) => {
     setActionLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/auth/session', {
+      const response = await fetch(path, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessToken: googleResponse.access_token }),
+        body: JSON.stringify(payload),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Входът не беше потвърден.');
       await refresh();
+      return true;
     } catch (authError) {
       setError(authError.message);
+      return false;
     } finally {
       setActionLoading(false);
     }
@@ -82,7 +84,8 @@ export function useAccount() {
     loading,
     actionLoading,
     error,
-    authenticate,
+    login: (credentials) => authenticate('/api/auth/login', credentials),
+    register: (details) => authenticate('/api/auth/register', details),
     logout,
     refresh,
     subscribe: () => openBilling('/api/billing/checkout'),
