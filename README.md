@@ -2,22 +2,25 @@
 
 Лично приложение за управление на рецепти, достъпно на [tastemaster.eu](https://tastemaster.eu).
 
-Изградено с React + Vite и Tailwind CSS. Публичният каталог чете основно от Google Sheet master таблицата `FreeFrom365_All_Apps_Master`, а `public/recipes.json` остава legacy fallback.
+Изградено с React + Vite, Vercel Functions, Neon Postgres и Stripe. Браузърът вече не чете директно master таблицата: каталогът минава през `/api/recipes`, което връща пълните данни само при проверена Premium сесия.
 
 ---
 
 ## Функционалности
 
-- Преглед на всички curated рецепти от master таблицата
+- 12 пълни безплатни рецепти и заключени previews за останалия каталог
 - Търсене по заглавие, съставки, описание, държава и тагове
 - Филтриране по каталог, държава, трудност и режими: без глутен, без млечни, без месо, растително, Healthy Gut
 - Детайлен изглед на всяка рецепта
 - Рецепта на деня с постоянен избор за текущата UTC дата
-- Freemium достъп до 12 различни рецепти на браузър и Premium paywall след лимита
+- Google профил с подписана HttpOnly сесия
+- Stripe Checkout абонамент за €1.99 месечно
+- Stripe webhook и entitlement, пазен в Postgres
+- Stripe Customer Portal за управление и прекратяване на абонамента
 - Admin режим — добавяне, редактиране и изтриване на рецепти
 - Качване на снимки в Google Drive
 - Избор на снимка от фото галерия
-- Рецептите се публикуват от Google Sheet master таблицата; `public/recipes.json` се ползва само като fallback
+- Рецептите се публикуват от Google Sheet master таблицата през server-side API
 
 ## Категории
 
@@ -39,6 +42,9 @@
 - [Tailwind CSS 3](https://tailwindcss.com/)
 - [Google OAuth (@react-oauth/google)](https://github.com/MomenSherif/react-oauth-google)
 - [Google Drive API v3](https://developers.google.com/drive/api/v3/about-sdk)
+- [Stripe Checkout](https://docs.stripe.com/payments/checkout/build-subscriptions)
+- [Neon serverless Postgres](https://neon.tech/docs/serverless/serverless-driver)
+- [JOSE](https://github.com/panva/jose) за подписаната сесия
 - Vercel
 
 ---
@@ -46,7 +52,7 @@
 ## Как работи
 
 ### Източник на истината — Google Sheet master таблицата
-Основният публичен каталог чете CSV export от `FreeFrom365_All_Apps_Master` / таб `Master_Recipes`.
+Vercel функцията `/api/recipes` чете CSV export от `FreeFrom365_All_Apps_Master` / таб `Master_Recipes`. URL адресът на таблицата не се изпраща във frontend bundle-а.
 
 Минималните важни колони са: `global_id`, `canonical_name_bg`, `app_primary`, `meal_type`, `time_min`, `tag`, `description_bg`, `ingredients_bg`, `steps_bg`, `image_url`, `image_drive_id`, `image_status`, `status`, `recipe_quality`, `is_breakfast`, `is_healthy_gut`, `is_gluten_free`, `is_dairy_free`, `is_meat_free`, `is_plant_based`.
 
@@ -56,8 +62,14 @@ TasteMaster показва всички `status=ready` + `recipe_quality=curated
 
 Снимките се хостват в Google Drive (папка "Recipe App Photos", публично достъпни) и се реферират в `image` като `https://drive.google.com/thumbnail?id=<FILE_ID>&sz=w800`.
 
-### Потребители (без вход)
-Виждат curated рецептите от master таблицата. Ако таблицата не се зареди, сайтът пада към legacy fallback.
+### Достъп
+
+- Без вход: 12 рецепти с пълни съставки и стъпки; останалите са previews без защитените полета.
+- С Google вход, без абонамент: същите 12 рецепти и възможност за Stripe Checkout.
+- С активен Stripe абонамент: целият каталог.
+- При отмяна или изтекъл абонамент webhook-ът актуализира entitlement-а и каталогът отново се заключва.
+
+Пълният стар `recipes.json` е преместен извън `public/`, за да не заобикаля API проверката.
 
 ### Admin (с Google вход)
 - Влиза с Google акаунт
@@ -70,24 +82,49 @@ TasteMaster показва всички `status=ready` + `recipe_quality=curated
 
 ```bash
 npm install
-npm run dev
+vercel dev
 ```
+
+`npm run dev` стартира само Vite и е подходящ за визуална работа; за auth, Stripe и защитения каталог използвай `vercel dev`.
 
 Нужни environment variables (`.env.local`):
 
 ```env
 VITE_GOOGLE_CLIENT_ID=...
-VITE_GOOGLE_API_KEY=...
-VITE_PHOTOS_SCRIPT_URL=...
-VITE_ADMIN_EMAIL=...
-VITE_STRIPE_PAYMENT_LINK=https://buy.stripe.com/...
+VITE_ADMIN_EMAIL=office@newage-studio.com
+APP_URL=https://tastemaster.eu
+ADMIN_EMAIL=office@newage-studio.com
+DATABASE_URL=postgresql://...
+SESSION_SECRET=<случайна стойност с поне 32 байта>
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_ID=price_1TsOCpDbRc9nb2mVhLaqc9fk
 ```
 
 ### Premium достъп
 
-Текущият интерфейс пази 12-те разгледани рецепти в `localStorage`, не заключва администратора и отваря Stripe Payment Link, когато `VITE_STRIPE_PAYMENT_LINK` е зададен. Това е завършен UX слой, но не е достатъчен като самостоятелна защита на платено съдържание.
+Premium не се пази в `localStorage`. Google access token се проверява server-side и се заменя с подписана `HttpOnly`, `Secure`, `SameSite=Lax` сесия. Stripe webhook записва статуса на абонамента в Postgres; `/api/recipes` проверява entitlement-а при всяко зареждане.
 
-Преди платеното пускане рецептите трябва да се сервират през защитен API след проверена потребителска сесия и активна Stripe покупка/абонамент. Stripe webhook трябва да записва entitlement на сървъра; клиентът не трябва сам да активира Premium.
+#### Stripe Dashboard
+
+1. Product: `TasteMaster365 Premium`.
+2. Recurring Price: `€1.99 / month`, Price ID `price_1TsOCpDbRc9nb2mVhLaqc9fk`.
+3. Включи Customer Portal с промяна на карта, фактури и отказ в края на периода.
+4. Добави webhook endpoint: `https://tastemaster.eu/api/billing/webhook`.
+5. Избери събитията:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+6. Копирай signing secret като `STRIPE_WEBHOOK_SECRET` във Vercel. Не поставяй `sk_...` или `whsec_...` във frontend променливи с `VITE_`.
+
+#### Vercel / Neon
+
+1. Създай Neon database от Vercel Marketplace или директно в Neon.
+2. Добави `DATABASE_URL` за Production, Preview и Development.
+3. Добави останалите server-only стойности от `.env.example`.
+4. При първата заявка таблиците `tm_users`, `tm_entitlements` и `tm_stripe_events` се създават автоматично.
+5. В Google Cloud OAuth добави `https://tastemaster.eu` като Authorized JavaScript origin.
 
 ---
 
@@ -120,6 +157,12 @@ src/
 │   ├── DrivePhotoPicker.jsx # Избор на снимка от галерия
 │   └── GoogleAuthButton.jsx # Бутон за Google OAuth
 └── hooks/
-    ├── useRecipes.js        # CRUD + localStorage + fetch от recipes.json
+    ├── useRecipes.js        # защитен fetch от /api/recipes
+    ├── useAccount.js        # Google сесия + Checkout/Portal
     └── useGoogleDrive.js    # OAuth, upload, Drive sync
+api/
+├── auth/                    # session, me, logout
+├── billing/                 # checkout, portal, webhook
+└── recipes.js               # server-side каталог и paywall
+server/                      # DB, Stripe, session и recipe helpers
 ```

@@ -10,6 +10,7 @@ import RecipeDetail from './components/RecipeDetail';
 import DailyRecipe from './components/DailyRecipe';
 import PremiumGate from './components/PremiumGate';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
+import { useAccount } from './hooks/useAccount';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
@@ -23,9 +24,16 @@ const DIET_FILTERS = [
 ];
 
 function RecipeApp() {
-  const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes, loading, source } = useRecipes();
+  const account = useAccount();
+  const refreshAccount = account.refresh;
+  const catalogRefreshKey = `${account.user?.id || 'guest'}:${account.premium}`;
+  const { recipes, addRecipe, updateRecipe, deleteRecipe, setRecipes, loading, source, error: catalogError } = useRecipes(catalogRefreshKey);
   const { accessToken, userEmail, signIn, signOut, uploadImage, uploading, saveRecipesToDrive, loadRecipesFromDrive, listDrivePhotos, makePhotoPublic, scopes } = useGoogleDrive();
-  const isAdmin = !!userEmail && userEmail.toLowerCase() === ADMIN_EMAIL;
+  const accountEmail = account.user?.email?.toLowerCase();
+  const isAdmin = Boolean(
+    (accountEmail && accountEmail === ADMIN_EMAIL)
+    || (userEmail && userEmail.toLowerCase() === ADMIN_EMAIL),
+  );
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Всички');
   const [difficulty, setDifficulty] = useState('Всички');
@@ -39,15 +47,13 @@ function RecipeApp() {
   const {
     premiumActive,
     freeViewsRemaining,
-    limitReached,
-    viewedRecipeIds,
     canOpenRecipe,
     registerRecipeView,
-  } = useFreemiumAccess(isAdmin);
+  } = useFreemiumAccess(recipes, isAdmin || account.premium);
 
   // Load from Drive when admin connects
   useEffect(() => {
-    if (!accessToken || !isAdmin || loading || source === 'master-sheet') return;
+    if (!accessToken || !isAdmin || loading || source === 'secure-api') return;
     loadRecipesFromDrive()
       .then((driveRecipes) => {
         if (driveRecipes && driveRecipes.length > 0) {
@@ -58,7 +64,7 @@ function RecipeApp() {
 
   // Save to Drive whenever recipes change (admin only, debounced)
   useEffect(() => {
-    if (!accessToken || !isAdmin || loading || source === 'master-sheet') return;
+    if (!accessToken || !isAdmin || loading || source === 'secure-api') return;
     const timer = setTimeout(() => saveRecipesToDrive(recipes), 1500);
     return () => clearTimeout(timer);
   }, [recipes, accessToken, isAdmin, loading, source, saveRecipesToDrive]);
@@ -116,7 +122,7 @@ function RecipeApp() {
   }, [recipes]);
 
   const dailyRecipe = useMemo(() => {
-    const available = recipes.filter((recipe) => recipe.image);
+    const available = recipes.filter((recipe) => recipe.image && (premiumActive || !recipe.locked));
     if (available.length === 0) return recipes[0] || null;
     const now = new Date();
     const dayNumber = Math.floor(Date.UTC(
@@ -125,7 +131,22 @@ function RecipeApp() {
       now.getUTCDate(),
     ) / 86400000);
     return available[dayNumber % available.length];
-  }, [recipes]);
+  }, [recipes, premiumActive]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('checkout') !== 'success') return undefined;
+    let attempts = 0;
+    const timer = window.setInterval(async () => {
+      attempts += 1;
+      const status = await refreshAccount();
+      if (status?.premium || attempts >= 8) {
+        window.clearInterval(timer);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }, 1500);
+    return () => window.clearInterval(timer);
+  }, [refreshAccount]);
 
   const openRecipe = (recipe) => {
     if (!canOpenRecipe(recipe.id)) {
@@ -170,6 +191,12 @@ function RecipeApp() {
         syncing={syncing}
         isAdmin={isAdmin}
         googleEnabled={!!CLIENT_ID}
+        accountUser={account.user}
+        onAccountToken={account.authenticate}
+        onAccountLogout={account.logout}
+        accountLoading={account.loading || account.actionLoading}
+        premium={account.premium}
+        onManageBilling={account.manageBilling}
       />
 
       <main className="max-w-6xl mx-auto px-4 py-6">
@@ -177,16 +204,14 @@ function RecipeApp() {
           <DailyRecipe
             recipe={dailyRecipe}
             onOpen={openRecipe}
-            locked={limitReached}
+            locked={Boolean(dailyRecipe?.locked)}
           />
         )}
 
         {!premiumActive && !loading && (
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border border-orange-200 bg-white px-4 py-3 text-sm text-stone-600">
             <span>
-              {limitReached
-                ? 'Безплатният достъп е изчерпан.'
-                : `Остават ${freeViewsRemaining} безплатни рецепти.`}
+              {freeViewsRemaining} рецепти са достъпни безплатно. Останалият каталог е Premium.
             </span>
             <button
               type="button"
@@ -213,12 +238,18 @@ function RecipeApp() {
           difficulties={difficulties}
         />
 
+        {catalogError ? (
+          <div className="mt-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">
+            {catalogError}
+          </div>
+        ) : null}
+
         <div className="mt-6">
           {syncing || loading ? (
             <div className="text-center py-16">
               <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto" />
               <p className="text-gray-400 mt-3 text-sm">
-                {loading ? 'Зарежда рецептите от master таблицата...' : 'Зарежда от Google Drive...'}
+                {loading ? 'Зарежда защитения каталог...' : 'Зарежда от Google Drive...'}
               </p>
             </div>
           ) : filtered.length === 0 ? (
@@ -241,7 +272,7 @@ function RecipeApp() {
                   onClick={() => openRecipe(recipe)}
                   onDelete={handleDelete}
                   canEdit={isAdmin}
-                  locked={limitReached && !viewedRecipeIds.includes(String(recipe.id))}
+                  locked={Boolean(recipe.locked)}
                 />
               ))}
             </div>
@@ -272,19 +303,24 @@ function RecipeApp() {
       )}
 
       {showPremium && (
-        <PremiumGate onClose={() => setShowPremium(false)} />
+        <PremiumGate
+          onClose={() => setShowPremium(false)}
+          authenticated={Boolean(account.user)}
+          onGoogleToken={account.authenticate}
+          onSubscribe={account.subscribe}
+          onManageBilling={account.manageBilling}
+          premium={account.premium}
+          loading={account.actionLoading}
+          error={account.error}
+        />
       )}
     </div>
   );
 }
 
 export default function App() {
-  if (!CLIENT_ID) {
-    return <RecipeApp />;
-  }
-
   return (
-    <GoogleOAuthProvider clientId={CLIENT_ID}>
+    <GoogleOAuthProvider clientId={CLIENT_ID || 'google-client-id-not-configured'}>
       <RecipeApp />
     </GoogleOAuthProvider>
   );

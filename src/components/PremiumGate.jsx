@@ -1,7 +1,20 @@
 import { FREE_RECIPE_LIMIT } from '../hooks/useFreemiumAccess';
+import { useGoogleLogin } from '@react-oauth/google';
 
-export default function PremiumGate({ onClose }) {
-  const paymentLink = import.meta.env.VITE_STRIPE_PAYMENT_LINK;
+export default function PremiumGate({
+  onClose,
+  authenticated,
+  onGoogleToken,
+  onSubscribe,
+  onManageBilling,
+  premium,
+  loading,
+  error,
+}) {
+  const googleLogin = useGoogleLogin({
+    onSuccess: onGoogleToken,
+    scope: 'openid email profile',
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/55 p-4 backdrop-blur-sm">
@@ -15,31 +28,53 @@ export default function PremiumGate({ onClose }) {
           TasteMaster365 Premium
         </p>
         <h2 id="premium-title" className="mt-3 text-2xl font-semibold text-stone-900">
-          Продължи с целия каталог
+          {premium ? 'Premium е активен' : 'Отключи целия каталог'}
         </h2>
         <p className="mt-3 text-sm leading-6 text-stone-600">
-          Разгледа своите {FREE_RECIPE_LIMIT} безплатни рецепти. Premium отключва всички рецепти,
-          хранителни режими, държави и новата рецепта на деня.
+          {FREE_RECIPE_LIMIT} рецепти са достъпни безплатно. Premium отключва всички рецепти,
+          хранителни режими, държави и всяко ново попълнение.
         </p>
-        <div className="mt-6 border-y border-orange-200 py-4 text-sm text-stone-700">
-          Плащането ще бъде активирано чрез защитена Stripe страница.
+        <div className="mt-6 border-y border-orange-200 py-4">
+          <div className="flex items-baseline justify-between gap-4">
+            <span className="text-sm text-stone-600">Месечен абонамент</span>
+            <strong className="text-xl text-stone-900">€1.99</strong>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-stone-500">
+            Защитено плащане чрез Stripe. Можеш да прекратиш абонамента по всяко време.
+          </p>
         </div>
-        {paymentLink ? (
-          <a
-            href={paymentLink}
-            className="mt-6 block w-full bg-orange-600 px-4 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-orange-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"
+
+        {error ? <p className="mt-4 text-sm text-red-700" role="alert">{error}</p> : null}
+
+        {premium ? (
+          <button
+            type="button"
+            onClick={onManageBilling}
+            disabled={loading}
+            className="mt-6 w-full bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800 disabled:opacity-60"
           >
-            Отключи TasteMaster365
-          </a>
+            Управление на абонамента
+          </button>
+        ) : authenticated ? (
+          <button
+            type="button"
+            onClick={onSubscribe}
+            disabled={loading}
+            className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
+          >
+            {loading ? 'Отваряне на Stripe...' : 'Отключи TasteMaster365'}
+          </button>
         ) : (
           <button
             type="button"
-            disabled
-            className="mt-6 w-full cursor-not-allowed bg-stone-300 px-4 py-3 text-sm font-semibold text-stone-600"
+            onClick={() => googleLogin()}
+            disabled={loading}
+            className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
           >
-            Плащането се подготвя
+            Вход с Google за продължаване
           </button>
         )}
+
         <button
           type="button"
           onClick={onClose}
