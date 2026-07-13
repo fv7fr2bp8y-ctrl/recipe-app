@@ -95,9 +95,9 @@ function RecipeApp() {
 
   const countries = useMemo(() => {
     const values = [...new Set(recipes.map((r) => r.country).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, 'bg'));
+      .sort((a, b) => a.localeCompare(b, language));
     return [ALL_FILTER, ...values];
-  }, [recipes]);
+  }, [recipes, language]);
 
   const toggleDietFilter = (key) => {
     setDietFilters((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -196,7 +196,11 @@ function RecipeApp() {
         premium={account.premium}
         onManageBilling={account.manageBilling}
         language={language}
-        onLanguageChange={(nextLanguage) => { setLanguage(nextLanguage); setVisibleCount(PAGE_SIZE); }}
+        onLanguageChange={(nextLanguage) => {
+          setLanguage(nextLanguage);
+          setCountry(ALL_FILTER);
+          setVisibleCount(PAGE_SIZE);
+        }}
         onShare={() => share()}
         messages={messages}
       />
