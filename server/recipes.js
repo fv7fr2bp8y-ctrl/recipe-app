@@ -60,6 +60,23 @@ function splitSteps(value) {
 
 const isTrue = (value) => String(value || '').toUpperCase() === 'TRUE';
 
+function hasCompleteTranslation(row, language) {
+  if (language === 'bg') {
+    return Boolean(
+      row.canonical_name_bg?.trim()
+      && row.description_bg?.trim()
+      && (row.ingredients_qty_bg?.trim() || row.ingredients_bg?.trim())
+      && row.steps_bg?.trim(),
+    );
+  }
+  return Boolean(
+    row[`name_${language}`]?.trim()
+    && row[`description_${language}`]?.trim()
+    && (row[`ingredients_qty_${language}`]?.trim() || row[`ingredients_${language}`]?.trim())
+    && row[`steps_${language}`]?.trim(),
+  );
+}
+
 function imageFromRow(row) {
   const match = row.image_url?.match(/\/d\/([^/]+)\//) || row.image_url?.match(/[?&]id=([^&]+)/);
   const fileId = row.image_drive_id || match?.[1];
@@ -96,6 +113,7 @@ function mapRow(row) {
       country: country || row.country_bg || row.country_en || 'Световна кухня',
     }];
   }));
+  const availableLanguages = LANGUAGES.filter((language) => hasCompleteTranslation(row, language));
   return {
     id: row.global_id,
     title: row.canonical_name_bg,
@@ -116,6 +134,7 @@ function mapRow(row) {
     allergenNotes: row.allergen_notes,
     nutritionNotes: row.nutrition_notes,
     translations,
+    availableLanguages,
   };
 }
 
@@ -141,6 +160,7 @@ function lockedPreview(recipe) {
         country: translation.country,
       }]
     ))),
+    availableLanguages: recipe.availableLanguages,
     locked: true,
   };
 }

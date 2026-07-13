@@ -32,7 +32,9 @@ function RecipeApp() {
   );
   const [language, setLanguage] = useState(() => localStorage.getItem('tastemaster-language') || 'bg');
   const messages = getMessages(language);
-  const recipes = useMemo(() => sourceRecipes.map((recipe) => localizeRecipe(recipe, language)), [sourceRecipes, language]);
+  const recipes = useMemo(() => sourceRecipes
+    .filter((recipe) => recipe.image && recipe.availableLanguages?.includes(language))
+    .map((recipe) => localizeRecipe(recipe, language)), [sourceRecipes, language]);
   const dietFilterOptions = useMemo(() => [
     { key: 'glutenFree', label: messages.glutenFree },
     { key: 'dairyFree', label: messages.dairyFree },
