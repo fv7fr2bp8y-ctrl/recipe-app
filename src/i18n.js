@@ -1,10 +1,10 @@
 export const LANGUAGES = [
-  { code: 'bg', label: 'Български', short: 'BG' },
   { code: 'en', label: 'English', short: 'EN' },
-  { code: 'de', label: 'Deutsch', short: 'DE' },
   { code: 'es', label: 'Español', short: 'ES' },
   { code: 'fr', label: 'Français', short: 'FR' },
+  { code: 'de', label: 'Deutsch', short: 'DE' },
   { code: 'ru', label: 'Русский', short: 'RU' },
+  { code: 'bg', label: 'Български', short: 'BG' },
 ];
 
 const MESSAGES = {
