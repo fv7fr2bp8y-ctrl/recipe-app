@@ -8,14 +8,15 @@ const headers = [
   'image_status', 'status', 'recipe_quality', 'is_breakfast', 'is_healthy_gut',
   'is_gluten_free', 'is_dairy_free', 'is_meat_free', 'is_plant_based',
   'country_en', 'servings', 'ingredients_qty_bg',
+  'created_at', 'updated_at',
 ];
 
-function row(index, id) {
+function row(index, id, createdAt = '') {
   return [
     id, `Рецепта ${index}`, 'Brunch', 'закуска', '20', 'тест',
     `Описание ${index}`, 'яйца; сол', 'Смеси. Изпечи.', '', '', 'ready',
     'ready', 'curated', 'TRUE', 'FALSE', 'FALSE', 'FALSE', 'TRUE', 'FALSE',
-    'Bulgaria', '2', '2 яйца; 1 щипка сол',
+    'Bulgaria', '2', '2 яйца; 1 щипка сол', createdAt, createdAt,
   ].map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',');
 }
 
@@ -47,4 +48,22 @@ test('premium catalog exposes every recipe', async () => {
   assert.equal(catalog.length, 14);
   assert.equal(catalog.every((recipe) => recipe.locked === false), true);
   assert.equal(catalog.every((recipe) => recipe.ingredients.length > 0), true);
+});
+
+test('catalog ordering keeps newer blocks first and mixes adjacent collections', async () => {
+  const { orderRecipesForCatalog } = await import('../server/recipes.js');
+  const recipes = Array.from({ length: 52 }, (_, index) => ({
+    id: `R-${index}`,
+    collection: index % 2 ? 'Vegan' : 'Brunch',
+    countryKey: index % 3 ? 'Bulgaria' : 'Italy',
+    mealType: index % 2 ? 'dinner' : 'breakfast',
+    createdAt: new Date(Date.UTC(2026, 0, index + 1)).toISOString(),
+    _sourceOrder: index,
+  }));
+  const ordered = orderRecipesForCatalog(recipes);
+  const firstBlockIds = new Set(recipes.slice(4).map((recipe) => recipe.id));
+  assert.equal(ordered.slice(0, 48).every((recipe) => firstBlockIds.has(recipe.id)), true);
+  assert.equal(ordered.slice(0, 12).every((recipe, index, list) => (
+    index === 0 || recipe.collection !== list[index - 1].collection
+  )), true);
 });

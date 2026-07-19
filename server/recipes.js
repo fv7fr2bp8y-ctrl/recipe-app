@@ -15,6 +15,50 @@ const MEDITERRANEAN_COUNTRIES = new Set([
   'Lebanon', 'Morocco', 'Portugal', 'Spain', 'Tunisia', 'Türkiye', 'Turkey',
 ]);
 
+const CATALOG_BLOCK_SIZE = 48;
+
+function recipeTimestamp(recipe) {
+  const updated = Date.parse(recipe.updatedAt || '');
+  const created = Date.parse(recipe.createdAt || '');
+  return Math.max(Number.isNaN(updated) ? 0 : updated, Number.isNaN(created) ? 0 : created);
+}
+
+function diversifyBlock(block) {
+  const remaining = [...block];
+  const result = [];
+  while (remaining.length) {
+    const recent = result.slice(-3);
+    let bestIndex = 0;
+    let bestScore = Number.NEGATIVE_INFINITY;
+    remaining.forEach((candidate, index) => {
+      const previous = result.at(-1);
+      let score = -index * 0.2;
+      if (!previous || candidate.collection !== previous.collection) score += 8;
+      if (!recent.some((recipe) => recipe.collection === candidate.collection)) score += 4;
+      if (!previous || candidate.countryKey !== previous.countryKey) score += 3;
+      if (!previous || candidate.mealType !== previous.mealType) score += 2;
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+    result.push(remaining.splice(bestIndex, 1)[0]);
+  }
+  return result;
+}
+
+export function orderRecipesForCatalog(recipes) {
+  const newestFirst = [...recipes].sort((a, b) => (
+    recipeTimestamp(b) - recipeTimestamp(a)
+    || (b._sourceOrder || 0) - (a._sourceOrder || 0)
+  ));
+  const ordered = [];
+  for (let index = 0; index < newestFirst.length; index += CATALOG_BLOCK_SIZE) {
+    ordered.push(...diversifyBlock(newestFirst.slice(index, index + CATALOG_BLOCK_SIZE)));
+  }
+  return ordered;
+}
+
 function sectionsFromRow(row, diets) {
   const dishText = [
     row.canonical_name_bg, row.name_en, row.description_bg, row.description_en,
@@ -115,7 +159,7 @@ function imageFromRow(row) {
   return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200` : row.image_url || null;
 }
 
-function mapRow(row) {
+function mapRow(row, sourceOrder) {
   const time = Number(row.time_min) || 30;
   const collection = APP_LABELS[row.app_primary] || row.app_primary || row.meal_type || 'Рецепти';
   const diets = {
@@ -150,6 +194,9 @@ function mapRow(row) {
   const availableLanguages = LANGUAGES.filter((language) => hasCompleteTranslation(row, language));
   return {
     id: row.global_id,
+    createdAt: row.created_at || '',
+    updatedAt: row.updated_at || '',
+    _sourceOrder: sourceOrder,
     title: row.canonical_name_bg,
     category: collection,
     collection,
@@ -209,11 +256,16 @@ export async function loadMasterRecipes() {
   if (!response.ok) throw new Error(`Master sheet failed: ${response.status}`);
   const matrix = parseCsv(await response.text());
   const [headers, ...dataRows] = matrix;
-  const recipes = dataRows
+  const mappedRecipes = dataRows
     .map((cells) => Object.fromEntries(headers.map((header, index) => [header, cells[index] || ''])))
     .filter((row) => row.global_id && row.canonical_name_bg)
     .filter((row) => row.status === 'ready' && row.recipe_quality === 'curated')
     .map(mapRow);
+  const recipes = orderRecipesForCatalog(mappedRecipes).map((recipe) => {
+    const publicRecipe = { ...recipe };
+    delete publicRecipe._sourceOrder;
+    return publicRecipe;
+  });
   cache = { recipes, expiresAt: Date.now() + 5 * 60 * 1000 };
   return recipes;
 }
