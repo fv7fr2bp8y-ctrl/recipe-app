@@ -38,7 +38,7 @@ function RecipeApp() {
   const dietFilterOptions = useMemo(() => [
     { key: 'glutenFree', label: messages.glutenFree },
     { key: 'dairyFree', label: messages.dairyFree },
-    { key: 'meatFree', label: messages.vegetarian },
+    { key: 'vegetarian', label: messages.vegetarian },
     { key: 'plantBased', label: messages.vegan },
     { key: 'healthyGut', label: messages.healthyGut },
   ], [messages]);

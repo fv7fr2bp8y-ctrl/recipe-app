@@ -20,7 +20,8 @@ function sectionsFromRow(row, diets) {
     row.canonical_name_bg, row.name_en, row.ingredients_bg, row.ingredients_en,
     row.ingredients_qty_bg, row.ingredients_qty_en, row.tag, row.tag_en,
   ].filter(Boolean).join(' ').toLowerCase();
-  const seafood = /(риба|сьомга|тон|треска|лаврак|скарид|мид|калмар|октопод|морски дар|fish|salmon|tuna|cod|sea bass|shrimp|prawn|mussel|squid|octopus|seafood)/i.test(text);
+  const seafood = !diets.plantBased
+    && /(риба|риба\s*тон|сьомга|треска|лаврак|скарид|мид|калмар|октопод|морски дар|fish|salmon|tuna|cod|sea bass|shrimp|prawn|mussel|squid|octopus|seafood)/i.test(text);
   const country = row.country_en || '';
   const mediterranean = MEDITERRANEAN_COUNTRIES.has(country)
     || /средиземномор|mediterranean/i.test(text)
@@ -119,6 +120,7 @@ function mapRow(row) {
     plantBased: isTrue(row.is_plant_based),
   };
   const sections = sectionsFromRow(row, diets);
+  diets.vegetarian = diets.meatFree && !sections.seafood;
   const translations = Object.fromEntries(LANGUAGES.map((language) => {
     const isBulgarian = language === 'bg';
     const title = isBulgarian ? row.canonical_name_bg : row[`name_${language}`];
