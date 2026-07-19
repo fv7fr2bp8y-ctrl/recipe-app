@@ -10,7 +10,7 @@ export const LANGUAGES = [
 const MESSAGES = {
   bg: {
     tagline: 'Рецепти от света', daily: 'Рецепта на деня', open: 'Отвори рецептата', premium: 'Виж Premium',
-    search: 'Търси рецепта, съставка, държава...', catalog: 'Каталог', diets: 'Режими', countries: 'Държави', difficulty: 'Трудност',
+    search: 'Търси рецепта, съставка, държава...', filters: 'Филтри', catalog: 'Каталог', diets: 'Режими', countries: 'Държави', difficulty: 'Трудност',
     all: 'Всички', recipes: 'рецепти', ingredients: 'Съставки', steps: 'Начин на приготвяне', minutes: 'мин', servings: 'порции',
     noResults: 'Няма намерени рецепти', clear: 'Изчисти филтрите', loading: 'Зарежда каталога...', imagePending: 'Снимката се подготвя',
     loadMore: 'Зареди още',
@@ -23,7 +23,7 @@ const MESSAGES = {
   },
   en: {
     tagline: 'Recipes from the world', daily: 'Recipe of the day', open: 'Open recipe', premium: 'View Premium',
-    search: 'Search recipes, ingredients, countries...', catalog: 'Catalogue', diets: 'Diets', countries: 'Countries', difficulty: 'Difficulty',
+    search: 'Search recipes, ingredients, countries...', filters: 'Filters', catalog: 'Catalogue', diets: 'Diets', countries: 'Countries', difficulty: 'Difficulty',
     all: 'All', recipes: 'recipes', ingredients: 'Ingredients', steps: 'Method', minutes: 'min', servings: 'servings',
     noResults: 'No recipes found', clear: 'Clear filters', loading: 'Loading the catalogue...', imagePending: 'Image coming soon',
     loadMore: 'Load more',
@@ -36,7 +36,7 @@ const MESSAGES = {
   },
   de: {
     tagline: 'Rezepte aus aller Welt', daily: 'Rezept des Tages', open: 'Rezept öffnen', premium: 'Premium ansehen',
-    search: 'Rezepte, Zutaten, Länder suchen...', catalog: 'Katalog', diets: 'Ernährungsweisen', countries: 'Länder', difficulty: 'Schwierigkeit',
+    search: 'Rezepte, Zutaten, Länder suchen...', filters: 'Filter', catalog: 'Katalog', diets: 'Ernährungsweisen', countries: 'Länder', difficulty: 'Schwierigkeit',
     all: 'Alle', recipes: 'Rezepte', ingredients: 'Zutaten', steps: 'Zubereitung', minutes: 'Min.', servings: 'Portionen',
     noResults: 'Keine Rezepte gefunden', clear: 'Filter löschen', loading: 'Katalog wird geladen...', imagePending: 'Bild folgt',
     loadMore: 'Mehr laden',
@@ -49,7 +49,7 @@ const MESSAGES = {
   },
   es: {
     tagline: 'Recetas del mundo', daily: 'Receta del día', open: 'Abrir receta', premium: 'Ver Premium',
-    search: 'Buscar recetas, ingredientes, países...', catalog: 'Catálogo', diets: 'Dietas', countries: 'Países', difficulty: 'Dificultad',
+    search: 'Buscar recetas, ingredientes, países...', filters: 'Filtros', catalog: 'Catálogo', diets: 'Dietas', countries: 'Países', difficulty: 'Dificultad',
     all: 'Todos', recipes: 'recetas', ingredients: 'Ingredientes', steps: 'Preparación', minutes: 'min', servings: 'raciones',
     noResults: 'No se encontraron recetas', clear: 'Borrar filtros', loading: 'Cargando el catálogo...', imagePending: 'Imagen próximamente',
     loadMore: 'Cargar más',
@@ -62,7 +62,7 @@ const MESSAGES = {
   },
   fr: {
     tagline: 'Recettes du monde', daily: 'Recette du jour', open: 'Ouvrir la recette', premium: 'Voir Premium',
-    search: 'Rechercher recettes, ingrédients, pays...', catalog: 'Catalogue', diets: 'Régimes', countries: 'Pays', difficulty: 'Difficulté',
+    search: 'Rechercher recettes, ingrédients, pays...', filters: 'Filtres', catalog: 'Catalogue', diets: 'Régimes', countries: 'Pays', difficulty: 'Difficulté',
     all: 'Tous', recipes: 'recettes', ingredients: 'Ingrédients', steps: 'Préparation', minutes: 'min', servings: 'portions',
     noResults: 'Aucune recette trouvée', clear: 'Effacer les filtres', loading: 'Chargement du catalogue...', imagePending: 'Image à venir',
     loadMore: 'Charger plus',
@@ -75,7 +75,7 @@ const MESSAGES = {
   },
   ru: {
     tagline: 'Рецепты со всего мира', daily: 'Рецепт дня', open: 'Открыть рецепт', premium: 'Смотреть Premium',
-    search: 'Поиск рецептов, ингредиентов, стран...', catalog: 'Каталог', diets: 'Рационы', countries: 'Страны', difficulty: 'Сложность',
+    search: 'Поиск рецептов, ингредиентов, стран...', filters: 'Фильтры', catalog: 'Каталог', diets: 'Рационы', countries: 'Страны', difficulty: 'Сложность',
     all: 'Все', recipes: 'рецептов', ingredients: 'Ингредиенты', steps: 'Приготовление', minutes: 'мин', servings: 'порции',
     noResults: 'Рецепты не найдены', clear: 'Сбросить фильтры', loading: 'Загрузка каталога...', imagePending: 'Изображение готовится',
     loadMore: 'Загрузить ещё',

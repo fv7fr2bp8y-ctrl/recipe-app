@@ -245,6 +245,7 @@ function RecipeApp() {
           difficulties={difficulties}
           messages={messages}
           allValue={ALL_FILTER}
+          onClearFilters={clearFilters}
         />
 
         {catalogError ? (
