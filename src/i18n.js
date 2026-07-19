@@ -18,7 +18,8 @@ const MESSAGES = {
     note: 'Рецепти за вдъхновение. Съобразявайте съставките с личните си нужди и алергии.', login: 'Вход', logout: 'Изход',
     premiumActive: 'Premium е активен', unlockTitle: 'Отключи целия каталог', premiumCopy: 'Premium отключва всички рецепти, режими, държави и всяко ново попълнение.', monthly: 'Месечен абонамент', cancelAnytime: 'Защитено плащане чрез Stripe. Можеш да прекратиш по всяко време.', manage: 'Управление на абонамента', unlock: 'Отключи TasteMaster365', loginOrRegister: 'Вход или нов профил', backCatalog: 'Назад към каталога',
     newProfile: 'Нов профил', welcome: 'Добре дошъл отново', createProfile: 'Създай TasteMaster профил', name: 'Име', email: 'Имейл', password: 'Парола', minChars: 'Поне 10 знака.', wait: 'Моля, изчакай...', create: 'Създай профил', help: 'Помощ за профил', back: 'Назад',
-    glutenFree: 'Без глутен', dairyFree: 'Без млечни', meatFree: 'Без месо', plantBased: 'Растително', healthyGut: 'Healthy Gut',
+    glutenFree: 'Без глутен', dairyFree: 'Без млечни', vegetarian: 'Вегетарианско', vegan: 'Веган', healthyGut: 'Healthy Gut',
+    dishes: 'Ястия', meatDishes: 'С месо', seafood: 'Риба и морски дарове', mediterranean: 'Средиземноморска кухня',
   },
   en: {
     tagline: 'Recipes from the world', daily: 'Recipe of the day', open: 'Open recipe', premium: 'View Premium',
@@ -30,7 +31,8 @@ const MESSAGES = {
     note: 'Recipes for inspiration. Adjust ingredients to your needs and allergies.', login: 'Sign in', logout: 'Sign out',
     premiumActive: 'Premium is active', unlockTitle: 'Unlock the full catalogue', premiumCopy: 'Premium unlocks every recipe, diet, country and all future additions.', monthly: 'Monthly subscription', cancelAnytime: 'Secure payment with Stripe. Cancel at any time.', manage: 'Manage subscription', unlock: 'Unlock TasteMaster365', loginOrRegister: 'Sign in or create account', backCatalog: 'Back to catalogue',
     newProfile: 'Create account', welcome: 'Welcome back', createProfile: 'Create your TasteMaster account', name: 'Name', email: 'Email', password: 'Password', minChars: 'At least 10 characters.', wait: 'Please wait...', create: 'Create account', help: 'Account support', back: 'Back',
-    glutenFree: 'Gluten free', dairyFree: 'Dairy free', meatFree: 'Meat free', plantBased: 'Plant based', healthyGut: 'Healthy Gut',
+    glutenFree: 'Gluten free', dairyFree: 'Dairy free', vegetarian: 'Vegetarian', vegan: 'Vegan', healthyGut: 'Healthy Gut',
+    dishes: 'Dishes', meatDishes: 'Meat dishes', seafood: 'Fish & seafood', mediterranean: 'Mediterranean',
   },
   de: {
     tagline: 'Rezepte aus aller Welt', daily: 'Rezept des Tages', open: 'Rezept öffnen', premium: 'Premium ansehen',
@@ -42,7 +44,8 @@ const MESSAGES = {
     note: 'Rezepte zur Inspiration. Bitte Zutaten an persönliche Bedürfnisse und Allergien anpassen.', login: 'Anmelden', logout: 'Abmelden',
     premiumActive: 'Premium ist aktiv', unlockTitle: 'Gesamten Katalog freischalten', premiumCopy: 'Premium schaltet alle Rezepte, Ernährungsweisen, Länder und Neuheiten frei.', monthly: 'Monatsabo', cancelAnytime: 'Sichere Zahlung über Stripe. Jederzeit kündbar.', manage: 'Abo verwalten', unlock: 'TasteMaster365 freischalten', loginOrRegister: 'Anmelden oder Konto erstellen', backCatalog: 'Zurück zum Katalog',
     newProfile: 'Neues Konto', welcome: 'Willkommen zurück', createProfile: 'TasteMaster-Konto erstellen', name: 'Name', email: 'E-Mail', password: 'Passwort', minChars: 'Mindestens 10 Zeichen.', wait: 'Bitte warten...', create: 'Konto erstellen', help: 'Kontohilfe', back: 'Zurück',
-    glutenFree: 'Glutenfrei', dairyFree: 'Milchfrei', meatFree: 'Fleischfrei', plantBased: 'Pflanzlich', healthyGut: 'Healthy Gut',
+    glutenFree: 'Glutenfrei', dairyFree: 'Milchfrei', vegetarian: 'Vegetarisch', vegan: 'Vegan', healthyGut: 'Healthy Gut',
+    dishes: 'Gerichte', meatDishes: 'Fleischgerichte', seafood: 'Fisch & Meeresfrüchte', mediterranean: 'Mediterran',
   },
   es: {
     tagline: 'Recetas del mundo', daily: 'Receta del día', open: 'Abrir receta', premium: 'Ver Premium',
@@ -54,7 +57,8 @@ const MESSAGES = {
     note: 'Recetas para inspirarte. Ajusta los ingredientes a tus necesidades y alergias.', login: 'Entrar', logout: 'Salir',
     premiumActive: 'Premium está activo', unlockTitle: 'Desbloquea todo el catálogo', premiumCopy: 'Premium desbloquea todas las recetas, dietas, países y novedades.', monthly: 'Suscripción mensual', cancelAnytime: 'Pago seguro con Stripe. Cancela cuando quieras.', manage: 'Gestionar suscripción', unlock: 'Desbloquear TasteMaster365', loginOrRegister: 'Entrar o crear cuenta', backCatalog: 'Volver al catálogo',
     newProfile: 'Nueva cuenta', welcome: 'Bienvenido de nuevo', createProfile: 'Crea tu cuenta TasteMaster', name: 'Nombre', email: 'Correo', password: 'Contraseña', minChars: 'Al menos 10 caracteres.', wait: 'Espera un momento...', create: 'Crear cuenta', help: 'Ayuda de cuenta', back: 'Volver',
-    glutenFree: 'Sin gluten', dairyFree: 'Sin lácteos', meatFree: 'Sin carne', plantBased: 'Vegetal', healthyGut: 'Healthy Gut',
+    glutenFree: 'Sin gluten', dairyFree: 'Sin lácteos', vegetarian: 'Vegetariano', vegan: 'Vegano', healthyGut: 'Healthy Gut',
+    dishes: 'Platos', meatDishes: 'Platos con carne', seafood: 'Pescado y marisco', mediterranean: 'Mediterránea',
   },
   fr: {
     tagline: 'Recettes du monde', daily: 'Recette du jour', open: 'Ouvrir la recette', premium: 'Voir Premium',
@@ -66,7 +70,8 @@ const MESSAGES = {
     note: 'Recettes pour inspiration. Adaptez les ingrédients à vos besoins et allergies.', login: 'Connexion', logout: 'Déconnexion',
     premiumActive: 'Premium est actif', unlockTitle: 'Débloquez tout le catalogue', premiumCopy: 'Premium débloque toutes les recettes, régimes, pays et nouveautés.', monthly: 'Abonnement mensuel', cancelAnytime: 'Paiement sécurisé par Stripe. Résiliable à tout moment.', manage: "Gérer l'abonnement", unlock: 'Débloquer TasteMaster365', loginOrRegister: 'Connexion ou nouveau compte', backCatalog: 'Retour au catalogue',
     newProfile: 'Nouveau compte', welcome: 'Bon retour', createProfile: 'Créez votre compte TasteMaster', name: 'Nom', email: 'E-mail', password: 'Mot de passe', minChars: 'Au moins 10 caractères.', wait: 'Veuillez patienter...', create: 'Créer un compte', help: 'Aide au compte', back: 'Retour',
-    glutenFree: 'Sans gluten', dairyFree: 'Sans produits laitiers', meatFree: 'Sans viande', plantBased: 'Végétal', healthyGut: 'Healthy Gut',
+    glutenFree: 'Sans gluten', dairyFree: 'Sans produits laitiers', vegetarian: 'Végétarien', vegan: 'Végan', healthyGut: 'Healthy Gut',
+    dishes: 'Plats', meatDishes: 'Plats de viande', seafood: 'Poissons et fruits de mer', mediterranean: 'Méditerranéen',
   },
   ru: {
     tagline: 'Рецепты со всего мира', daily: 'Рецепт дня', open: 'Открыть рецепт', premium: 'Смотреть Premium',
@@ -78,7 +83,8 @@ const MESSAGES = {
     note: 'Рецепты для вдохновения. Учитывайте свои потребности и аллергии.', login: 'Войти', logout: 'Выйти',
     premiumActive: 'Premium активен', unlockTitle: 'Открыть весь каталог', premiumCopy: 'Premium открывает все рецепты, рационы, страны и новые поступления.', monthly: 'Ежемесячная подписка', cancelAnytime: 'Безопасная оплата через Stripe. Отмена в любое время.', manage: 'Управление подпиской', unlock: 'Открыть TasteMaster365', loginOrRegister: 'Войти или создать профиль', backCatalog: 'Назад к каталогу',
     newProfile: 'Новый профиль', welcome: 'С возвращением', createProfile: 'Создать профиль TasteMaster', name: 'Имя', email: 'Эл. почта', password: 'Пароль', minChars: 'Не менее 10 символов.', wait: 'Подождите...', create: 'Создать профиль', help: 'Помощь с профилем', back: 'Назад',
-    glutenFree: 'Без глютена', dairyFree: 'Без молочных продуктов', meatFree: 'Без мяса', plantBased: 'Растительное', healthyGut: 'Healthy Gut',
+    glutenFree: 'Без глютена', dairyFree: 'Без молочных продуктов', vegetarian: 'Вегетарианское', vegan: 'Веган', healthyGut: 'Healthy Gut',
+    dishes: 'Блюда', meatDishes: 'Мясные блюда', seafood: 'Рыба и морепродукты', mediterranean: 'Средиземноморская кухня',
   },
 };
 

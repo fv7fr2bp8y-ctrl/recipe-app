@@ -38,15 +38,21 @@ function RecipeApp() {
   const dietFilterOptions = useMemo(() => [
     { key: 'glutenFree', label: messages.glutenFree },
     { key: 'dairyFree', label: messages.dairyFree },
-    { key: 'meatFree', label: messages.meatFree },
-    { key: 'plantBased', label: messages.plantBased },
+    { key: 'meatFree', label: messages.vegetarian },
+    { key: 'plantBased', label: messages.vegan },
     { key: 'healthyGut', label: messages.healthyGut },
+  ], [messages]);
+  const sectionOptions = useMemo(() => [
+    { key: 'meat', label: messages.meatDishes },
+    { key: 'seafood', label: messages.seafood },
+    { key: 'mediterranean', label: messages.mediterranean },
   ], [messages]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState(ALL_FILTER);
   const [difficulty, setDifficulty] = useState(ALL_FILTER);
   const [country, setCountry] = useState(ALL_FILTER);
   const [dietFilters, setDietFilters] = useState({});
+  const [section, setSection] = useState(ALL_FILTER);
   const [viewRecipeId, setViewRecipeId] = useState(() => new URLSearchParams(window.location.search).get('recipe'));
   const [showPremium, setShowPremium] = useState(false);
   const [showAccount, setShowAccount] = useState(false);
@@ -86,9 +92,10 @@ function RecipeApp() {
       const matchDiff = difficulty === ALL_FILTER || r.difficulty === difficulty;
       const matchCountry = country === ALL_FILTER || r.country === country;
       const matchDiet = dietFilterOptions.every(({ key }) => !dietFilters[key] || r.diets?.[key]);
-      return matchSearch && matchCat && matchDiff && matchCountry && matchDiet;
+      const matchSection = section === ALL_FILTER || r.sections?.[section];
+      return matchSearch && matchCat && matchDiff && matchCountry && matchDiet && matchSection;
     });
-  }, [recipes, search, category, difficulty, country, dietFilters, dietFilterOptions]);
+  }, [recipes, search, category, difficulty, country, dietFilters, dietFilterOptions, section]);
 
   const categories = useMemo(() => {
     const values = [...new Set(recipes.map((r) => r.collection || r.category).filter(Boolean))];
@@ -112,6 +119,7 @@ function RecipeApp() {
     setDifficulty(ALL_FILTER);
     setCountry(ALL_FILTER);
     setDietFilters({});
+    setSection(ALL_FILTER);
     setVisibleCount(PAGE_SIZE);
   };
 
@@ -228,6 +236,9 @@ function RecipeApp() {
           dietFilters={dietFilters}
           dietFilterOptions={dietFilterOptions}
           onToggleDiet={toggleDietFilter}
+          section={section}
+          setSection={(value) => { setSection(value); setVisibleCount(PAGE_SIZE); }}
+          sectionOptions={sectionOptions}
           count={filtered.length}
           totalCount={recipes.length}
           categories={categories}

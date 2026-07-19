@@ -6,7 +6,31 @@ const APP_LABELS = {
   Breakfast: 'Brunch',
   Brunch: 'Brunch',
   'Healthy Gut': 'Healthy Gut',
+  'Meat Free': 'Vegetarian',
+  'Plant Based': 'Vegan',
 };
+
+const MEDITERRANEAN_COUNTRIES = new Set([
+  'Albania', 'Croatia', 'Cyprus', 'Egypt', 'France', 'Greece', 'Israel', 'Italy',
+  'Lebanon', 'Morocco', 'Portugal', 'Spain', 'Tunisia', 'Türkiye', 'Turkey',
+]);
+
+function sectionsFromRow(row, diets) {
+  const text = [
+    row.canonical_name_bg, row.name_en, row.ingredients_bg, row.ingredients_en,
+    row.ingredients_qty_bg, row.ingredients_qty_en, row.tag, row.tag_en,
+  ].filter(Boolean).join(' ').toLowerCase();
+  const seafood = /(риба|сьомга|тон|треска|лаврак|скарид|мид|калмар|октопод|морски дар|fish|salmon|tuna|cod|sea bass|shrimp|prawn|mussel|squid|octopus|seafood)/i.test(text);
+  const country = row.country_en || '';
+  const mediterranean = MEDITERRANEAN_COUNTRIES.has(country)
+    || /средиземномор|mediterranean/i.test(text)
+    || /Mediterranean/i.test(country);
+  return {
+    meat: !diets.meatFree && !seafood,
+    seafood,
+    mediterranean,
+  };
+}
 
 function parseCsv(text) {
   const rows = [];
@@ -94,6 +118,7 @@ function mapRow(row) {
     meatFree: isTrue(row.is_meat_free),
     plantBased: isTrue(row.is_plant_based),
   };
+  const sections = sectionsFromRow(row, diets);
   const translations = Object.fromEntries(LANGUAGES.map((language) => {
     const isBulgarian = language === 'bg';
     const title = isBulgarian ? row.canonical_name_bg : row[`name_${language}`];
@@ -130,6 +155,7 @@ function mapRow(row) {
     steps: splitSteps(row.steps_bg),
     image: imageFromRow(row),
     diets,
+    sections,
     tag: row.tag,
     allergenNotes: row.allergen_notes,
     nutritionNotes: row.nutrition_notes,
@@ -151,6 +177,7 @@ function lockedPreview(recipe) {
     time: recipe.time,
     image: recipe.image,
     diets: recipe.diets,
+    sections: recipe.sections,
     tag: recipe.tag,
     translations: Object.fromEntries(Object.entries(recipe.translations).map(([language, translation]) => (
       [language, {

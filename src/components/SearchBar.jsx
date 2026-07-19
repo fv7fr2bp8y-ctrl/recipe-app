@@ -16,6 +16,9 @@ export default function SearchBar({
   dietFilters = {},
   dietFilterOptions = [],
   onToggleDiet,
+  section,
+  setSection,
+  sectionOptions = [],
   count,
   totalCount,
   categories = CATEGORIES,
@@ -75,6 +78,35 @@ export default function SearchBar({
                 dietFilters[key]
                   ? 'bg-emerald-600 text-white'
                   : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-gray-400 mb-2">{messages.dishes}</p>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={() => setSection(allValue)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              section === allValue
+                ? 'bg-orange-500 text-white'
+                : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
+            }`}
+          >
+            {messages.all}
+          </button>
+          {sectionOptions.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setSection(key)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                section === key
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-orange-50 text-orange-700 hover:bg-orange-100'
               }`}
             >
               {label}
