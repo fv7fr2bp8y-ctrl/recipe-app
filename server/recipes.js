@@ -16,12 +16,19 @@ const MEDITERRANEAN_COUNTRIES = new Set([
 ]);
 
 function sectionsFromRow(row, diets) {
-  const text = [
-    row.canonical_name_bg, row.name_en, row.ingredients_bg, row.ingredients_en,
-    row.ingredients_qty_bg, row.ingredients_qty_en, row.tag, row.tag_en,
+  const dishText = [
+    row.canonical_name_bg, row.name_en, row.description_bg, row.description_en,
+    row.tag, row.tag_en,
   ].filter(Boolean).join(' ').toLowerCase();
+  const ingredientText = [
+    row.ingredients_bg, row.ingredients_en, row.ingredients_qty_bg, row.ingredients_qty_en,
+  ].filter(Boolean).join(' ').toLowerCase();
+  const text = `${dishText} ${ingredientText}`;
   const seafood = !diets.plantBased
-    && /(риба|риба\s*тон|сьомга|треска|лаврак|скарид|мид|калмар|октопод|морски дар|fish|salmon|tuna|cod|sea bass|shrimp|prawn|mussel|squid|octopus|seafood)/i.test(text);
+    && (
+      /(риба|сьомга|треска|лаврак|скарид|мид|калмар|октопод|морски дар|fish|salmon|tuna|cod|sea bass|shrimp|prawn|mussel|squid|octopus|seafood)/i.test(dishText)
+      || /(риба\s*тон|сьомга|треска|лаврак|скарид|мид(?:и|а|ено)?\b|калмар|октопод|морски дар|salmon|tuna|cod\b|sea bass|shrimp|prawn|mussel|squid|octopus|seafood)/i.test(ingredientText)
+    );
   const country = row.country_en || '';
   const mediterranean = MEDITERRANEAN_COUNTRIES.has(country)
     || /средиземномор|mediterranean/i.test(text)
