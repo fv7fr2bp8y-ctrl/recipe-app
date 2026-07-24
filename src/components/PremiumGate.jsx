@@ -70,7 +70,7 @@ export default function PremiumGate({
             disabled={loading}
             className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
           >
-            {messages.loginOrRegister}
+            {consumptionOnly ? messages.login : messages.loginOrRegister}
           </button>
         ) : null}
 
