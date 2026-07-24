@@ -7,6 +7,7 @@ export default function PremiumGate({
   onSubscribe,
   onManageBilling,
   premium,
+  consumptionOnly,
   loading,
   error,
   messages,
@@ -23,24 +24,28 @@ export default function PremiumGate({
           TasteMaster365 Premium
         </p>
         <h2 id="premium-title" className="mt-3 text-2xl font-semibold text-stone-900">
-          {premium ? messages.premiumActive : messages.unlockTitle}
+          {premium ? messages.premiumActive : consumptionOnly ? messages.playAccessTitle : messages.unlockTitle}
         </h2>
         <p className="mt-3 text-sm leading-6 text-stone-600">
-          {FREE_RECIPE_LIMIT} {messages.recipes}. {messages.premiumCopy}
+          {consumptionOnly
+            ? messages.playAccessCopy
+            : `${FREE_RECIPE_LIMIT} ${messages.recipes}. ${messages.premiumCopy}`}
         </p>
-        <div className="mt-6 border-y border-orange-200 py-4">
-          <div className="flex items-baseline justify-between gap-4">
-            <span className="text-sm text-stone-600">{messages.monthly}</span>
-            <strong className="text-xl text-stone-900">€1.99</strong>
+        {!consumptionOnly && (
+          <div className="mt-6 border-y border-orange-200 py-4">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-sm text-stone-600">{messages.monthly}</span>
+              <strong className="text-xl text-stone-900">€1.99</strong>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-stone-500">
+              {messages.cancelAnytime}
+            </p>
           </div>
-          <p className="mt-2 text-xs leading-5 text-stone-500">
-            {messages.cancelAnytime}
-          </p>
-        </div>
+        )}
 
         {error ? <p className="mt-4 text-sm text-red-700" role="alert">{error}</p> : null}
 
-        {premium ? (
+        {premium && !consumptionOnly ? (
           <button
             type="button"
             onClick={onManageBilling}
@@ -49,7 +54,7 @@ export default function PremiumGate({
           >
             {messages.manage}
           </button>
-        ) : authenticated ? (
+        ) : !consumptionOnly && authenticated ? (
           <button
             type="button"
             onClick={onSubscribe}
@@ -58,7 +63,7 @@ export default function PremiumGate({
           >
             {loading ? messages.wait : messages.unlock}
           </button>
-        ) : (
+        ) : !authenticated ? (
           <button
             type="button"
             onClick={onLoginRequest}
@@ -67,7 +72,7 @@ export default function PremiumGate({
           >
             {messages.loginOrRegister}
           </button>
-        )}
+        ) : null}
 
         <button
           type="button"

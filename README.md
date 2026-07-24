@@ -1,6 +1,6 @@
 # TasteMaster365 — Recipe Atelier
 
-Лично приложение за управление на рецепти, достъпно на [tastemaster.eu](https://tastemaster.eu).
+Лично приложение за управление на рецепти, достъпно на [tastemaster365.com](https://tastemaster365.com).
 
 Изградено с React + Vite, Vercel Functions, Neon Postgres и Stripe. Браузърът вече не чете директно master таблицата: каталогът минава през `/api/recipes`, което връща пълните данни само при проверена Premium сесия.
 
@@ -92,7 +92,7 @@ vercel dev
 ```env
 VITE_GOOGLE_CLIENT_ID=...
 VITE_ADMIN_EMAIL=office@newage-studio.com
-APP_URL=https://tastemaster.eu
+APP_URL=https://tastemaster365.com
 ADMIN_EMAIL=office@newage-studio.com
 DATABASE_URL=postgresql://...
 SESSION_SECRET=<случайна стойност с поне 32 байта>
@@ -114,7 +114,7 @@ Premium не се пази в `localStorage`. Паролите се хешира
 1. Product: `TasteMaster365 Premium`.
 2. Recurring Price: `€1.99 / month`, Price ID `price_1TsOCpDbRc9nb2mVhLaqc9fk`.
 3. Включи Customer Portal с промяна на карта, фактури и отказ в края на периода.
-4. Добави webhook endpoint: `https://tastemaster.eu/api/billing/webhook`.
+4. Добави webhook endpoint: `https://tastemaster365.com/api/billing/webhook`.
 5. Избери събитията:
    - `checkout.session.completed`
    - `customer.subscription.created`
@@ -137,7 +137,7 @@ Premium не се пази в `localStorage`. Паролите се хешира
 Деплоят е във Vercel:
 
 1. Build с `vite build`
-2. Публикува във Vercel → [tastemaster.eu](https://tastemaster.eu)
+2. Публикува във Vercel → [tastemaster365.com](https://tastemaster365.com)
 
 ```bash
 # Ръчен build/deploy (ако е нужен)

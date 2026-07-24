@@ -13,6 +13,7 @@ import Footer from './components/Footer';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
+import { detectPlayApp } from './platform';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
@@ -20,6 +21,7 @@ const ALL_FILTER = '__all__';
 const PAGE_SIZE = 48;
 
 function RecipeApp() {
+  const playApp = useMemo(() => detectPlayApp(), []);
   const account = useAccount();
   const refreshAccount = account.refresh;
   const catalogRefreshKey = `${account.user?.id || 'guest'}:${account.premium}`;
@@ -141,6 +143,7 @@ function RecipeApp() {
   }, [recipes, premiumActive]);
 
   useEffect(() => {
+    if (playApp) return undefined;
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') !== 'success') return undefined;
     let attempts = 0;
@@ -153,7 +156,7 @@ function RecipeApp() {
       }
     }, 1500);
     return () => window.clearInterval(timer);
-  }, [refreshAccount]);
+  }, [playApp, refreshAccount]);
 
   const openRecipe = (recipe) => {
     if (!canOpenRecipe(recipe.id)) {
@@ -205,6 +208,7 @@ function RecipeApp() {
         accountLoading={account.loading || account.actionLoading}
         premium={account.premium}
         onManageBilling={account.manageBilling}
+        billingEnabled={!playApp}
         language={language}
         onLanguageChange={(nextLanguage) => {
           setLanguage(nextLanguage);
@@ -319,6 +323,7 @@ function RecipeApp() {
           onSubscribe={account.subscribe}
           onManageBilling={account.manageBilling}
           premium={account.premium}
+          consumptionOnly={playApp}
           loading={account.actionLoading}
           error={account.error}
           messages={messages}
@@ -327,6 +332,7 @@ function RecipeApp() {
       {showAccount && (
         <AccountDialog
           onClose={() => setShowAccount(false)}
+          allowRegistration={!playApp}
           onLogin={async (credentials) => {
             if (await account.login(credentials)) setShowAccount(false);
           }}

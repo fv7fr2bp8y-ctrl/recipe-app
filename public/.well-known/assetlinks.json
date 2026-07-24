@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "eu.tastemaster365.twa",
+      "sha256_cert_fingerprints": [
+        "B7:A0:C6:50:13:D1:D5:98:4F:CF:6C:E3:28:BE:A0:0E:81:3B:7D:28:9F:06:01:CD:CF:FA:0D:FE:37:1B:09:12"
+      ]
+    }
+  }
+]

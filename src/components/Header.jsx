@@ -17,6 +17,7 @@ export default function Header({
   accountLoading,
   premium,
   onManageBilling,
+  billingEnabled,
   language,
   onLanguageChange,
   onShare,
@@ -80,7 +81,7 @@ export default function Header({
           >
             <Share2 size={18} strokeWidth={1.5} />
           </button>
-          {accountUser && premium && (
+          {billingEnabled && accountUser && premium && (
             <button type="button" onClick={onManageBilling} className="hidden border border-orange-200 px-3 py-2 text-xs font-semibold text-orange-800 hover:bg-orange-50 md:block">Premium</button>
           )}
           <AccountButton user={accountUser} onLogin={onAccountLogin} onLogout={onAccountLogout} loading={accountLoading} labels={{ login: messages.login, logout: messages.logout }} />

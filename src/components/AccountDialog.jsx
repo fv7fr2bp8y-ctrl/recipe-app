@@ -1,6 +1,14 @@
 import { useState } from 'react';
 
-export default function AccountDialog({ onClose, onLogin, onRegister, loading, error, messages }) {
+export default function AccountDialog({
+  onClose,
+  onLogin,
+  onRegister,
+  allowRegistration = true,
+  loading,
+  error,
+  messages,
+}) {
   const [mode, setMode] = useState('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -20,10 +28,12 @@ export default function AccountDialog({ onClose, onLogin, onRegister, loading, e
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-stone-950/55 p-4 backdrop-blur-sm">
       <div role="dialog" aria-modal="true" aria-labelledby="account-title" className="w-full max-w-sm border border-orange-200 bg-[#fffaf2] p-7 shadow-2xl">
-        <div className="flex border border-stone-200 bg-white p-1" role="tablist" aria-label="Профил">
-          <button type="button" role="tab" aria-selected={mode === 'login'} onClick={() => switchMode('login')} className={`flex-1 px-3 py-2 text-sm font-semibold ${mode === 'login' ? 'bg-stone-900 text-white' : 'text-stone-600'}`}>{messages.login}</button>
-          <button type="button" role="tab" aria-selected={mode === 'register'} onClick={() => switchMode('register')} className={`flex-1 px-3 py-2 text-sm font-semibold ${mode === 'register' ? 'bg-stone-900 text-white' : 'text-stone-600'}`}>{messages.newProfile}</button>
-        </div>
+        {allowRegistration ? (
+          <div className="flex border border-stone-200 bg-white p-1" role="tablist" aria-label="Профил">
+            <button type="button" role="tab" aria-selected={mode === 'login'} onClick={() => switchMode('login')} className={`flex-1 px-3 py-2 text-sm font-semibold ${mode === 'login' ? 'bg-stone-900 text-white' : 'text-stone-600'}`}>{messages.login}</button>
+            <button type="button" role="tab" aria-selected={mode === 'register'} onClick={() => switchMode('register')} className={`flex-1 px-3 py-2 text-sm font-semibold ${mode === 'register' ? 'bg-stone-900 text-white' : 'text-stone-600'}`}>{messages.newProfile}</button>
+          </div>
+        ) : null}
         <h2 id="account-title" className="mt-6 text-2xl font-semibold text-stone-900">
           {mode === 'login' ? messages.welcome : messages.createProfile}
         </h2>
@@ -48,7 +58,7 @@ export default function AccountDialog({ onClose, onLogin, onRegister, loading, e
             {loading ? messages.wait : mode === 'login' ? messages.login : messages.create}
           </button>
         </form>
-        <p className="mt-4 text-center text-xs leading-5 text-stone-500">{messages.help}: office@newage-studio.com</p>
+        <p className="mt-4 text-center text-xs leading-5 text-stone-500">{messages.help}: support@tastemaster.eu</p>
         <button type="button" onClick={onClose} className="mt-3 w-full px-4 py-2 text-sm text-stone-500 hover:text-stone-800">{messages.back}</button>
       </div>
     </div>
