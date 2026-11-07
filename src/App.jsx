@@ -13,6 +13,7 @@ import Footer from './components/Footer';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
+import { SEO_LANGUAGES, recipePath } from './seo-url';
 import { detectPlayApp } from './platform';
 import { track } from './track';
 
@@ -33,7 +34,10 @@ function RecipeApp() {
     (accountEmail && accountEmail === ADMIN_EMAIL)
     || (userEmail && userEmail.toLowerCase() === ADMIN_EMAIL),
   );
-  const [language, setLanguage] = useState(() => localStorage.getItem('tastemaster-language') || 'bg');
+  const [language, setLanguage] = useState(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('lang');
+    return SEO_LANGUAGES.includes(fromUrl) ? fromUrl : localStorage.getItem('tastemaster-language') || 'bg';
+  });
   const messages = getMessages(language);
   const recipes = useMemo(() => sourceRecipes
     .filter((recipe) => recipe.image && recipe.availableLanguages?.includes(language))
@@ -70,6 +74,7 @@ function RecipeApp() {
   } = useFreemiumAccess(recipes, isAdmin || account.premium);
   const linkedRecipe = recipes.find((recipe) => recipe.id === viewRecipeId) || null;
   const viewRecipe = linkedRecipe && canOpenRecipe(linkedRecipe.id) ? linkedRecipe : null;
+  const linkedLockedRecipe = linkedRecipe && !viewRecipe ? linkedRecipe : null;
 
   useEffect(() => {
     document.documentElement.lang = language;
@@ -173,8 +178,7 @@ function RecipeApp() {
   };
 
   const share = async (recipe = null) => {
-    const url = new URL(window.location.origin);
-    if (recipe) url.searchParams.set('recipe', recipe.id);
+    const url = new URL(recipe ? recipePath(recipe, language) : '/', window.location.origin);
     const data = {
       title: recipe ? `${recipe.title} · TasteMaster365` : 'TasteMaster365',
       text: recipe?.description || messages.tagline,
@@ -308,7 +312,7 @@ function RecipeApp() {
         </div>
       </main>
 
-      <Footer messages={messages} />
+      <Footer messages={messages} language={language} />
 
       {viewRecipe && (
         <RecipeDetail
@@ -319,9 +323,15 @@ function RecipeApp() {
         />
       )}
 
-      {showPremium && (
+      {(showPremium || linkedLockedRecipe) && (
         <PremiumGate
-          onClose={() => setShowPremium(false)}
+          onClose={() => {
+            setShowPremium(false);
+            if (linkedLockedRecipe) {
+              setViewRecipeId(null);
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          }}
           authenticated={Boolean(account.user)}
           onLoginRequest={() => setShowAccount(true)}
           onSubscribe={account.subscribe}
@@ -329,7 +339,7 @@ function RecipeApp() {
           premium={account.premium}
           consumptionOnly={playApp}
           trialEligible={account.subscriptionStatus === 'inactive'}
-          recipe={premiumRecipe}
+          recipe={linkedLockedRecipe || premiumRecipe}
           loading={account.actionLoading}
           error={account.error}
           messages={messages}

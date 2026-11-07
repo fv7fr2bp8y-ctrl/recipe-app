@@ -1,4 +1,6 @@
-export default function Footer({ messages }) {
+import { hubPath } from '../seo-url';
+
+export default function Footer({ messages, language }) {
   return (
     <footer className="mx-auto mt-12 max-w-6xl border-t border-orange-200 px-4 py-10 text-center text-stone-600">
       <div className="mx-auto mb-5 flex max-w-48 items-center gap-3 text-orange-500" aria-hidden="true">
@@ -11,6 +13,7 @@ export default function Footer({ messages }) {
         support@tastemaster.eu
       </a>
       <div className="mt-4 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs">
+        <a href={hubPath(language)} className="hover:text-orange-700">{messages.allRecipes}</a>
         <a href="/privacy.html" className="hover:text-orange-700">{messages.privacy}</a>
         <a href="/account-deletion.html" className="hover:text-orange-700">{messages.deleteAccount}</a>
       </div>
