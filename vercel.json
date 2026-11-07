@@ -1,4 +1,9 @@
 {
+  "redirects": [
+    { "source": "/:path*", "has": [{ "type": "host", "value": "tastemaster.eu" }], "destination": "https://tastemaster365.com/:path*", "permanent": true },
+    { "source": "/:path*", "has": [{ "type": "host", "value": "www.tastemaster.eu" }], "destination": "https://tastemaster365.com/:path*", "permanent": true },
+    { "source": "/:path*", "has": [{ "type": "host", "value": "www.tastemaster365.com" }], "destination": "https://tastemaster365.com/:path*", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/seo?page=sitemap" },
     { "source": "/:lang(bg|en|de|es|fr|ru)/recipes", "destination": "/api/seo?page=hub&lang=:lang" },
