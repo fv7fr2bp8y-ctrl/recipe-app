@@ -40,6 +40,9 @@ test('free catalog exposes full details for 12 recipes only', async () => {
   assert.equal(catalog[12].locked, true);
   assert.equal('ingredients' in catalog[12], false);
   assert.equal('steps' in catalog[12], false);
+  assert.equal(catalog[12].teaserIngredients.length <= 3, true);
+  assert.equal(catalog[12].stepCount > 0, true);
+  assert.equal(Object.values(catalog[12].translations).every((t) => !('steps' in t) && !('ingredients' in t)), true);
 });
 
 test('premium catalog exposes every recipe', async () => {

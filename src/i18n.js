@@ -21,6 +21,7 @@ const MESSAGES = {
     newProfile: 'Нов профил', welcome: 'Добре дошъл отново', createProfile: 'Създай TasteMaster профил', name: 'Име', email: 'Имейл', password: 'Парола', minChars: 'Поне 10 знака.', wait: 'Моля, изчакай...', create: 'Създай профил', help: 'Помощ за профил', back: 'Назад',
     glutenFree: 'Без глутен', dairyFree: 'Без млечни', vegetarian: 'Вегетарианско', vegan: 'Веган', healthyGut: 'Healthy Gut',
     dishes: 'Ястия', meatDishes: 'С месо', seafood: 'Риба и морски дарове', mediterranean: 'Средиземноморска кухня',
+    planMonthly: "Месечно", planYearly: "Годишно", perMonth: "/ месец", perYear: "/ година", yearlyEquivalent: "по {price} на месец", save: "Спести 50%", trialCta: "Започни 7 дни безплатно", trialNote: "7 дни безплатно, после {price}. Прекрати преди края и не плащаш нищо.", teaserTitle: "В тази рецепта", teaserMore: "+ още {ingredients} съставки и {steps} стъпки в Premium",
   },
   en: {
     tagline: 'Recipes from the world', daily: 'Recipe of the day', open: 'Open recipe', premium: 'View Premium',
@@ -35,6 +36,7 @@ const MESSAGES = {
     newProfile: 'Create account', welcome: 'Welcome back', createProfile: 'Create your TasteMaster account', name: 'Name', email: 'Email', password: 'Password', minChars: 'At least 10 characters.', wait: 'Please wait...', create: 'Create account', help: 'Account support', back: 'Back',
     glutenFree: 'Gluten free', dairyFree: 'Dairy free', vegetarian: 'Vegetarian', vegan: 'Vegan', healthyGut: 'Healthy Gut',
     dishes: 'Dishes', meatDishes: 'Meat dishes', seafood: 'Fish & seafood', mediterranean: 'Mediterranean',
+    planMonthly: "Monthly", planYearly: "Yearly", perMonth: "/ month", perYear: "/ year", yearlyEquivalent: "just {price} a month", save: "Save 50%", trialCta: "Start 7 days free", trialNote: "7 days free, then {price}. Cancel before it ends and you pay nothing.", teaserTitle: "In this recipe", teaserMore: "+ {ingredients} more ingredients and {steps} steps in Premium",
   },
   de: {
     tagline: 'Rezepte aus aller Welt', daily: 'Rezept des Tages', open: 'Rezept öffnen', premium: 'Premium ansehen',
@@ -49,6 +51,7 @@ const MESSAGES = {
     newProfile: 'Neues Konto', welcome: 'Willkommen zurück', createProfile: 'TasteMaster-Konto erstellen', name: 'Name', email: 'E-Mail', password: 'Passwort', minChars: 'Mindestens 10 Zeichen.', wait: 'Bitte warten...', create: 'Konto erstellen', help: 'Kontohilfe', back: 'Zurück',
     glutenFree: 'Glutenfrei', dairyFree: 'Milchfrei', vegetarian: 'Vegetarisch', vegan: 'Vegan', healthyGut: 'Healthy Gut',
     dishes: 'Gerichte', meatDishes: 'Fleischgerichte', seafood: 'Fisch & Meeresfrüchte', mediterranean: 'Mediterran',
+    planMonthly: "Monatlich", planYearly: "Jährlich", perMonth: "/ Monat", perYear: "/ Jahr", yearlyEquivalent: "nur {price} pro Monat", save: "50 % sparen", trialCta: "7 Tage kostenlos testen", trialNote: "7 Tage kostenlos, danach {price}. Vor Ablauf kündigen und nichts zahlen.", teaserTitle: "In diesem Rezept", teaserMore: "+ {ingredients} weitere Zutaten und {steps} Schritte in Premium",
   },
   es: {
     tagline: 'Recetas del mundo', daily: 'Receta del día', open: 'Abrir receta', premium: 'Ver Premium',
@@ -63,6 +66,7 @@ const MESSAGES = {
     newProfile: 'Nueva cuenta', welcome: 'Bienvenido de nuevo', createProfile: 'Crea tu cuenta TasteMaster', name: 'Nombre', email: 'Correo', password: 'Contraseña', minChars: 'Al menos 10 caracteres.', wait: 'Espera un momento...', create: 'Crear cuenta', help: 'Ayuda de cuenta', back: 'Volver',
     glutenFree: 'Sin gluten', dairyFree: 'Sin lácteos', vegetarian: 'Vegetariano', vegan: 'Vegano', healthyGut: 'Healthy Gut',
     dishes: 'Platos', meatDishes: 'Platos con carne', seafood: 'Pescado y marisco', mediterranean: 'Mediterránea',
+    planMonthly: "Mensual", planYearly: "Anual", perMonth: "/ mes", perYear: "/ año", yearlyEquivalent: "solo {price} al mes", save: "Ahorra 50 %", trialCta: "Empieza 7 días gratis", trialNote: "7 días gratis, después {price}. Cancela antes y no pagas nada.", teaserTitle: "En esta receta", teaserMore: "+ {ingredients} ingredientes más y {steps} pasos en Premium",
   },
   fr: {
     tagline: 'Recettes du monde', daily: 'Recette du jour', open: 'Ouvrir la recette', premium: 'Voir Premium',
@@ -77,6 +81,7 @@ const MESSAGES = {
     newProfile: 'Nouveau compte', welcome: 'Bon retour', createProfile: 'Créez votre compte TasteMaster', name: 'Nom', email: 'E-mail', password: 'Mot de passe', minChars: 'Au moins 10 caractères.', wait: 'Veuillez patienter...', create: 'Créer un compte', help: 'Aide au compte', back: 'Retour',
     glutenFree: 'Sans gluten', dairyFree: 'Sans produits laitiers', vegetarian: 'Végétarien', vegan: 'Végan', healthyGut: 'Healthy Gut',
     dishes: 'Plats', meatDishes: 'Plats de viande', seafood: 'Poissons et fruits de mer', mediterranean: 'Méditerranéen',
+    planMonthly: "Mensuel", planYearly: "Annuel", perMonth: "/ mois", perYear: "/ an", yearlyEquivalent: "seulement {price} par mois", save: "Économisez 50 %", trialCta: "Essayer 7 jours gratuits", trialNote: "7 jours gratuits, puis {price}. Résiliez avant la fin et vous ne payez rien.", teaserTitle: "Dans cette recette", teaserMore: "+ {ingredients} ingrédients et {steps} étapes de plus avec Premium",
   },
   ru: {
     tagline: 'Рецепты со всего мира', daily: 'Рецепт дня', open: 'Открыть рецепт', premium: 'Смотреть Premium',
@@ -91,6 +96,7 @@ const MESSAGES = {
     newProfile: 'Новый профиль', welcome: 'С возвращением', createProfile: 'Создать профиль TasteMaster', name: 'Имя', email: 'Эл. почта', password: 'Пароль', minChars: 'Не менее 10 символов.', wait: 'Подождите...', create: 'Создать профиль', help: 'Помощь с профилем', back: 'Назад',
     glutenFree: 'Без глютена', dairyFree: 'Без молочных продуктов', vegetarian: 'Вегетарианское', vegan: 'Веган', healthyGut: 'Healthy Gut',
     dishes: 'Блюда', meatDishes: 'Мясные блюда', seafood: 'Рыба и морепродукты', mediterranean: 'Средиземноморская кухня',
+    planMonthly: "Ежемесячно", planYearly: "Ежегодно", perMonth: "/ месяц", perYear: "/ год", yearlyEquivalent: "всего {price} в месяц", save: "Экономия 50%", trialCta: "Попробовать 7 дней бесплатно", trialNote: "7 дней бесплатно, затем {price}. Отмените до конца и ничего не заплатите.", teaserTitle: "В этом рецепте", teaserMore: "+ ещё {ingredients} ингредиентов и {steps} шагов в Premium",
   },
 };
 

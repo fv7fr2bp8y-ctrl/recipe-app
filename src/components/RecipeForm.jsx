@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import DrivePhotoPicker from './DrivePhotoPicker';
 
-const CATEGORIES = ['Основно ястие', 'Салата', 'Супа', 'Десерт', 'Закуска', 'Предястие'];
+const CATEGORIES = ['Основно ястие', 'Салата', 'Супа', 'Десерт', 'Закуска', 'Предястие', 'Вегетарианско'];
 const DIFFICULTIES = ['Лесно', 'Средно', 'Трудно'];
 
 const empty = {

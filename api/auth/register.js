@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { createSessionToken, setSessionCookie } from '../../server/session.js';
-import { createPasswordUser, getUserByEmail } from '../../server/db.js';
+import { createPasswordUser, getUserByEmail, recordFunnelEvent } from '../../server/db.js';
 import { hashPassword } from '../../server/password.js';
 import { jsonError, methodNotAllowed, readJson } from '../../server/http.js';
 
@@ -35,6 +35,7 @@ export default async function handler(req, res) {
     });
     const sessionUser = { id: user.id, email: user.email, name: user.name, picture: '' };
     setSessionCookie(res, await createSessionToken(sessionUser));
+    await recordFunnelEvent({ name: 'signup', userId: user.id }).catch(() => {});
     return res.status(201).json({ user: sessionUser });
   } catch (error) {
     console.error('registration_failed', error);

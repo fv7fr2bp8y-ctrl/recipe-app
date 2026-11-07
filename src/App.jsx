@@ -14,6 +14,7 @@ import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
 import { detectPlayApp } from './platform';
+import { track } from './track';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
@@ -57,6 +58,7 @@ function RecipeApp() {
   const [section, setSection] = useState(ALL_FILTER);
   const [viewRecipeId, setViewRecipeId] = useState(() => new URLSearchParams(window.location.search).get('recipe'));
   const [showPremium, setShowPremium] = useState(false);
+  const [premiumRecipe, setPremiumRecipe] = useState(null);
   const [showAccount, setShowAccount] = useState(false);
   const [toast, setToast] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
@@ -160,7 +162,9 @@ function RecipeApp() {
 
   const openRecipe = (recipe) => {
     if (!canOpenRecipe(recipe.id)) {
+      setPremiumRecipe(recipe);
       setShowPremium(true);
+      if (!playApp) track('premium_view');
       return;
     }
     registerRecipeView(recipe.id);
@@ -324,6 +328,8 @@ function RecipeApp() {
           onManageBilling={account.manageBilling}
           premium={account.premium}
           consumptionOnly={playApp}
+          trialEligible={account.subscriptionStatus === 'inactive'}
+          recipe={premiumRecipe}
           loading={account.actionLoading}
           error={account.error}
           messages={messages}

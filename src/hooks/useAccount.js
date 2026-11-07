@@ -63,11 +63,16 @@ export function useAccount() {
     setActionLoading(false);
   }, []);
 
-  const openBilling = useCallback(async (path) => {
+  const openBilling = useCallback(async (path, payload) => {
     setActionLoading(true);
     setError('');
     try {
-      const response = await fetch(path, { method: 'POST', credentials: 'include' });
+      const response = await fetch(path, {
+        method: 'POST',
+        credentials: 'include',
+        headers: payload ? { 'Content-Type': 'application/json' } : undefined,
+        body: payload ? JSON.stringify(payload) : undefined,
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Stripe страницата не можа да се отвори.');
       window.location.assign(data.url);
@@ -88,7 +93,7 @@ export function useAccount() {
     register: (details) => authenticate('/api/auth/register', details),
     logout,
     refresh,
-    subscribe: () => openBilling('/api/billing/checkout'),
+    subscribe: (plan) => openBilling('/api/billing/checkout', { plan }),
     manageBilling: () => openBilling('/api/billing/portal'),
   };
 }

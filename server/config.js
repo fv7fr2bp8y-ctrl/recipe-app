@@ -15,8 +15,12 @@ export const FREE_RECIPE_IDS = [
   'FF-C004',
 ];
 
-export const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID
-  || 'price_1TsOCpDbRc9nb2mVhLaqc9fk';
+export const STRIPE_PRICES = {
+  monthly: process.env.STRIPE_PRICE_MONTHLY || 'price_1UZBGrDbRc9nb2mVCxePCUMc',
+  yearly: process.env.STRIPE_PRICE_YEARLY || 'price_1UZBGsDbRc9nb2mVCuBEFHFf',
+};
+
+export const TRIAL_DAYS = 7;
 
 export const MASTER_SHEET_CSV_URL = process.env.MASTER_RECIPES_CSV_URL
   || 'https://docs.google.com/spreadsheets/d/1wxcQ28CslNUa_7-hrhkIKEuO6fF2HAkfSrKxRYmIRek/export?format=csv&gid=1571845576';

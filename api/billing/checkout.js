@@ -1,15 +1,20 @@
 import { getSession } from '../../server/session.js';
-import { getEntitlement, entitlementIsActive, getUser, setStripeCustomer } from '../../server/db.js';
-import { getOrigin, jsonError, methodNotAllowed } from '../../server/http.js';
+import {
+  getEntitlement, entitlementIsActive, getUser, recordFunnelEvent, setStripeCustomer,
+} from '../../server/db.js';
+import { getOrigin, jsonError, methodNotAllowed, readJson } from '../../server/http.js';
 import { stripe } from '../../server/stripe.js';
-import { STRIPE_PRICE_ID } from '../../server/config.js';
+import { STRIPE_PRICES, TRIAL_DAYS } from '../../server/config.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
   try {
     const sessionUser = await getSession(req);
     if (!sessionUser) return jsonError(res, 401, 'authentication_required', 'Sign in before subscribing.');
-    if (entitlementIsActive(await getEntitlement(sessionUser.id))) {
+    const { plan: requestedPlan } = await readJson(req).catch(() => ({}));
+    const plan = requestedPlan === 'yearly' ? 'yearly' : 'monthly';
+    const entitlement = await getEntitlement(sessionUser.id);
+    if (entitlementIsActive(entitlement)) {
       return jsonError(res, 409, 'already_subscribed', 'This account already has Premium access.');
     }
     const user = await getUser(sessionUser.id);
@@ -32,13 +37,17 @@ export default async function handler(req, res) {
       mode: 'subscription',
       customer: customerId,
       client_reference_id: user.id,
-      line_items: [{ price: STRIPE_PRICE_ID, quantity: 1 }],
+      line_items: [{ price: STRIPE_PRICES[plan], quantity: 1 }],
       allow_promotion_codes: true,
       success_url: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled`,
-      subscription_data: { metadata: { tm_user_id: user.id } },
-      metadata: { tm_user_id: user.id },
+      subscription_data: {
+        metadata: { tm_user_id: user.id, tm_plan: plan },
+        ...(entitlement ? {} : { trial_period_days: TRIAL_DAYS }),
+      },
+      metadata: { tm_user_id: user.id, tm_plan: plan },
     });
+    await recordFunnelEvent({ name: 'checkout_start', plan, userId: user.id }).catch(() => {});
     return res.status(200).json({ url: checkout.url });
   } catch (error) {
     console.error('checkout_create_failed', error);

@@ -220,6 +220,8 @@ function mapRow(row, sourceOrder) {
   };
 }
 
+const TEASER_INGREDIENTS = 3;
+
 function lockedPreview(recipe) {
   return {
     id: recipe.id,
@@ -235,12 +237,16 @@ function lockedPreview(recipe) {
     diets: recipe.diets,
     sections: recipe.sections,
     tag: recipe.tag,
+    teaserIngredients: (recipe.ingredients || []).slice(0, TEASER_INGREDIENTS),
+    ingredientCount: (recipe.ingredients || []).length,
+    stepCount: (recipe.steps || []).length,
     translations: Object.fromEntries(Object.entries(recipe.translations).map(([language, translation]) => (
       [language, {
         title: translation.title,
         description: translation.description,
         tag: translation.tag,
         country: translation.country,
+        teaserIngredients: (translation.ingredients || []).slice(0, TEASER_INGREDIENTS),
       }]
     ))),
     availableLanguages: recipe.availableLanguages,

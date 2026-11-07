@@ -1,4 +1,6 @@
-import { claimStripeEvent, getUserByStripeCustomer, releaseStripeEvent, saveEntitlement } from '../../server/db.js';
+import {
+  claimStripeEvent, getUserByStripeCustomer, recordFunnelEvent, releaseStripeEvent, saveEntitlement,
+} from '../../server/db.js';
 import { jsonError, methodNotAllowed, readRawBody } from '../../server/http.js';
 import { stripe, subscriptionPeriodEnd } from '../../server/stripe.js';
 import { requireEnv } from '../../server/config.js';
@@ -44,6 +46,11 @@ export default async function handler(req, res) {
       if (checkout.subscription) {
         const subscription = await stripe().subscriptions.retrieve(checkout.subscription);
         await saveSubscription(subscription);
+        await recordFunnelEvent({
+          name: subscription.status === 'trialing' ? 'trial_started' : 'paid',
+          plan: checkout.metadata?.tm_plan || null,
+          userId: checkout.metadata?.tm_user_id || null,
+        }).catch(() => {});
       }
     } else if ([
       'customer.subscription.created',

@@ -30,6 +30,13 @@ export function ensureSchema() {
         current_period_end TIMESTAMPTZ,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
+      await sql`CREATE TABLE IF NOT EXISTS tm_funnel_events (
+        id BIGSERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        plan TEXT,
+        user_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )`;
       await sql`CREATE TABLE IF NOT EXISTS tm_stripe_events (
         id TEXT PRIMARY KEY,
         processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -129,4 +136,20 @@ export async function claimStripeEvent(eventId) {
 export async function releaseStripeEvent(eventId) {
   await ensureSchema();
   await db()`DELETE FROM tm_stripe_events WHERE id = ${eventId}`;
+}
+
+export async function recordFunnelEvent({ name, plan = null, userId = null }) {
+  await ensureSchema();
+  await db()`INSERT INTO tm_funnel_events (name, plan, user_id) VALUES (${name}, ${plan}, ${userId})`;
+}
+
+export async function funnelStats(days) {
+  await ensureSchema();
+  return db()`
+    SELECT name, COALESCE(plan, '') AS plan, COUNT(*)::int AS count
+    FROM tm_funnel_events
+    WHERE created_at > NOW() - make_interval(days => ${days})
+    GROUP BY name, plan
+    ORDER BY name, plan
+  `;
 }
