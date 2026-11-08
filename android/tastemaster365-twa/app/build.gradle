@@ -55,7 +55,7 @@ android {
     namespace "eu.tastemaster365.twa"
     defaultConfig {
         applicationId "eu.tastemaster365.twa"
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 35
         versionCode 2
         versionName "2"
