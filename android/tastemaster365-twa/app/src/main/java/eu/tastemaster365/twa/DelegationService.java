@@ -1,6 +1,8 @@
 package eu.tastemaster365.twa;
 
 
+import com.google.androidbrowserhelper.playbilling.digitalgoods.DigitalGoodsRequestHandler;
+
 
 public class DelegationService extends
         com.google.androidbrowserhelper.trusted.DelegationService {
@@ -9,5 +11,8 @@ public class DelegationService extends
         super.onCreate();
 
         
+            registerExtraCommandHandler(new DigitalGoodsRequestHandler(getApplicationContext()));
+        
     }
 }
+
