@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "eu.tastemaster365.twa",
       "sha256_cert_fingerprints": [
-        "B7:A0:C6:50:13:D1:D5:98:4F:CF:6C:E3:28:BE:A0:0E:81:3B:7D:28:9F:06:01:CD:CF:FA:0D:FE:37:1B:09:12"
+        "B7:A0:C6:50:13:D1:D5:98:4F:CF:6C:E3:28:BE:A0:0E:81:3B:7D:28:9F:06:01:CD:CF:FA:0D:FE:37:1B:09:12",
+        "45:64:75:D0:F5:1E:79:D7:AC:1A:67:0F:CE:2B:A3:58:F4:F5:6A:08:18:0C:2A:94:E2:81:84:C2:37:B8:87:17"
       ]
     }
   }
