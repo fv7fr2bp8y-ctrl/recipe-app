@@ -22,6 +22,9 @@ export const STRIPE_PRICES = {
 
 export const TRIAL_DAYS = 7;
 
+export const PLAY_PACKAGE = 'eu.tastemaster365.twa';
+export const PLAY_PRODUCTS = { monthly: 'tastemaster_monthly', yearly: 'tastemaster_yearly' };
+
 export const MASTER_SHEET_CSV_URL = process.env.MASTER_RECIPES_CSV_URL
   || 'https://docs.google.com/spreadsheets/d/1wxcQ28CslNUa_7-hrhkIKEuO6fF2HAkfSrKxRYmIRek/export?format=csv&gid=1571845576';
 

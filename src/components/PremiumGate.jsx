@@ -18,14 +18,21 @@ export default function PremiumGate({
   premium,
   consumptionOnly,
   trialEligible,
+  playPlans,
+  onPlayBuy,
   recipe,
   loading,
   error,
   messages,
 }) {
   const [plan, setPlan] = useState('yearly');
-  const selected = PLANS[plan];
+  const plans = playPlans
+    ? Object.fromEntries(Object.entries(PLANS).map(([key, option]) => [key, { ...option, price: playPlans[key].price, monthlyEquivalent: undefined }]))
+    : PLANS;
+  const selected = plans[plan];
   const priceLabel = `${selected.price} ${messages[selected.periodKey]}`;
+  const showTrial = playPlans ? playPlans[plan].trial : trialEligible;
+  const subscribe = () => (playPlans ? onPlayBuy(playPlans[plan].sku) : onSubscribe(plan));
   const teaser = recipe?.teaserIngredients || [];
   const moreIngredients = Math.max((recipe?.ingredientCount || 0) - teaser.length, 0);
 
@@ -80,7 +87,7 @@ export default function PremiumGate({
 
         {!premium && !consumptionOnly && (
           <div className="mt-5 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Premium">
-            {Object.entries(PLANS).map(([key, option]) => (
+            {Object.entries(plans).map(([key, option]) => (
               <button
                 key={key}
                 type="button"
@@ -110,8 +117,8 @@ export default function PremiumGate({
 
         {!premium && !consumptionOnly && (
           <p className="mt-3 text-xs leading-5 text-stone-500">
-            {trialEligible ? `${fill(messages.trialNote, { price: priceLabel })} ` : ''}
-            {messages.cancelAnytime}
+            {showTrial ? `${fill(messages.trialNote, { price: priceLabel })} ` : ''}
+            {playPlans ? '' : messages.cancelAnytime}
           </p>
         )}
 
@@ -120,7 +127,7 @@ export default function PremiumGate({
         {premium && !consumptionOnly ? (
           <button
             type="button"
-            onClick={onManageBilling}
+            onClick={playPlans ? () => window.location.assign('https://play.google.com/store/account/subscriptions') : onManageBilling}
             disabled={loading}
             className="mt-6 w-full bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800 disabled:opacity-60"
           >
@@ -129,11 +136,11 @@ export default function PremiumGate({
         ) : !consumptionOnly && authenticated ? (
           <button
             type="button"
-            onClick={() => onSubscribe(plan)}
+            onClick={subscribe}
             disabled={loading}
             className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
           >
-            {loading ? messages.wait : trialEligible ? messages.trialCta : messages.unlock}
+            {loading ? messages.wait : showTrial ? messages.trialCta : messages.unlock}
           </button>
         ) : !authenticated ? (
           <button

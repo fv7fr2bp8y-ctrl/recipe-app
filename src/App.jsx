@@ -16,6 +16,7 @@ import { getMessages, localizeRecipe } from './i18n';
 import { SEO_LANGUAGES, recipePath } from './seo-url';
 import { detectPlayApp } from './platform';
 import { track } from './track';
+import { buyPlayPlan, loadPlayPlans, restorePlayPurchases } from './playBilling';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
@@ -24,6 +25,9 @@ const PAGE_SIZE = 48;
 
 function RecipeApp() {
   const playApp = useMemo(() => detectPlayApp(), []);
+  const [playPlans, setPlayPlans] = useState(null);
+  const [playError, setPlayError] = useState('');
+  const [playBusy, setPlayBusy] = useState(false);
   const account = useAccount();
   const refreshAccount = account.refresh;
   const catalogRefreshKey = `${account.user?.id || 'guest'}:${account.premium}`;
@@ -165,11 +169,38 @@ function RecipeApp() {
     return () => window.clearInterval(timer);
   }, [playApp, refreshAccount]);
 
+  useEffect(() => {
+    if (!playApp) return undefined;
+    let cancelled = false;
+    loadPlayPlans().then((plans) => { if (!cancelled) setPlayPlans(plans); });
+    return () => { cancelled = true; };
+  }, [playApp]);
+
+  const accountId = account.user?.id;
+  useEffect(() => {
+    if (!playApp || !accountId) return;
+    restorePlayPurchases().then((linked) => { if (linked) refreshAccount(); });
+  }, [playApp, accountId, refreshAccount]);
+
+  const buyPlay = async (sku) => {
+    setPlayBusy(true);
+    setPlayError('');
+    try {
+      await buyPlayPlan(sku);
+      await refreshAccount();
+      setShowPremium(false);
+    } catch (error) {
+      if (error?.name !== 'AbortError') setPlayError(error.message);
+    } finally {
+      setPlayBusy(false);
+    }
+  };
+
   const openRecipe = (recipe) => {
     if (!canOpenRecipe(recipe.id)) {
       setPremiumRecipe(recipe);
       setShowPremium(true);
-      if (!playApp) track('premium_view');
+      if (!playApp || playPlans) track('premium_view');
       return;
     }
     registerRecipeView(recipe.id);
@@ -337,18 +368,20 @@ function RecipeApp() {
           onSubscribe={account.subscribe}
           onManageBilling={account.manageBilling}
           premium={account.premium}
-          consumptionOnly={playApp}
+          consumptionOnly={playApp && !playPlans}
+          playPlans={playPlans}
+          onPlayBuy={buyPlay}
           trialEligible={account.subscriptionStatus === 'inactive'}
           recipe={linkedLockedRecipe || premiumRecipe}
-          loading={account.actionLoading}
-          error={account.error}
+          loading={account.actionLoading || playBusy}
+          error={playError || account.error}
           messages={messages}
         />
       )}
       {showAccount && (
         <AccountDialog
           onClose={() => setShowAccount(false)}
-          allowRegistration={!playApp}
+          allowRegistration={!playApp || Boolean(playPlans)}
           onLogin={async (credentials) => {
             if (await account.login(credentials)) setShowAccount(false);
           }}
