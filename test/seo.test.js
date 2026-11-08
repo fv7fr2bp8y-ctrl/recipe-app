@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recipeIdFromSlug, recipePath, slugify } from '../src/seo-url.js';
-import { renderRecipePage } from '../server/seo.js';
+import { renderRecipePage, renderSitemap } from '../server/seo.js';
 
 test('recipe paths transliterate titles and round-trip the id', () => {
   assert.equal(slugify('Шопска салата'), 'shopska-salata');
@@ -27,4 +27,13 @@ test('locked recipe pages expose only the teaser', () => {
   assert.match(html, /"@type":"Recipe"/);
   assert.doesNotMatch(html, /recipeInstructions|recipeIngredient/);
   assert.match(html, /\?recipe=BR-C900&amp;lang=bg/);
+});
+
+test('sitemap and canonical links use the primary domain', () => {
+  const recipe = {
+    id: 'BR-C901', title: 'Тест', image: 'https://example.com/a.jpg', translations: { bg: { title: 'Тест' } }, locked: true,
+  };
+  const urls = [...renderSitemap([recipe]).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  assert.equal(urls.every((url) => url.startsWith('https://tastemaster365.com/')), true);
+  assert.match(renderRecipePage(recipe, [recipe], 'bg'), /rel="canonical" href="https:\/\/tastemaster365\.com\//);
 });

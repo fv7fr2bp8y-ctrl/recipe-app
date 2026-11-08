@@ -2,7 +2,7 @@ import { catalogForAccess } from './recipes.js';
 import { getMessages, localizeRecipe } from '../src/i18n.js';
 import { SEO_LANGUAGES, hubPath, recipePath } from '../src/seo-url.js';
 
-export const SITE = (process.env.APP_URL || 'https://tastemaster365.com').replace(/\/$/, '');
+export const SITE = 'https://tastemaster365.com';
 
 const LOCALES = { bg: 'bg_BG', en: 'en_GB', de: 'de_DE', es: 'es_ES', fr: 'fr_FR', ru: 'ru_RU' };
 const SCHEMA_DIETS = {
