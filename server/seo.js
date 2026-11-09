@@ -5,6 +5,19 @@ import { SEO_LANGUAGES, hubPath, recipePath } from '../src/seo-url.js';
 export const SITE = 'https://tastemaster365.com';
 
 const LOCALES = { bg: 'bg_BG', en: 'en_GB', de: 'de_DE', es: 'es_ES', fr: 'fr_FR', ru: 'ru_RU' };
+const MEAL_TYPES = {
+  закуска: { bg: 'Закуска', en: 'Breakfast', de: 'Frühstück', es: 'Desayuno', fr: 'Petit-déjeuner', ru: 'Завтрак' },
+  вечеря: { bg: 'Вечеря', en: 'Dinner', de: 'Abendessen', es: 'Cena', fr: 'Dîner', ru: 'Ужин' },
+  обяд: { bg: 'Обяд', en: 'Lunch', de: 'Mittagessen', es: 'Almuerzo', fr: 'Déjeuner', ru: 'Обед' },
+  предястие: { bg: 'Предястие', en: 'Appetizer', de: 'Vorspeise', es: 'Entrante', fr: 'Entrée', ru: 'Закуска' },
+  салата: { bg: 'Салата', en: 'Salad', de: 'Salat', es: 'Ensalada', fr: 'Salade', ru: 'Салат' },
+  десерт: { bg: 'Десерт', en: 'Dessert', de: 'Dessert', es: 'Postre', fr: 'Dessert', ru: 'Десерт' },
+  основно: { bg: 'Основно ястие', en: 'Main course', de: 'Hauptgericht', es: 'Plato principal', fr: 'Plat principal', ru: 'Основное блюдо' },
+  брънч: { bg: 'Брънч', en: 'Brunch', de: 'Brunch', es: 'Brunch', fr: 'Brunch', ru: 'Бранч' },
+  супа: { bg: 'Супа', en: 'Soup', de: 'Suppe', es: 'Sopa', fr: 'Soupe', ru: 'Суп' },
+  снак: { bg: 'Снак', en: 'Snack', de: 'Snack', es: 'Aperitivo', fr: 'En-cas', ru: 'Перекус' },
+};
+
 const SCHEMA_DIETS = {
   glutenFree: 'https://schema.org/GlutenFreeDiet',
   vegetarian: 'https://schema.org/VegetarianDiet',
@@ -141,6 +154,7 @@ export function renderRecipePage(source, recipes, language) {
     inLanguage: language,
     author: { '@type': 'Organization', name: 'TasteMaster365', url: SITE },
     publisher: { '@type': 'Organization', name: 'TasteMaster365', logo: { '@type': 'ImageObject', url: `${SITE}/tastemaster-logo.png` } },
+    recipeCategory: MEAL_TYPES[String(source.mealType || '').toLowerCase()]?.[language],
     recipeCuisine: recipe.country || undefined,
     keywords: recipe.tag || undefined,
     totalTime: minutes ? `PT${minutes}M` : undefined,

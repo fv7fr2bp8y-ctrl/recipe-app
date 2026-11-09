@@ -37,3 +37,10 @@ test('sitemap and canonical links use the primary domain', () => {
   assert.equal(urls.every((url) => url.startsWith('https://tastemaster365.com/')), true);
   assert.match(renderRecipePage(recipe, [recipe], 'bg'), /rel="canonical" href="https:\/\/tastemaster365\.com\//);
 });
+
+test('recipe pages declare a localized category', () => {
+  const recipe = {
+    id: 'BR-C902', title: 'Тест', image: 'https://example.com/a.jpg', mealType: 'вечеря', translations: { en: { title: 'Test' } }, locked: true,
+  };
+  assert.match(renderRecipePage(recipe, [recipe], 'en'), /"recipeCategory":"Dinner"/);
+});
