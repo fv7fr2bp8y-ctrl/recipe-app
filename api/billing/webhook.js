@@ -4,6 +4,7 @@ import {
 import { jsonError, methodNotAllowed, readRawBody } from '../../server/http.js';
 import { stripe, subscriptionPeriodEnd } from '../../server/stripe.js';
 import { requireEnv } from '../../server/config.js';
+import { attributionFromMetadata } from '../../server/attribution.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -50,6 +51,7 @@ export default async function handler(req, res) {
           name: subscription.status === 'trialing' ? 'trial_started' : 'paid',
           plan: checkout.metadata?.tm_plan || null,
           userId: checkout.metadata?.tm_user_id || null,
+          attribution: attributionFromMetadata(checkout.metadata),
         }).catch(() => {});
       }
     } else if ([

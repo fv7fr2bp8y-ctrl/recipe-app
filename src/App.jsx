@@ -10,12 +10,14 @@ import DailyRecipe from './components/DailyRecipe';
 import PremiumGate from './components/PremiumGate';
 import AccountDialog from './components/AccountDialog';
 import Footer from './components/Footer';
+import ConsentBanner from './components/ConsentBanner';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
 import { SEO_LANGUAGES, recipePath } from './seo-url';
 import { detectPlayApp } from './platform';
 import { track } from './track';
+import { initAds, trackConversion } from './ads';
 import { buyPlayPlan, loadPlayPlans, restorePlayPurchases } from './playBilling';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -154,13 +156,21 @@ function RecipeApp() {
   }, [recipes, premiumActive]);
 
   useEffect(() => {
+    if (!playApp) initAds();
+  }, [playApp]);
+
+  useEffect(() => {
     if (playApp) return undefined;
     const params = new URLSearchParams(window.location.search);
     if (params.get('checkout') !== 'success') return undefined;
+    const checkoutSessionId = params.get('session_id') || undefined;
     let attempts = 0;
     const timer = window.setInterval(async () => {
       attempts += 1;
       const status = await refreshAccount();
+      if (status?.premium && status.subscriptionStatus === 'trialing') {
+        trackConversion('trial_started', { transactionId: checkoutSessionId });
+      }
       if (status?.premium || attempts >= 8) {
         window.clearInterval(timer);
         window.history.replaceState({}, '', window.location.pathname);
@@ -344,6 +354,7 @@ function RecipeApp() {
       </main>
 
       <Footer messages={messages} language={language} />
+      {playApp ? null : <ConsentBanner language={language} />}
 
       {viewRecipe && (
         <RecipeDetail

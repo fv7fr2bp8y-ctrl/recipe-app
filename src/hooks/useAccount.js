@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getAttribution } from '../attribution';
+import { trackConversion } from '../ads';
 
 export function useAccount() {
   const [user, setUser] = useState(null);
@@ -40,7 +42,7 @@ export function useAccount() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, attribution: getAttribution() }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Входът не беше потвърден.');
@@ -75,6 +77,7 @@ export function useAccount() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Stripe страницата не можа да се отвори.');
+      if (path === '/api/billing/checkout') await trackConversion('checkout_start');
       window.location.assign(data.url);
     } catch (billingError) {
       setError(billingError.message);
@@ -93,7 +96,7 @@ export function useAccount() {
     register: (details) => authenticate('/api/auth/register', details),
     logout,
     refresh,
-    subscribe: (plan) => openBilling('/api/billing/checkout', { plan }),
+    subscribe: (plan) => openBilling('/api/billing/checkout', { plan, attribution: getAttribution() }),
     manageBilling: () => openBilling('/api/billing/portal'),
   };
 }

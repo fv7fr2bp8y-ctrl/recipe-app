@@ -1,9 +1,11 @@
+import { getAttribution } from './attribution';
+
 export function track(name) {
   fetch('/api/events', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, attribution: getAttribution() }),
     keepalive: true,
   }).catch(() => {});
 }

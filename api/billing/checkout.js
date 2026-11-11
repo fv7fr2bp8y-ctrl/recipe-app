@@ -6,6 +6,7 @@ import { getOrigin, jsonError, methodNotAllowed, readJson } from '../../server/h
 import { stripe } from '../../server/stripe.js';
 import { STRIPE_PRICES, TRIAL_DAYS } from '../../server/config.js';
 import { playSubscriptionId, verifyPlayPurchase } from '../../server/play.js';
+import { attributionMetadata, sanitizeAttribution } from '../../server/attribution.js';
 
 async function linkPlayPurchase(res, userId, entitlement, purchaseToken) {
   if (typeof purchaseToken !== 'string' || !purchaseToken || purchaseToken.length > 4096) {
@@ -37,7 +38,9 @@ export default async function handler(req, res) {
   try {
     const sessionUser = await getSession(req);
     if (!sessionUser) return jsonError(res, 401, 'authentication_required', 'Sign in before subscribing.');
-    const { plan: requestedPlan, provider, purchaseToken } = await readJson(req).catch(() => ({}));
+    const {
+      plan: requestedPlan, provider, purchaseToken, attribution: rawAttribution,
+    } = await readJson(req).catch(() => ({}));
     const entitlement = await getEntitlement(sessionUser.id);
     if (provider === 'play') return await linkPlayPurchase(res, sessionUser.id, entitlement, purchaseToken);
     const plan = requestedPlan === 'yearly' ? 'yearly' : 'monthly';
@@ -46,6 +49,10 @@ export default async function handler(req, res) {
     }
     const user = await getUser(sessionUser.id);
     if (!user) return jsonError(res, 401, 'unknown_user', 'The signed-in account was not found.');
+
+    // The account keeps its first source; the browser's copy covers accounts made before tracking.
+    const attribution = sanitizeAttribution(user.attribution) || sanitizeAttribution(rawAttribution);
+    const sourceMetadata = attributionMetadata(attribution);
 
     const client = stripe();
     let customerId = user.stripe_customer_id;
@@ -69,12 +76,14 @@ export default async function handler(req, res) {
       success_url: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled`,
       subscription_data: {
-        metadata: { tm_user_id: user.id, tm_plan: plan },
+        metadata: { tm_user_id: user.id, tm_plan: plan, ...sourceMetadata },
         ...(entitlement ? {} : { trial_period_days: TRIAL_DAYS }),
       },
-      metadata: { tm_user_id: user.id, tm_plan: plan },
+      metadata: { tm_user_id: user.id, tm_plan: plan, ...sourceMetadata },
     });
-    await recordFunnelEvent({ name: 'checkout_start', plan, userId: user.id }).catch(() => {});
+    await recordFunnelEvent({
+      name: 'checkout_start', plan, userId: user.id, attribution,
+    }).catch(() => {});
     return res.status(200).json({ url: checkout.url });
   } catch (error) {
     console.error('checkout_create_failed', error);

@@ -3,6 +3,7 @@ import { createSessionToken, setSessionCookie } from '../../server/session.js';
 import { createPasswordUser, getUserByEmail, recordFunnelEvent } from '../../server/db.js';
 import { hashPassword } from '../../server/password.js';
 import { jsonError, methodNotAllowed, readJson } from '../../server/http.js';
+import { sanitizeAttribution } from '../../server/attribution.js';
 
 function normalizeEmail(value) {
   const email = String(value || '').trim().toLowerCase();
@@ -13,7 +14,8 @@ function normalizeEmail(value) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
   try {
-    const { email: rawEmail, password, name: rawName } = await readJson(req);
+    const { email: rawEmail, password, name: rawName, attribution: rawAttribution } = await readJson(req);
+    const attribution = sanitizeAttribution(rawAttribution);
     const email = normalizeEmail(rawEmail);
     const name = String(rawName || '').trim().slice(0, 100);
     if (!email) return jsonError(res, 400, 'invalid_email', 'Въведи валиден имейл адрес.');
@@ -32,10 +34,11 @@ export default async function handler(req, res) {
       email,
       name,
       passwordHash,
+      attribution,
     });
     const sessionUser = { id: user.id, email: user.email, name: user.name, picture: '' };
     setSessionCookie(res, await createSessionToken(sessionUser));
-    await recordFunnelEvent({ name: 'signup', userId: user.id }).catch(() => {});
+    await recordFunnelEvent({ name: 'signup', userId: user.id, attribution }).catch(() => {});
     return res.status(201).json({ user: sessionUser });
   } catch (error) {
     console.error('registration_failed', error);

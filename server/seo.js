@@ -52,6 +52,10 @@ function alternates(pathFor) {
   ].join('\n    ');
 }
 
+// Same rules as src/attribution.js: remember the ad click / UTM tags of the first visit
+// so they survive the jump from a recipe page into the app.
+const ATTRIBUTION_SCRIPT = "(function(){try{var p=new URLSearchParams(location.search),k='tm_attribution',f=['gclid','gbraid','wbraid','utm_source','utm_medium','utm_campaign'],o={},n=0;f.forEach(function(x){var v=p.get(x);if(v){o[x]=v.slice(0,200);n++;}});if(!n)return;var s=localStorage.getItem(k);if(s&&!o.gclid&&!o.gbraid&&!o.wbraid)return;o.landing=location.pathname.slice(0,200);o.at=new Date().toISOString();localStorage.setItem(k,JSON.stringify(o));}catch(e){}})();";
+
 function layout({ language, title, description, canonical, image, ogType = 'website', pathFor, structuredData, body }) {
   const messages = getMessages(language);
   return `<!doctype html>
@@ -73,6 +77,7 @@ function layout({ language, title, description, canonical, image, ogType = 'webs
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-tastemaster-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-tastemaster.png" />
+    <script>${ATTRIBUTION_SCRIPT}</script>
     <meta name="theme-color" content="#169f9e" />
     ${structuredData ? `<script type="application/ld+json">${jsonLd(structuredData)}</script>` : ''}
     <style>

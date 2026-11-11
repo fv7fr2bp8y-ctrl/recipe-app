@@ -37,6 +37,10 @@ export function ensureSchema() {
         user_id TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )`;
+      await sql`ALTER TABLE tm_users ADD COLUMN IF NOT EXISTS attribution JSONB`;
+      await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS utm_source TEXT`;
+      await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS utm_campaign TEXT`;
+      await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS gclid TEXT`;
       await sql`CREATE TABLE IF NOT EXISTS tm_stripe_events (
         id TEXT PRIMARY KEY,
         processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -71,14 +75,24 @@ export async function getUserByEmail(email) {
   return rows[0] || null;
 }
 
-export async function createPasswordUser({ id, email, name, passwordHash }) {
+export async function createPasswordUser({ id, email, name, passwordHash, attribution = null }) {
   await ensureSchema();
   const rows = await db()`
-    INSERT INTO tm_users (id, email, name, password_hash, updated_at)
-    VALUES (${id}, ${email}, ${name || ''}, ${passwordHash}, NOW())
+    INSERT INTO tm_users (id, email, name, password_hash, attribution, updated_at)
+    VALUES (${id}, ${email}, ${name || ''}, ${passwordHash}, ${attribution ? JSON.stringify(attribution) : null}::jsonb, NOW())
     RETURNING *
   `;
   return rows[0];
+}
+
+// Fills in the source only for accounts that have none yet (first touch wins).
+export async function setUserAttributionIfEmpty(userId, attribution) {
+  if (!attribution) return;
+  await ensureSchema();
+  await db()`
+    UPDATE tm_users SET attribution = ${JSON.stringify(attribution)}::jsonb
+    WHERE id = ${userId} AND attribution IS NULL
+  `;
 }
 
 export async function getUser(id) {
@@ -138,18 +152,26 @@ export async function releaseStripeEvent(eventId) {
   await db()`DELETE FROM tm_stripe_events WHERE id = ${eventId}`;
 }
 
-export async function recordFunnelEvent({ name, plan = null, userId = null }) {
+export async function recordFunnelEvent({ name, plan = null, userId = null, attribution = null }) {
   await ensureSchema();
-  await db()`INSERT INTO tm_funnel_events (name, plan, user_id) VALUES (${name}, ${plan}, ${userId})`;
+  const source = attribution?.utm_source || null;
+  const campaign = attribution?.utm_campaign || null;
+  const gclid = attribution?.gclid || attribution?.gbraid || attribution?.wbraid || null;
+  await db()`
+    INSERT INTO tm_funnel_events (name, plan, user_id, utm_source, utm_campaign, gclid)
+    VALUES (${name}, ${plan}, ${userId}, ${source}, ${campaign}, ${gclid})
+  `;
 }
 
 export async function funnelStats(days) {
   await ensureSchema();
   return db()`
-    SELECT name, COALESCE(plan, '') AS plan, COUNT(*)::int AS count
+    SELECT name, COALESCE(plan, '') AS plan,
+      COALESCE(utm_campaign, CASE WHEN gclid IS NOT NULL THEN '(google ads)' END, '') AS campaign,
+      COUNT(*)::int AS count
     FROM tm_funnel_events
     WHERE created_at > NOW() - make_interval(days => ${days})
-    GROUP BY name, plan
-    ORDER BY name, plan
+    GROUP BY 1, 2, 3
+    ORDER BY 1, 2, 3
   `;
 }
