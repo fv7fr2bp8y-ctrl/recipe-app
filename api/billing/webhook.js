@@ -14,13 +14,19 @@ async function saveSubscription(subscription) {
     : subscription.customer?.id;
   const userId = subscription.metadata?.tm_user_id
     || (customerId ? (await getUserByStripeCustomer(customerId))?.id : null);
-  if (!userId) throw new Error(`No TasteMaster user for Stripe subscription ${subscription.id}`);
+  // The Stripe account is shared with other apps (ASTRA365, Onira...), so this endpoint
+  // also receives their subscriptions. Skip them instead of failing the delivery.
+  if (!userId) {
+    console.warn('webhook_skip_foreign_subscription', subscription.id);
+    return false;
+  }
   await saveEntitlement({
     userId,
     subscriptionId: subscription.id,
     status: subscription.status,
     currentPeriodEnd: subscriptionPeriodEnd(subscription),
   });
+  return true;
 }
 
 export default async function handler(req, res) {
@@ -46,8 +52,8 @@ export default async function handler(req, res) {
       const checkout = event.data.object;
       if (checkout.subscription) {
         const subscription = await stripe().subscriptions.retrieve(checkout.subscription);
-        await saveSubscription(subscription);
-        await recordFunnelEvent({
+        const ours = await saveSubscription(subscription);
+        if (ours) await recordFunnelEvent({
           name: subscription.status === 'trialing' ? 'trial_started' : 'paid',
           plan: checkout.metadata?.tm_plan || null,
           userId: checkout.metadata?.tm_user_id || null,
