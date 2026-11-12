@@ -21,7 +21,13 @@ function exportAuthorized(req) {
 }
 
 async function exportAdsConversions(req, res) {
-  if (!exportAuthorized(req)) return jsonError(res, 403, 'forbidden', 'Export token required.');
+  if (!exportAuthorized(req)) {
+    const scheme = (req.headers.authorization || '').split(' ')[0] || 'none';
+    console.warn('gads_export_unauthorized', scheme, req.headers['user-agent'] || '');
+    // Clients such as Google's uploader send the password only after a Basic challenge.
+    res.setHeader('WWW-Authenticate', 'Basic realm="TasteMaster export", charset="UTF-8"');
+    return jsonError(res, 401, 'unauthorized', 'Export token required.');
+  }
   const days = Math.min(Math.max(Number(req.query?.days) || 60, 1), 90);
   const rows = await adsConversionEvents(days);
   const csv = buildAdsCsv(rows, {
@@ -42,7 +48,9 @@ export default async function handler(req, res) {
       await recordFunnelEvent({ name, userId: user?.id || null, attribution: sanitizeAttribution(attribution) });
       return res.status(204).end();
     }
-    if (req.method === 'GET' && req.query?.export === 'gads') return await exportAdsConversions(req, res);
+    if ((req.method === 'GET' || req.method === 'HEAD') && req.query?.export === 'gads') {
+      return await exportAdsConversions(req, res);
+    }
     if (req.method === 'GET') {
       const user = await getSession(req);
       const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
