@@ -6,6 +6,7 @@
   ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/seo?page=sitemap" },
+    { "source": "/gads-conversions.csv", "destination": "/api/events?export=gads" },
     { "source": "/:lang(bg|en|de|es|fr|ru)/recipes", "destination": "/api/seo?page=hub&lang=:lang" },
     { "source": "/:lang(bg|en|de|es|fr|ru)/recipe/:slug", "destination": "/api/seo?page=recipe&lang=:lang&slug=:slug" }
   ]
