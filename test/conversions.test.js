@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { adsTime, buildAdsCsv, eventValue } from '../server/conversions.js';
+import { SAMPLE_GCLID, adsTime, buildAdsCsv, eventValue } from '../server/conversions.js';
 
 const NAMES = { paid: 'TasteMaster Purchase', trial_started: '' };
 
@@ -35,4 +35,11 @@ test('buildAdsCsv quotes cells with commas', () => {
     { name: 'paid', plan: 'monthly', gclid: 'a,b', value_cents: 499, consent: 'granted', created_at: '2026-11-12T10:00:00Z' },
   ], { paid: 'Buy "now"' });
   assert.match(csv, /"a,b","Buy ""now""",/);
+});
+
+test('buildAdsCsv serves a placeholder row only while there is no real conversion', () => {
+  const csv = buildAdsCsv([], NAMES);
+  const rows = csv.trim().split('\n');
+  assert.equal(rows.length, 2);
+  assert.ok(rows[1].startsWith(`${SAMPLE_GCLID},TasteMaster Purchase,`));
 });

@@ -3,6 +3,8 @@
 // and whose visitor accepted ad cookies. Google ignores rows it has already imported,
 // so the same rows can be served again on every scheduled run.
 
+export const SAMPLE_GCLID = 'TasteMasterSampleNotARealClick';
+
 export const PLAN_VALUES = { monthly: 4.99, yearly: 29.99 };
 
 function csvCell(value) {
@@ -34,6 +36,12 @@ export function buildAdsCsv(rows, conversionNames) {
       value.toFixed(2),
       (row.currency || 'EUR').toUpperCase(),
     ].map(csvCell).join(','));
+  }
+  // Google Ads needs at least one data row to read the columns when the connection is
+  // set up. Until a real conversion exists, serve a placeholder that Google rejects
+  // as an unknown click id, so it is never counted.
+  if (lines.length === 1 && conversionNames.paid) {
+    lines.push([SAMPLE_GCLID, conversionNames.paid, adsTime(Date.now() - 86400000), '4.99', 'EUR'].map(csvCell).join(','));
   }
   return `${lines.join('\n')}\n`;
 }
