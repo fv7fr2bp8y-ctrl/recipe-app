@@ -58,6 +58,10 @@ export default async function handler(req, res) {
           plan: checkout.metadata?.tm_plan || null,
           userId: checkout.metadata?.tm_user_id || null,
           attribution: attributionFromMetadata(checkout.metadata),
+          valueCents: checkout.amount_total ?? null,
+          currency: checkout.currency ? checkout.currency.toUpperCase() : null,
+          ref: checkout.id,
+          consent: checkout.metadata?.tm_consent || null,
         }).catch(() => {});
       }
     } else if ([

@@ -33,13 +33,33 @@ async function linkPlayPurchase(res, userId, entitlement, purchaseToken) {
   return res.status(200).json({ premium: purchase.status === 'active' });
 }
 
+// After the return from Stripe the page asks what was actually paid, so the Google Ads
+// purchase conversion carries the real amount (promotion codes included).
+async function checkoutSummary(req, res, userId) {
+  const sessionId = req.query?.session_id;
+  if (typeof sessionId !== 'string' || !/^cs_[A-Za-z0-9_]{10,200}$/.test(sessionId)) {
+    return jsonError(res, 400, 'invalid_session', 'Invalid checkout session.');
+  }
+  const checkout = await stripe().checkout.sessions.retrieve(sessionId);
+  if (checkout.client_reference_id !== userId) {
+    return jsonError(res, 404, 'session_not_found', 'Checkout session not found.');
+  }
+  return res.status(200).json({
+    plan: checkout.metadata?.tm_plan || null,
+    value: (checkout.amount_total || 0) / 100,
+    currency: (checkout.currency || 'eur').toUpperCase(),
+    paid: checkout.payment_status === 'paid' && (checkout.amount_total || 0) > 0,
+  });
+}
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') return methodNotAllowed(res, ['POST']);
+  if (req.method !== 'POST' && req.method !== 'GET') return methodNotAllowed(res, ['GET', 'POST']);
   try {
     const sessionUser = await getSession(req);
     if (!sessionUser) return jsonError(res, 401, 'authentication_required', 'Sign in before subscribing.');
+    if (req.method === 'GET') return await checkoutSummary(req, res, sessionUser.id);
     const {
-      plan: requestedPlan, provider, purchaseToken, attribution: rawAttribution,
+      plan: requestedPlan, provider, purchaseToken, attribution: rawAttribution, consent,
     } = await readJson(req).catch(() => ({}));
     const entitlement = await getEntitlement(sessionUser.id);
     if (provider === 'play') return await linkPlayPurchase(res, sessionUser.id, entitlement, purchaseToken);
@@ -52,7 +72,10 @@ export default async function handler(req, res) {
 
     // The account keeps its first source; the browser's copy covers accounts made before tracking.
     const attribution = sanitizeAttribution(user.attribution) || sanitizeAttribution(rawAttribution);
-    const sourceMetadata = attributionMetadata(attribution);
+    const sourceMetadata = {
+      ...attributionMetadata(attribution),
+      ...(consent === 'granted' || consent === 'denied' ? { tm_consent: consent } : {}),
+    };
 
     const client = stripe();
     let customerId = user.stripe_customer_id;

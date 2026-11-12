@@ -2,9 +2,13 @@
 // IDs are public (they are visible in the page tag); env vars can override them.
 // Until the visitor accepts, Google gets only cookieless pings (consent denied).
 const ADS_ID = import.meta.env.VITE_GADS_ID ?? 'AW-18278475994';
+const TRIAL_LABEL = import.meta.env.VITE_GADS_TRIAL_LABEL ?? 'RVtTCIHNzbYdENrR7YtE';
 const LABELS = {
-  trial_started: import.meta.env.VITE_GADS_TRIAL_LABEL ?? 'RVtTCIHNzbYdENrR7YtE',
+  trial_started: TRIAL_LABEL,
   checkout_start: import.meta.env.VITE_GADS_CHECKOUT_LABEL ?? 'dbSbCITNzbYdENrR7YtE',
+  // Paid start without a trial (returning accounts). Until a separate "Purchase"
+  // conversion action exists, it counts in the Sign-ups action, with its value.
+  purchase: import.meta.env.VITE_GADS_PURCHASE_LABEL || TRIAL_LABEL,
 };
 export const CONSENT_KEY = 'tm_consent';
 const SENT_KEY = 'tm_ads_sent';

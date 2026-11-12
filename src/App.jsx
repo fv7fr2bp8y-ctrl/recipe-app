@@ -20,6 +20,17 @@ import { track } from './track';
 import { initAds, trackConversion } from './ads';
 import { buyPlayPlan, loadPlayPlans, restorePlayPurchases } from './playBilling';
 
+async function loadCheckoutSummary(sessionId) {
+  try {
+    const response = await fetch(`/api/billing/checkout?session_id=${encodeURIComponent(sessionId)}`, {
+      credentials: 'include',
+    });
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL || '').toLowerCase();
 const ALL_FILTER = '__all__';
@@ -168,8 +179,17 @@ function RecipeApp() {
     const timer = window.setInterval(async () => {
       attempts += 1;
       const status = await refreshAccount();
+      if (status?.premium) window.clearInterval(timer);
       if (status?.premium && status.subscriptionStatus === 'trialing') {
         trackConversion('trial_started', { transactionId: checkoutSessionId });
+      } else if (status?.premium && checkoutSessionId) {
+        // Paid right away (no trial for accounts that subscribed before).
+        const summary = await loadCheckoutSummary(checkoutSessionId);
+        if (summary?.paid) {
+          trackConversion('purchase', {
+            transactionId: checkoutSessionId, value: summary.value, currency: summary.currency,
+          });
+        }
       }
       if (status?.premium || attempts >= 8) {
         window.clearInterval(timer);

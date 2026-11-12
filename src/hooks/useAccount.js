@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getAttribution } from '../attribution';
-import { trackConversion } from '../ads';
+import { readConsent, trackConversion } from '../ads';
 
 export function useAccount() {
   const [user, setUser] = useState(null);
@@ -96,7 +96,9 @@ export function useAccount() {
     register: (details) => authenticate('/api/auth/register', details),
     logout,
     refresh,
-    subscribe: (plan) => openBilling('/api/billing/checkout', { plan, attribution: getAttribution() }),
+    subscribe: (plan) => openBilling('/api/billing/checkout', {
+      plan, attribution: getAttribution(), consent: readConsent() || undefined,
+    }),
     manageBilling: () => openBilling('/api/billing/portal'),
   };
 }

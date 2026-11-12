@@ -41,6 +41,10 @@ export function ensureSchema() {
       await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS utm_source TEXT`;
       await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS utm_campaign TEXT`;
       await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS gclid TEXT`;
+      await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS value_cents INTEGER`;
+      await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS currency TEXT`;
+      await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS ref TEXT`;
+      await sql`ALTER TABLE tm_funnel_events ADD COLUMN IF NOT EXISTS consent TEXT`;
       await sql`CREATE TABLE IF NOT EXISTS tm_stripe_events (
         id TEXT PRIMARY KEY,
         processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -152,14 +156,29 @@ export async function releaseStripeEvent(eventId) {
   await db()`DELETE FROM tm_stripe_events WHERE id = ${eventId}`;
 }
 
-export async function recordFunnelEvent({ name, plan = null, userId = null, attribution = null }) {
+export async function recordFunnelEvent({
+  name, plan = null, userId = null, attribution = null,
+  valueCents = null, currency = null, ref = null, consent = null,
+}) {
   await ensureSchema();
   const source = attribution?.utm_source || null;
   const campaign = attribution?.utm_campaign || null;
   const gclid = attribution?.gclid || attribution?.gbraid || attribution?.wbraid || null;
   await db()`
-    INSERT INTO tm_funnel_events (name, plan, user_id, utm_source, utm_campaign, gclid)
-    VALUES (${name}, ${plan}, ${userId}, ${source}, ${campaign}, ${gclid})
+    INSERT INTO tm_funnel_events (name, plan, user_id, utm_source, utm_campaign, gclid, value_cents, currency, ref, consent)
+    VALUES (${name}, ${plan}, ${userId}, ${source}, ${campaign}, ${gclid}, ${valueCents}, ${currency}, ${ref}, ${consent})
+  `;
+}
+
+// Paid and trial subscriptions from Google Ads clicks, for the offline conversion export.
+export async function adsConversionEvents(days) {
+  await ensureSchema();
+  return db()`
+    SELECT name, plan, gclid, value_cents, currency, consent, created_at
+    FROM tm_funnel_events
+    WHERE name IN ('paid', 'trial_started') AND gclid IS NOT NULL
+      AND created_at > NOW() - make_interval(days => ${days})
+    ORDER BY created_at
   `;
 }
 
