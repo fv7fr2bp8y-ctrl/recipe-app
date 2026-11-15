@@ -1,8 +1,10 @@
 import {
-  SITE, findRecipe, publicCatalog, renderHubPage, renderNotFound, renderRecipePage, renderSitemap,
+  SITE, findRecipe, publicCatalog, renderHubPage, renderLentenPage, renderNotFound, renderRecipePage, renderSitemap,
 } from '../server/seo.js';
 import { localizeRecipe } from '../src/i18n.js';
-import { SEO_LANGUAGES, recipeIdFromSlug, recipePath } from '../src/seo-url.js';
+import {
+  LENTEN_LANGUAGES, SEO_LANGUAGES, recipeIdFromSlug, recipePath,
+} from '../src/seo-url.js';
 import { methodNotAllowed } from '../server/http.js';
 
 const CACHE = 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400';
@@ -22,6 +24,10 @@ export default async function handler(req, res) {
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     if (page === 'hub') return res.status(200).send(renderHubPage(recipes, language));
+    if (page === 'lenten') {
+      if (!LENTEN_LANGUAGES.includes(language)) return res.status(404).send(renderNotFound(language));
+      return res.status(200).send(renderLentenPage(recipes, language));
+    }
 
     const recipe = findRecipe(recipes, recipeIdFromSlug(slug));
     if (!recipe) return res.status(404).send(renderNotFound(language));

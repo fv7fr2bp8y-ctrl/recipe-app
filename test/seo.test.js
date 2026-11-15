@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recipeIdFromSlug, recipePath, slugify } from '../src/seo-url.js';
-import { renderRecipePage, renderSitemap } from '../server/seo.js';
+import { renderLentenPage, renderRecipePage, renderSitemap } from '../server/seo.js';
 
 test('recipe paths transliterate titles and round-trip the id', () => {
   assert.equal(slugify('Шопска салата'), 'shopska-salata');
@@ -43,4 +43,26 @@ test('recipe pages declare a localized category', () => {
     id: 'BR-C902', title: 'Тест', image: 'https://example.com/a.jpg', mealType: 'вечеря', translations: { en: { title: 'Test' } }, locked: true,
   };
   assert.match(renderRecipePage(recipe, [recipe], 'en'), /"recipeCategory":"Dinner"/);
+});
+
+test('lenten page puts the picks first, lists only plant-based recipes and marks the trial', () => {
+  const make = (id, plantBased, locked, mealType = 'обяд') => ({
+    id, title: id, image: 'https://example.com/a.jpg', mealType, diets: { plantBased }, availableLanguages: ['bg', 'en'],
+    translations: { bg: { title: `Рецепта ${id}` } }, locked,
+  });
+  const recipes = [make('PB-C900', true, false), make('BR-C001', false, false), make('PB-C128', true, true, 'вечеря')];
+  const html = renderLentenPage(recipes, 'bg');
+  assert.match(html, /<h1>Постни рецепти за Коледните пости<\/h1>/);
+  assert.match(html, /rel="canonical" href="https:\/\/tastemaster365\.com\/bg\/postni-recepti"/);
+  assert.match(html, /hreflang="en" href="https:\/\/tastemaster365\.com\/en\/lenten-recipes"/);
+  assert.doesNotMatch(html, /hreflang="de"/);
+  assert.doesNotMatch(html, /BR-C001/i);
+  assert.match(html, /Всички постни рецепти \(2\)/);
+  assert.match(html, /Premium · 7 дни безплатно/);
+  assert.match(html, /\?premium=1&amp;lang=bg/);
+  const allGrid = html.split('id="all"')[1];
+  assert.ok(allGrid.indexOf('pb-c128') < allGrid.indexOf('pb-c900'));
+  const urls = [...renderSitemap(recipes).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  assert.ok(urls.includes('https://tastemaster365.com/bg/postni-recepti'));
+  assert.ok(urls.includes('https://tastemaster365.com/en/lenten-recipes'));
 });

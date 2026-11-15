@@ -24,6 +24,9 @@ export function captureAttribution(search = window.location.search) {
   // First touch wins, except that a new paid click (gclid) replaces an older visit,
   // because Google Ads can only credit a conversion to its own click id.
   if (stored && !found.gclid && !found.gbraid && !found.wbraid) return stored;
+  // The same click carried on from a landing page: keep the original landing path.
+  const clickId = (record) => record?.gclid || record?.gbraid || record?.wbraid;
+  if (stored && clickId(stored) === clickId(found)) return stored;
   const next = { ...found, landing: window.location.pathname.slice(0, 200), at: new Date().toISOString() };
   try {
     window.localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(next));

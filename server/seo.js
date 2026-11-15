@@ -1,6 +1,8 @@
 import { catalogForAccess } from './recipes.js';
 import { getMessages, localizeRecipe } from '../src/i18n.js';
-import { SEO_LANGUAGES, hubPath, recipePath } from '../src/seo-url.js';
+import {
+  LENTEN_LANGUAGES, LENTEN_PATHS, SEO_LANGUAGES, hubPath, recipePath,
+} from '../src/seo-url.js';
 
 export const SITE = 'https://tastemaster365.com';
 
@@ -45,18 +47,23 @@ export function findRecipe(recipes, id) {
   return recipes.find((recipe) => recipe.id.toUpperCase() === id) || null;
 }
 
-function alternates(pathFor) {
+function alternates(pathFor, languages = SEO_LANGUAGES) {
   return [
-    ...SEO_LANGUAGES.map((language) => `<link rel="alternate" hreflang="${language}" href="${SITE}${esc(pathFor(language))}" />`),
+    ...languages.map((language) => `<link rel="alternate" hreflang="${language}" href="${SITE}${esc(pathFor(language))}" />`),
     `<link rel="alternate" hreflang="x-default" href="${SITE}${esc(pathFor('en'))}" />`,
   ].join('\n    ');
 }
 
 // Same rules as src/attribution.js: remember the ad click / UTM tags of the first visit
 // so they survive the jump from a recipe page into the app.
+// The app's Google tag only sees a click id that is in its own URL, so links from these
+// pages into the app carry the stored gclid/gbraid/wbraid along.
+const APP_LINK_SCRIPT = "document.addEventListener('DOMContentLoaded',function(){try{var a=JSON.parse(localStorage.getItem('tm_attribution')||'null');if(!a)return;var q=['gclid','gbraid','wbraid'].filter(function(k){return a[k];}).map(function(k){return k+'='+encodeURIComponent(a[k]);}).join('&');if(!q)return;document.querySelectorAll('a[href^=\"/?\"]').forEach(function(l){l.setAttribute('href',l.getAttribute('href')+'&'+q);});}catch(e){}});";
 const ATTRIBUTION_SCRIPT = "(function(){try{var p=new URLSearchParams(location.search),k='tm_attribution',f=['gclid','gbraid','wbraid','utm_source','utm_medium','utm_campaign'],o={},n=0;f.forEach(function(x){var v=p.get(x);if(v){o[x]=v.slice(0,200);n++;}});if(!n)return;var s=localStorage.getItem(k);if(s&&!o.gclid&&!o.gbraid&&!o.wbraid)return;o.landing=location.pathname.slice(0,200);o.at=new Date().toISOString();localStorage.setItem(k,JSON.stringify(o));}catch(e){}})();";
 
-function layout({ language, title, description, canonical, image, ogType = 'website', pathFor, structuredData, body }) {
+function layout({
+  language, title, description, canonical, image, ogType = 'website', pathFor, languages = SEO_LANGUAGES, structuredData, body, extraStyle = '',
+}) {
   const messages = getMessages(language);
   return `<!doctype html>
 <html lang="${language}">
@@ -66,7 +73,7 @@ function layout({ language, title, description, canonical, image, ogType = 'webs
     <title>${esc(title)}</title>
     <meta name="description" content="${esc(description)}" />
     <link rel="canonical" href="${SITE}${esc(canonical)}" />
-    ${alternates(pathFor)}
+    ${alternates(pathFor, languages)}
     <meta property="og:type" content="${ogType}" />
     <meta property="og:site_name" content="TasteMaster365" />
     <meta property="og:locale" content="${LOCALES[language]}" />
@@ -77,7 +84,7 @@ function layout({ language, title, description, canonical, image, ogType = 'webs
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-tastemaster-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-tastemaster.png" />
-    <script>${ATTRIBUTION_SCRIPT}</script>
+    <script>${ATTRIBUTION_SCRIPT}${APP_LINK_SCRIPT}</script>
     <meta name="theme-color" content="#169f9e" />
     ${structuredData ? `<script type="application/ld+json">${jsonLd(structuredData)}</script>` : ''}
     <style>
@@ -113,7 +120,7 @@ function layout({ language, title, description, canonical, image, ogType = 'webs
       .list { columns: 2 260px; margin: 0; padding-left: 18px; } .list li { margin: 3px 0; break-inside: avoid; }
       .badge { font-size: 11px; color: var(--accent); margin-left: 4px; }
       footer { margin-top: 48px; border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: 13px; }
-      footer .langs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }
+      footer .langs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }${extraStyle}
     </style>
   </head>
   <body>
@@ -125,7 +132,7 @@ function layout({ language, title, description, canonical, image, ogType = 'webs
 ${body}
     </main>
     <footer><div class="wrap">
-      <nav class="langs" aria-label="${esc(messages.language)}">${SEO_LANGUAGES.map((code) => `<a href="${esc(pathFor(code))}" hreflang="${code}" lang="${code}">${code.toUpperCase()}</a>`).join('')}</nav>
+      <nav class="langs" aria-label="${esc(messages.language)}">${languages.map((code) => `<a href="${esc(pathFor(code))}" hreflang="${code}" lang="${code}">${code.toUpperCase()}</a>`).join('')}</nav>
       ${esc(messages.rights)}
     </div></footer>
   </body>
@@ -257,8 +264,131 @@ ${countries.map((country) => `      <h2 class="country">${esc(country)}</h2>
   });
 }
 
+// Picked for the Christmas fast; the rest of the plant-based catalogue follows them.
+export const LENTEN_PICKS = [
+  'PB-C128', 'PB-C096', 'PB-C140', 'PB-C045', 'PB-C003', 'PB-C088',
+  'FF-C012', 'PB-C115', 'PB-C122', 'PB-C041', 'PB-C104', 'FF-C066',
+];
+
+const LENTEN_COPY = {
+  bg: {
+    title: 'Постни рецепти за Коледните пости',
+    description: '{count} постни рецепти без месо, мляко и яйца: сарми, пълнени чушки, боб, леща и десерти. За Коледните пости от 15 ноември до 24 декември.',
+    lead: 'Коледните пости са от 15 ноември до 24 декември. Тук са всички наши {count} постни рецепти без месо, мляко и яйца, от българската и световната кухня. Започни с подбраните за сезона.',
+    picks: 'Подбрани за поста',
+    all: 'Всички постни рецепти',
+    filterAll: 'Всички',
+    filterLabel: 'Вид ястие',
+    free: 'Безплатна',
+    locked: 'Premium · 7 дни безплатно',
+    boxTitle: '7 дни безплатно за всички рецепти',
+    boxCopy: '{free} от рецептите тук са безплатни. Останалите са в Premium. С нов профил пробваш 7 дни безплатно и ако прекратиш преди края, не плащаш нищо.',
+  },
+  en: {
+    title: 'Lenten recipes for the Nativity Fast',
+    description: '{count} plant-based Lenten recipes with no meat, dairy or eggs: stuffed vegetables, beans, lentils and desserts for the Nativity Fast.',
+    lead: 'The Nativity Fast runs from 15 November to 24 December. Here are all {count} of our Lenten recipes with no meat, dairy or eggs, from cuisines around the world. Start with our picks for the season.',
+    picks: 'Our picks for the fast',
+    all: 'All Lenten recipes',
+    filterAll: 'All',
+    filterLabel: 'Dish type',
+    free: 'Free',
+    locked: 'Premium · 7 days free',
+    boxTitle: '7 days free for every recipe',
+    boxCopy: '{free} of the recipes here are free. The rest are in Premium. New accounts get 7 days free, and if you cancel before it ends you pay nothing.',
+  },
+};
+
+const LENTEN_STYLE = `
+      .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+      .filters button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+      .filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .card { position: relative; }
+      .card .tag { position: absolute; top: 8px; left: 8px; padding: 2px 8px; font-size: 12px; font-style: normal; font-weight: 600; background: var(--accent); color: #fff; }
+      .card .tag.free { background: var(--green); }
+      .card[hidden] { display: none; }`;
+
+const LENTEN_FILTER_SCRIPT = `<script>
+document.querySelectorAll('.filters button').forEach(function (button) {
+  button.addEventListener('click', function () {
+    var meal = button.getAttribute('data-meal');
+    document.querySelectorAll('.filters button').forEach(function (b) { b.setAttribute('aria-pressed', String(b === button)); });
+    document.querySelectorAll('#all .card').forEach(function (card) { card.hidden = Boolean(meal) && card.getAttribute('data-meal') !== meal; });
+  });
+});
+</script>`;
+
+export function renderLentenPage(recipes, language) {
+  const messages = getMessages(language);
+  const copy = LENTEN_COPY[language];
+  const lenten = recipes.filter((recipe) => recipe.diets?.plantBased && recipe.availableLanguages?.includes(language));
+  const picks = LENTEN_PICKS.map((id) => lenten.find((recipe) => recipe.id.toUpperCase() === id)).filter(Boolean);
+  const pickIds = new Set(picks.map((recipe) => recipe.id));
+  const ordered = [...picks, ...lenten.filter((recipe) => !pickIds.has(recipe.id))];
+  const count = lenten.length;
+  const free = lenten.filter((recipe) => !recipe.locked).length;
+  const mealKey = (recipe) => String(recipe.mealType || '').toLowerCase();
+  const mealCounts = new Map();
+  for (const recipe of lenten) {
+    const key = mealKey(recipe);
+    if (MEAL_TYPES[key]) mealCounts.set(key, (mealCounts.get(key) || 0) + 1);
+  }
+  const meals = [...mealCounts.entries()].sort((a, b) => b[1] - a[1]);
+
+  const card = (source) => {
+    const recipe = localizeRecipe(source, language);
+    const tag = recipe.locked
+      ? `<em class="tag">${esc(copy.locked)}</em>`
+      : `<em class="tag free">${esc(copy.free)}</em>`;
+    return `<a class="card" data-meal="${esc(mealKey(source))}" href="${esc(recipePath(recipe, language))}">${tag}<img src="${esc(recipe.image)}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span></a>`;
+  };
+  const premiumLink = `/?premium=1&lang=${language}`;
+  const body = `      <h1>${esc(copy.title)}</h1>
+      <p class="lead">${esc(fill(copy.lead, { count }))}</p>
+      <section class="box">
+        <div class="label">Premium</div>
+        <h2 style="margin-top:8px">${esc(copy.boxTitle)}</h2>
+        <p style="margin:0">${esc(fill(copy.boxCopy, { free }))}</p>
+        <a class="cta" href="${esc(premiumLink)}">${esc(messages.trialCta)}</a>
+      </section>
+      <h2>${esc(copy.picks)}</h2>
+      <div class="grid">${picks.map(card).join('')}</div>
+      <h2>${esc(copy.all)} (${count})</h2>
+      <div class="filters" role="group" aria-label="${esc(copy.filterLabel)}"><button type="button" data-meal="" aria-pressed="true">${esc(copy.filterAll)} · ${count}</button>${meals.map(([key, total]) => `<button type="button" data-meal="${esc(key)}" aria-pressed="false">${esc(MEAL_TYPES[key][language])} · ${total}</button>`).join('')}</div>
+      <div class="grid" id="all">${ordered.map(card).join('')}</div>
+      <a class="cta" href="${esc(premiumLink)}">${esc(messages.trialCta)}</a>
+${LENTEN_FILTER_SCRIPT}`;
+
+  return layout({
+    language,
+    title: `${copy.title} · TasteMaster365`,
+    description: trimText(fill(copy.description, { count }), 160),
+    canonical: LENTEN_PATHS[language],
+    pathFor: (code) => LENTEN_PATHS[code],
+    languages: LENTEN_LANGUAGES,
+    extraStyle: LENTEN_STYLE,
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: copy.title,
+      inLanguage: language,
+      url: `${SITE}${LENTEN_PATHS[language]}`,
+      mainEntity: {
+        '@type': 'ItemList',
+        numberOfItems: picks.length,
+        itemListElement: picks.map((recipe, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          url: `${SITE}${recipePath(localizeRecipe(recipe, language), language)}`,
+        })),
+      },
+    },
+    body,
+  });
+}
+
 export function renderSitemap(recipes) {
-  const urls = [`${SITE}/`];
+  const urls = [`${SITE}/`, ...LENTEN_LANGUAGES.map((language) => `${SITE}${LENTEN_PATHS[language]}`)];
   for (const language of SEO_LANGUAGES) {
     urls.push(`${SITE}${hubPath(language)}`);
     for (const recipe of recipes) urls.push(`${SITE}${recipePath(localizeRecipe(recipe, language), language)}`);

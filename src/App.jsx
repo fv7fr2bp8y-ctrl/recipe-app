@@ -78,7 +78,8 @@ function RecipeApp() {
   const [dietFilters, setDietFilters] = useState({});
   const [section, setSection] = useState(ALL_FILTER);
   const [viewRecipeId, setViewRecipeId] = useState(() => new URLSearchParams(window.location.search).get('recipe'));
-  const [showPremium, setShowPremium] = useState(false);
+  // ?premium=1 (from the landing pages) opens the subscription dialog right away.
+  const [showPremium, setShowPremium] = useState(() => new URLSearchParams(window.location.search).get('premium') === '1');
   const [premiumRecipe, setPremiumRecipe] = useState(null);
   const [showAccount, setShowAccount] = useState(false);
   const [toast, setToast] = useState('');
@@ -169,6 +170,10 @@ function RecipeApp() {
   useEffect(() => {
     if (!playApp) initAds();
   }, [playApp]);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('premium') === '1') track('premium_view');
+  }, []);
 
   useEffect(() => {
     if (playApp) return undefined;
@@ -389,6 +394,9 @@ function RecipeApp() {
         <PremiumGate
           onClose={() => {
             setShowPremium(false);
+            if (new URLSearchParams(window.location.search).has('premium')) {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
             if (linkedLockedRecipe) {
               setViewRecipeId(null);
               window.history.replaceState({}, '', window.location.pathname);

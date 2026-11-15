@@ -29,3 +29,7 @@ export function recipeIdFromSlug(slug) {
 }
 
 export const hubPath = (language) => `/${language}/recipes`;
+
+// Landing page for the Christmas (Nativity) fast, used by the Google Ads campaign.
+export const LENTEN_PATHS = { bg: '/bg/postni-recepti', en: '/en/lenten-recipes' };
+export const LENTEN_LANGUAGES = Object.keys(LENTEN_PATHS);
