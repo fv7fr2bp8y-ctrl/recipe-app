@@ -264,10 +264,20 @@ ${countries.map((country) => `      <h2 class="country">${esc(country)}</h2>
   });
 }
 
-// Picked for the Christmas fast; the rest of the plant-based catalogue follows them.
+// Picked for the Christmas fast, best photos first; the rest of the plant-based
+// catalogue follows them.
 export const LENTEN_PICKS = [
-  'PB-C128', 'PB-C096', 'PB-C140', 'PB-C045', 'PB-C003', 'PB-C088',
-  'FF-C012', 'PB-C115', 'PB-C122', 'PB-C041', 'PB-C104', 'FF-C066',
+  'PB-C140', 'PB-C128', 'PB-C088', 'PB-C003', 'PB-C045', 'PB-C096',
+  'PB-C115', 'FF-C012', 'PB-C122', 'PB-C104', 'PB-C041', 'FF-C066',
+];
+// The most attractive photos lead the full list (picked by eye, 15.11.2026).
+const LENTEN_PHOTO_FIRST = [
+  'PB-C106', 'PB-C132', 'PB-C116', 'PB-C138', 'PB-C111', 'PB-C126', 'PB-C143', 'PB-C133',
+  'PB-C130', 'PB-C121', 'PB-C095', 'PB-C090', 'PB-C084', 'PB-C086', 'PB-C060', 'PB-C093',
+  'PB-C102', 'PB-C047', 'PB-C141', 'PB-C136', 'PB-C147', 'PB-C127', 'PB-C113', 'PB-C145',
+  'FF-C004', 'BR-C002', 'FF-C003', 'PB-C125', 'PB-C110', 'PB-C103', 'PB-C071', 'PB-C073',
+  'FF-C068', 'FF-C035', 'BR-C047', 'BR-C020', 'BR-C022', 'FF-C010', 'FF-C040', 'FF-C054',
+  'PB-C085', 'PB-C038', 'PB-C065', 'PB-C058', 'PB-C119', 'PB-C112',
 ];
 
 const LENTEN_COPY = {
@@ -322,9 +332,11 @@ export function renderLentenPage(recipes, language) {
   const messages = getMessages(language);
   const copy = LENTEN_COPY[language];
   const lenten = recipes.filter((recipe) => recipe.diets?.plantBased && recipe.availableLanguages?.includes(language));
-  const picks = LENTEN_PICKS.map((id) => lenten.find((recipe) => recipe.id.toUpperCase() === id)).filter(Boolean);
-  const pickIds = new Set(picks.map((recipe) => recipe.id));
-  const ordered = [...picks, ...lenten.filter((recipe) => !pickIds.has(recipe.id))];
+  const byIds = (ids) => ids.map((id) => lenten.find((recipe) => recipe.id.toUpperCase() === id)).filter(Boolean);
+  const picks = byIds(LENTEN_PICKS);
+  const lead = [...picks, ...byIds(LENTEN_PHOTO_FIRST)];
+  const leadIds = new Set(lead.map((recipe) => recipe.id));
+  const ordered = [...lead, ...lenten.filter((recipe) => !leadIds.has(recipe.id))];
   const count = lenten.length;
   const free = lenten.filter((recipe) => !recipe.locked).length;
   const mealKey = (recipe) => String(recipe.mealType || '').toLowerCase();
