@@ -118,7 +118,7 @@ export default function PremiumGate({
         {!premium && !consumptionOnly && (
           <p className="mt-3 text-xs leading-5 text-stone-500">
             {showTrial ? `${fill(messages.trialNote, { price: priceLabel })} ` : ''}
-            {playPlans ? '' : messages.cancelAnytime}
+            {playPlans || showTrial ? '' : messages.cancelAnytime}
           </p>
         )}
 

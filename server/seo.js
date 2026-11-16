@@ -291,8 +291,8 @@ const LENTEN_COPY = {
     filterLabel: 'Вид ястие',
     free: 'Безплатна',
     locked: 'Premium · 7 дни безплатно',
-    boxTitle: '7 дни безплатно за всички рецепти',
-    boxCopy: '{free} от рецептите тук са безплатни. Останалите са в Premium. С нов профил пробваш 7 дни безплатно и ако прекратиш преди края, не плащаш нищо.',
+    boxTitle: '7 дни безплатно, без карта',
+    boxCopy: '{free} от рецептите тук са безплатни. Останалите са в Premium. С нов профил ги отключваш за 7 дни безплатно, без карта. Ако ти харесат, добавяш карта и продължаваш.',
   },
   en: {
     title: 'Lenten recipes for the Nativity Fast',
@@ -304,8 +304,8 @@ const LENTEN_COPY = {
     filterLabel: 'Dish type',
     free: 'Free',
     locked: 'Premium · 7 days free',
-    boxTitle: '7 days free for every recipe',
-    boxCopy: '{free} of the recipes here are free. The rest are in Premium. New accounts get 7 days free, and if you cancel before it ends you pay nothing.',
+    boxTitle: '7 days free, no card',
+    boxCopy: '{free} of the recipes here are free. The rest are in Premium. New accounts unlock them for 7 days free, no card needed. If you like them, add a card and keep going.',
   },
 };
 

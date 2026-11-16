@@ -6,6 +6,8 @@ export function useAccount() {
   const [user, setUser] = useState(null);
   const [premium, setPremium] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState('inactive');
+  const [periodEnd, setPeriodEnd] = useState(null);
+  const [cardNeeded, setCardNeeded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,6 +20,8 @@ export function useAccount() {
       setUser(data.user || null);
       setPremium(Boolean(data.premium));
       setSubscriptionStatus(data.subscriptionStatus || 'inactive');
+      setPeriodEnd(data.currentPeriodEnd || null);
+      setCardNeeded(Boolean(data.cardNeeded));
       return data;
     } catch (refreshError) {
       console.error(refreshError);
@@ -62,6 +66,8 @@ export function useAccount() {
     setUser(null);
     setPremium(false);
     setSubscriptionStatus('inactive');
+    setPeriodEnd(null);
+    setCardNeeded(false);
     setActionLoading(false);
   }, []);
 
@@ -89,6 +95,8 @@ export function useAccount() {
     user,
     premium,
     subscriptionStatus,
+    periodEnd,
+    cardNeeded,
     loading,
     actionLoading,
     error,

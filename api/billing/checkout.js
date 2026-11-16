@@ -3,7 +3,7 @@ import {
   getEntitlement, entitlementIsActive, getUser, recordFunnelEvent, saveEntitlement, setStripeCustomer,
 } from '../../server/db.js';
 import { getOrigin, jsonError, methodNotAllowed, readJson } from '../../server/http.js';
-import { stripe } from '../../server/stripe.js';
+import { stripe, subscriptionPeriodEnd } from '../../server/stripe.js';
 import { STRIPE_PRICES, TRIAL_DAYS } from '../../server/config.js';
 import { playSubscriptionId, verifyPlayPurchase } from '../../server/play.js';
 import { attributionMetadata, sanitizeAttribution } from '../../server/attribution.js';
@@ -90,6 +90,43 @@ export default async function handler(req, res) {
     }
 
     const origin = getOrigin(req);
+    const metadata = { tm_user_id: user.id, tm_plan: plan, ...sourceMetadata };
+
+    // New accounts start the trial right here, without a card and without a Stripe page.
+    // A card is added later from the billing portal; without one Stripe cancels the
+    // subscription when the trial ends, so nobody is ever charged by surprise.
+    if (!entitlement) {
+      const subscription = await client.subscriptions.create({
+        customer: customerId,
+        items: [{ price: STRIPE_PRICES[plan] }],
+        trial_period_days: TRIAL_DAYS,
+        trial_settings: { end_behavior: { missing_payment_method: 'cancel' } },
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        metadata,
+      }, { idempotencyKey: `tm-trial-${user.id}-${plan}` });
+      await saveEntitlement({
+        userId: user.id,
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        currentPeriodEnd: subscriptionPeriodEnd(subscription),
+      });
+      await recordFunnelEvent({ name: 'checkout_start', plan, userId: user.id, attribution }).catch(() => {});
+      await recordFunnelEvent({
+        name: 'trial_started',
+        plan,
+        userId: user.id,
+        attribution,
+        valueCents: 0,
+        currency: 'EUR',
+        ref: subscription.id,
+        consent: sourceMetadata.tm_consent || null,
+      }).catch(() => {});
+      return res.status(200).json({
+        trial: true,
+        url: `${origin}/?checkout=success&session_id=${encodeURIComponent(subscription.id)}`,
+      });
+    }
+
     const checkout = await client.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
@@ -98,11 +135,9 @@ export default async function handler(req, res) {
       allow_promotion_codes: true,
       success_url: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled`,
-      subscription_data: {
-        metadata: { tm_user_id: user.id, tm_plan: plan, ...sourceMetadata },
-        ...(entitlement ? {} : { trial_period_days: TRIAL_DAYS }),
-      },
-      metadata: { tm_user_id: user.id, tm_plan: plan, ...sourceMetadata },
+      // Returning accounts (trial already used) pay right away.
+      subscription_data: { metadata },
+      metadata,
     });
     await recordFunnelEvent({
       name: 'checkout_start', plan, userId: user.id, attribution,

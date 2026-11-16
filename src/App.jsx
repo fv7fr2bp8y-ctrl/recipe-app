@@ -293,6 +293,26 @@ function RecipeApp() {
         messages={messages}
       />
 
+      {!playApp && account.premium && account.cardNeeded && (
+        <div className="border-b border-orange-200 bg-orange-50">
+          <div className="max-w-6xl mx-auto flex flex-wrap items-center gap-3 px-4 py-3 text-sm text-stone-800">
+            <p className="flex-1 min-w-[16rem]">
+              {messages.cardNotice.replace('{date}', account.periodEnd
+                ? new Date(account.periodEnd).toLocaleDateString(language, { day: 'numeric', month: 'long' })
+                : '')}
+            </p>
+            <button
+              type="button"
+              onClick={account.manageBilling}
+              disabled={account.actionLoading}
+              className="bg-orange-600 px-4 py-2 font-semibold text-white hover:bg-orange-700 disabled:opacity-60"
+            >
+              {messages.addCard}
+            </button>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-6xl mx-auto px-4 py-6">
         {!loading && (
           <DailyRecipe

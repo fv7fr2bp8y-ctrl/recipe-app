@@ -16,3 +16,16 @@ export function subscriptionPeriodEnd(subscription) {
   const seconds = direct || Math.max(0, ...itemEnds);
   return seconds ? new Date(seconds * 1000) : null;
 }
+
+// True when Stripe has a way to charge this subscription after the trial: a payment
+// method on the subscription itself or a default one on the customer.
+// Expects the subscription with `customer` expanded.
+export function subscriptionHasCard(subscription) {
+  const customer = typeof subscription.customer === 'object' ? subscription.customer : null;
+  return Boolean(
+    subscription.default_payment_method
+    || subscription.default_source
+    || customer?.invoice_settings?.default_payment_method
+    || customer?.default_source,
+  );
+}
