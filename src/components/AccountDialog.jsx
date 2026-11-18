@@ -5,11 +5,12 @@ export default function AccountDialog({
   onLogin,
   onRegister,
   allowRegistration = true,
+  initialMode = 'login',
   loading,
   error,
   messages,
 }) {
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(allowRegistration && initialMode === 'register' ? 'register' : 'login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

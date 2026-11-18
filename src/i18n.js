@@ -11,7 +11,7 @@ const MESSAGES = {
   bg: {
     tagline: 'Рецепти от света', daily: 'Рецепта на деня', open: 'Отвори рецептата', premium: 'Виж Premium',
     search: 'Търси рецепта, съставка, държава...', filters: 'Филтри', catalog: 'Каталог', diets: 'Режими', countries: 'Държави', difficulty: 'Трудност',
-    all: 'Всички', recipes: 'рецепти', ingredients: 'Съставки', steps: 'Начин на приготвяне', minutes: 'мин', servings: 'порции',
+    freeOfTotal: 'В каталога има {total} рецепти, {free} от тях са безплатни.', freeOnly: '{free} рецепти са безплатни.', all: 'Всички', recipes: 'рецепти', ingredients: 'Съставки', steps: 'Начин на приготвяне', minutes: 'мин', servings: 'порции',
     noResults: 'Няма намерени рецепти', clear: 'Изчисти филтрите', loading: 'Зарежда каталога...', imagePending: 'Снимката се подготвя',
     loadMore: 'Зареди още',
     share: 'Сподели', language: 'Език', copied: 'Линкът е копиран', contact: 'Контакт', privacy: 'Поверителност', deleteAccount: 'Изтриване на профил', rights: '© 2026 New Age Studio. Всички права запазени.',
@@ -27,7 +27,7 @@ const MESSAGES = {
   en: {
     tagline: 'Recipes from the world', daily: 'Recipe of the day', open: 'Open recipe', premium: 'View Premium',
     search: 'Search recipes, ingredients, countries...', filters: 'Filters', catalog: 'Catalogue', diets: 'Diets', countries: 'Countries', difficulty: 'Difficulty',
-    all: 'All', recipes: 'recipes', ingredients: 'Ingredients', steps: 'Method', minutes: 'min', servings: 'servings',
+    freeOfTotal: 'The catalogue has {total} recipes, {free} of them are free.', freeOnly: '{free} recipes are free.', all: 'All', recipes: 'recipes', ingredients: 'Ingredients', steps: 'Method', minutes: 'min', servings: 'servings',
     noResults: 'No recipes found', clear: 'Clear filters', loading: 'Loading the catalogue...', imagePending: 'Image coming soon',
     loadMore: 'Load more',
     share: 'Share', language: 'Language', copied: 'Link copied', contact: 'Contact', privacy: 'Privacy', deleteAccount: 'Delete account', rights: '© 2026 New Age Studio. All rights reserved.',
@@ -43,7 +43,7 @@ const MESSAGES = {
   de: {
     tagline: 'Rezepte aus aller Welt', daily: 'Rezept des Tages', open: 'Rezept öffnen', premium: 'Premium ansehen',
     search: 'Rezepte, Zutaten, Länder suchen...', filters: 'Filter', catalog: 'Katalog', diets: 'Ernährungsweisen', countries: 'Länder', difficulty: 'Schwierigkeit',
-    all: 'Alle', recipes: 'Rezepte', ingredients: 'Zutaten', steps: 'Zubereitung', minutes: 'Min.', servings: 'Portionen',
+    freeOfTotal: 'Der Katalog hat {total} Rezepte, {free} davon sind kostenlos.', freeOnly: '{free} Rezepte sind kostenlos.', all: 'Alle', recipes: 'Rezepte', ingredients: 'Zutaten', steps: 'Zubereitung', minutes: 'Min.', servings: 'Portionen',
     noResults: 'Keine Rezepte gefunden', clear: 'Filter löschen', loading: 'Katalog wird geladen...', imagePending: 'Bild folgt',
     loadMore: 'Mehr laden',
     share: 'Teilen', language: 'Sprache', copied: 'Link kopiert', contact: 'Kontakt', privacy: 'Datenschutz', deleteAccount: 'Konto löschen', rights: '© 2026 New Age Studio. Alle Rechte vorbehalten.',
@@ -59,7 +59,7 @@ const MESSAGES = {
   es: {
     tagline: 'Recetas del mundo', daily: 'Receta del día', open: 'Abrir receta', premium: 'Ver Premium',
     search: 'Buscar recetas, ingredientes, países...', filters: 'Filtros', catalog: 'Catálogo', diets: 'Dietas', countries: 'Países', difficulty: 'Dificultad',
-    all: 'Todos', recipes: 'recetas', ingredients: 'Ingredientes', steps: 'Preparación', minutes: 'min', servings: 'raciones',
+    freeOfTotal: 'El catálogo tiene {total} recetas, {free} de ellas son gratis.', freeOnly: '{free} recetas son gratis.', all: 'Todos', recipes: 'recetas', ingredients: 'Ingredientes', steps: 'Preparación', minutes: 'min', servings: 'raciones',
     noResults: 'No se encontraron recetas', clear: 'Borrar filtros', loading: 'Cargando el catálogo...', imagePending: 'Imagen próximamente',
     loadMore: 'Cargar más',
     share: 'Compartir', language: 'Idioma', copied: 'Enlace copiado', contact: 'Contacto', privacy: 'Privacidad', deleteAccount: 'Eliminar cuenta', rights: '© 2026 New Age Studio. Todos los derechos reservados.',
@@ -75,7 +75,7 @@ const MESSAGES = {
   fr: {
     tagline: 'Recettes du monde', daily: 'Recette du jour', open: 'Ouvrir la recette', premium: 'Voir Premium',
     search: 'Rechercher recettes, ingrédients, pays...', filters: 'Filtres', catalog: 'Catalogue', diets: 'Régimes', countries: 'Pays', difficulty: 'Difficulté',
-    all: 'Tous', recipes: 'recettes', ingredients: 'Ingrédients', steps: 'Préparation', minutes: 'min', servings: 'portions',
+    freeOfTotal: 'Le catalogue compte {total} recettes, dont {free} gratuites.', freeOnly: '{free} recettes sont gratuites.', all: 'Tous', recipes: 'recettes', ingredients: 'Ingrédients', steps: 'Préparation', minutes: 'min', servings: 'portions',
     noResults: 'Aucune recette trouvée', clear: 'Effacer les filtres', loading: 'Chargement du catalogue...', imagePending: 'Image à venir',
     loadMore: 'Charger plus',
     share: 'Partager', language: 'Langue', copied: 'Lien copié', contact: 'Contact', privacy: 'Confidentialité', deleteAccount: 'Supprimer le compte', rights: '© 2026 New Age Studio. Tous droits réservés.',
@@ -91,7 +91,7 @@ const MESSAGES = {
   ru: {
     tagline: 'Рецепты со всего мира', daily: 'Рецепт дня', open: 'Открыть рецепт', premium: 'Смотреть Premium',
     search: 'Поиск рецептов, ингредиентов, стран...', filters: 'Фильтры', catalog: 'Каталог', diets: 'Рационы', countries: 'Страны', difficulty: 'Сложность',
-    all: 'Все', recipes: 'рецептов', ingredients: 'Ингредиенты', steps: 'Приготовление', minutes: 'мин', servings: 'порции',
+    freeOfTotal: 'В каталоге {total} рецептов, {free} из них бесплатны.', freeOnly: '{free} рецептов бесплатны.', all: 'Все', recipes: 'рецептов', ingredients: 'Ингредиенты', steps: 'Приготовление', minutes: 'мин', servings: 'порции',
     noResults: 'Рецепты не найдены', clear: 'Сбросить фильтры', loading: 'Загрузка каталога...', imagePending: 'Изображение готовится',
     loadMore: 'Загрузить ещё',
     share: 'Поделиться', language: 'Язык', copied: 'Ссылка скопирована', contact: 'Контакт', privacy: 'Конфиденциальность', deleteAccount: 'Удалить аккаунт', rights: '© 2026 New Age Studio. Все права защищены.',
@@ -159,7 +159,9 @@ const BG_COUNTRY_LABELS = {
 export const getMessages = (language) => MESSAGES[language] || MESSAGES.bg;
 
 export function localizeRecipe(recipe, language) {
-  const translation = recipe.translations?.[language] || recipe.translations?.bg || {};
+  // The catalog carries only the chosen language; until a new language loads, keep the old one.
+  const translation = recipe.translations?.[language] || recipe.translations?.bg
+    || Object.values(recipe.translations || {}).find(Boolean) || {};
   const sourceCountry = recipe.countryKey || recipe.country;
   return {
     ...recipe,

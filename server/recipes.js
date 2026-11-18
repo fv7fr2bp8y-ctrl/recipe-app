@@ -254,10 +254,15 @@ function lockedPreview(recipe) {
   };
 }
 
-let cache = { expiresAt: 0, recipes: [] };
+// The master sheet takes 2 to 9 seconds to download, so the parsed catalog stays in memory.
+// After CACHE_FRESH_MS it is still served at once while a fresh copy loads in the background;
+// only a cold instance (or a copy older than CACHE_MAX_STALE_MS) waits for the sheet.
+const CACHE_FRESH_MS = 5 * 60 * 1000;
+const CACHE_MAX_STALE_MS = 6 * 60 * 60 * 1000;
+let cache = { loadedAt: 0, recipes: [] };
+let pendingLoad = null;
 
-export async function loadMasterRecipes() {
-  if (cache.expiresAt > Date.now() && cache.recipes.length) return cache.recipes;
+async function fetchMasterRecipes() {
   const response = await fetch(MASTER_SHEET_CSV_URL, { cache: 'no-store' });
   if (!response.ok) throw new Error(`Master sheet failed: ${response.status}`);
   const matrix = parseCsv(await response.text());
@@ -272,21 +277,50 @@ export async function loadMasterRecipes() {
     delete publicRecipe._sourceOrder;
     return publicRecipe;
   });
-  cache = { recipes, expiresAt: Date.now() + 5 * 60 * 1000 };
+  cache = { recipes, loadedAt: Date.now() };
   return recipes;
 }
 
-export async function catalogForAccess(hasPremium) {
+function refreshMasterRecipes() {
+  if (!pendingLoad) {
+    pendingLoad = fetchMasterRecipes().finally(() => { pendingLoad = null; });
+  }
+  return pendingLoad;
+}
+
+export async function loadMasterRecipes() {
+  const age = Date.now() - cache.loadedAt;
+  if (cache.recipes.length && age < CACHE_FRESH_MS) return cache.recipes;
+  if (cache.recipes.length && age < CACHE_MAX_STALE_MS) {
+    refreshMasterRecipes().catch((error) => console.error('catalog_refresh_failed', error));
+    return cache.recipes;
+  }
+  return refreshMasterRecipes();
+}
+
+export const CATALOG_LANGUAGES = LANGUAGES;
+
+// With a language the app gets only that translation: the full six-language catalog is
+// ~3.8 MB of JSON for subscribers, which took over ten seconds on a phone.
+function forLanguage(recipe, language) {
+  if (!language) return recipe;
+  const slim = { ...recipe, translations: { [language]: recipe.translations?.[language] } };
+  delete slim.ingredients;
+  delete slim.steps;
+  return slim;
+}
+
+export async function catalogForAccess(hasPremium, language = null) {
   const recipes = await loadMasterRecipes();
-  if (hasPremium) return recipes.map((recipe) => ({ ...recipe, locked: false }));
+  if (hasPremium) return recipes.map((recipe) => forLanguage({ ...recipe, locked: false }, language));
   const freeIds = new Set(FREE_RECIPE_IDS);
   const byId = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const freeRecipes = FREE_RECIPE_IDS
     .map((id) => byId.get(id))
     .filter(Boolean)
-    .map((recipe) => ({ ...recipe, locked: false }));
+    .map((recipe) => forLanguage({ ...recipe, locked: false }, language));
   const premiumPreviews = recipes
     .filter((recipe) => !freeIds.has(recipe.id))
-    .map(lockedPreview);
+    .map((recipe) => forLanguage(lockedPreview(recipe), language));
   return [...freeRecipes, ...premiumPreviews];
 }

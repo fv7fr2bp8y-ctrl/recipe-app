@@ -44,7 +44,6 @@ function RecipeApp() {
   const account = useAccount();
   const refreshAccount = account.refresh;
   const catalogRefreshKey = `${account.user?.id || 'guest'}:${account.premium}`;
-  const { recipes: sourceRecipes, loading, error: catalogError } = useRecipes(catalogRefreshKey);
   const { accessToken, userEmail, signIn, signOut, scopes } = useGoogleDrive();
   const accountEmail = account.user?.email?.toLowerCase();
   const isAdmin = Boolean(
@@ -55,6 +54,8 @@ function RecipeApp() {
     const fromUrl = new URLSearchParams(window.location.search).get('lang');
     return SEO_LANGUAGES.includes(fromUrl) ? fromUrl : localStorage.getItem('tastemaster-language') || 'bg';
   });
+  // Wait for the account check so a subscriber downloads one catalog, not the guest one first.
+  const { recipes: sourceRecipes, loading, error: catalogError } = useRecipes(catalogRefreshKey, language, !account.loading);
   const messages = getMessages(language);
   const recipes = useMemo(() => sourceRecipes
     .filter((recipe) => recipe.image && recipe.availableLanguages?.includes(language))
@@ -82,6 +83,8 @@ function RecipeApp() {
   const [showPremium, setShowPremium] = useState(() => new URLSearchParams(window.location.search).get('premium') === '1');
   const [premiumRecipe, setPremiumRecipe] = useState(null);
   const [showAccount, setShowAccount] = useState(false);
+  // Plan picked in PremiumGate before sign-up; the trial starts right after registration.
+  const [pendingPlan, setPendingPlan] = useState(null);
   const [toast, setToast] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const syncing = false;
@@ -423,7 +426,7 @@ function RecipeApp() {
             }
           }}
           authenticated={Boolean(account.user)}
-          onLoginRequest={() => setShowAccount(true)}
+          onLoginRequest={(plan) => { setPendingPlan(plan || null); setShowAccount(true); }}
           onSubscribe={account.subscribe}
           onManageBilling={account.manageBilling}
           premium={account.premium}
@@ -432,6 +435,7 @@ function RecipeApp() {
           onPlayBuy={buyPlay}
           trialEligible={account.subscriptionStatus === 'inactive'}
           recipe={linkedLockedRecipe || premiumRecipe}
+          totalCount={recipes.length}
           loading={account.actionLoading || playBusy}
           error={playError || account.error}
           messages={messages}
@@ -439,13 +443,19 @@ function RecipeApp() {
       )}
       {showAccount && (
         <AccountDialog
-          onClose={() => setShowAccount(false)}
+          onClose={() => { setShowAccount(false); setPendingPlan(null); }}
           allowRegistration={!playApp || Boolean(playPlans)}
+          initialMode={pendingPlan ? 'register' : 'login'}
           onLogin={async (credentials) => {
-            if (await account.login(credentials)) setShowAccount(false);
+            if (await account.login(credentials)) { setShowAccount(false); setPendingPlan(null); }
           }}
           onRegister={async (details) => {
-            if (await account.register(details)) setShowAccount(false);
+            if (!(await account.register(details))) return;
+            setShowAccount(false);
+            const plan = pendingPlan;
+            setPendingPlan(null);
+            // New profile from the trial button: start the 7-day trial without a second click.
+            if (plan && !playPlans) account.subscribe(plan);
           }}
           loading={account.actionLoading}
           error={account.error}

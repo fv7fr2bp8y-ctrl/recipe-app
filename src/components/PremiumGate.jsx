@@ -21,6 +21,7 @@ export default function PremiumGate({
   playPlans,
   onPlayBuy,
   recipe,
+  totalCount,
   loading,
   error,
   messages,
@@ -82,7 +83,7 @@ export default function PremiumGate({
         <p className="mt-4 text-sm leading-6 text-stone-600">
           {consumptionOnly
             ? messages.playAccessCopy
-            : `${FREE_RECIPE_LIMIT} ${messages.recipes}. ${messages.premiumCopy}`}
+            : `${totalCount > FREE_RECIPE_LIMIT ? fill(messages.freeOfTotal, { total: totalCount, free: FREE_RECIPE_LIMIT }) : fill(messages.freeOnly, { free: FREE_RECIPE_LIMIT })} ${messages.premiumCopy}`}
         </p>
 
         {!premium && !consumptionOnly && (
@@ -145,7 +146,7 @@ export default function PremiumGate({
         ) : !authenticated ? (
           <button
             type="button"
-            onClick={onLoginRequest}
+            onClick={() => onLoginRequest(consumptionOnly ? null : plan)}
             disabled={loading}
             className="mt-6 w-full bg-orange-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-700 disabled:opacity-60"
           >

@@ -1,4 +1,4 @@
-import { catalogForAccess } from '../server/recipes.js';
+import { CATALOG_LANGUAGES, catalogForAccess } from '../server/recipes.js';
 import { getSession } from '../server/session.js';
 import { getEntitlement, entitlementIsActive } from '../server/db.js';
 import { FREE_RECIPE_LIMIT } from '../server/config.js';
@@ -12,7 +12,8 @@ export default async function handler(req, res) {
     const isAdmin = Boolean(user && adminEmail && user.email?.toLowerCase() === adminEmail);
     const entitlement = user ? await getEntitlement(user.id) : null;
     const premium = isAdmin || entitlementIsActive(entitlement);
-    const recipes = await catalogForAccess(premium);
+    const language = CATALOG_LANGUAGES.includes(req.query?.lang) ? req.query.lang : null;
+    const recipes = await catalogForAccess(premium, language);
     res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).json({ recipes, premium, freeLimit: FREE_RECIPE_LIMIT });
   } catch (error) {
