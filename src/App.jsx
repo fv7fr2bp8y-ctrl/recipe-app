@@ -11,6 +11,7 @@ import PremiumGate from './components/PremiumGate';
 import AccountDialog from './components/AccountDialog';
 import Footer from './components/Footer';
 import ConsentBanner from './components/ConsentBanner';
+import LentenMenu, { MENU_PARAM } from './components/LentenMenu';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
@@ -82,6 +83,9 @@ function RecipeApp() {
   // ?premium=1 (from the landing pages) opens the subscription dialog right away.
   const [showPremium, setShowPremium] = useState(() => new URLSearchParams(window.location.search).get('premium') === '1');
   const [premiumRecipe, setPremiumRecipe] = useState(null);
+  // ?menu=postno opens the Lenten menu (the /bg/postno-menu landing page links here).
+  const [showMenu, setShowMenu] = useState(() => new URLSearchParams(window.location.search).get('menu') === MENU_PARAM);
+  const baseQuery = showMenu ? `?menu=${MENU_PARAM}` : '';
   const [showAccount, setShowAccount] = useState(false);
   // Plan picked in PremiumGate before sign-up; the trial starts right after registration.
   const [pendingPlan, setPendingPlan] = useState(null);
@@ -175,7 +179,12 @@ function RecipeApp() {
   }, [playApp]);
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('premium') === '1') track('premium_view');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('premium') !== '1') return;
+    track('premium_view');
+    if (params.get('menu') === MENU_PARAM) {
+      try { sessionStorage.setItem('tm-after-premium', 'menu'); } catch { /* private mode */ }
+    }
   }, []);
 
   useEffect(() => {
@@ -201,7 +210,13 @@ function RecipeApp() {
       }
       if (status?.premium || attempts >= 8) {
         window.clearInterval(timer);
-        window.history.replaceState({}, '', window.location.pathname);
+        let backToMenu = false;
+        try {
+          backToMenu = sessionStorage.getItem('tm-after-premium') === 'menu';
+          sessionStorage.removeItem('tm-after-premium');
+        } catch { /* private mode */ }
+        if (backToMenu) setShowMenu(true);
+        window.history.replaceState({}, '', backToMenu ? `?menu=${MENU_PARAM}` : window.location.pathname);
       }
     }, 1500);
     return () => window.clearInterval(timer);
@@ -243,7 +258,21 @@ function RecipeApp() {
     }
     registerRecipeView(recipe.id);
     setViewRecipeId(recipe.id);
-    window.history.replaceState({}, '', `?recipe=${encodeURIComponent(recipe.id)}`);
+    window.history.replaceState({}, '', `${baseQuery ? `${baseQuery}&` : '?'}recipe=${encodeURIComponent(recipe.id)}`);
+  };
+
+  const openMenu = (open) => {
+    setShowMenu(open);
+    window.history.replaceState({}, '', open ? `?menu=${MENU_PARAM}` : window.location.pathname);
+    window.scrollTo(0, 0);
+  };
+
+  const askForTrial = (recipe) => {
+    // Bring the visitor back to the menu once the trial has started.
+    try { sessionStorage.setItem('tm-after-premium', 'menu'); } catch { /* private mode */ }
+    setPremiumRecipe(recipe || null);
+    setShowPremium(true);
+    track('premium_view');
   };
 
   const share = async (recipe = null) => {
@@ -317,6 +346,36 @@ function RecipeApp() {
       )}
 
       <main className="max-w-6xl mx-auto px-4 py-6">
+        {showMenu ? (
+          loading ? (
+            <div className="py-16 text-center">
+              <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
+            </div>
+          ) : (
+            <LentenMenu
+              recipes={recipes}
+              unlocked={premiumActive}
+              onOpenRecipe={openRecipe}
+              onTrial={askForTrial}
+              onBack={() => openMenu(false)}
+              language={language}
+            />
+          )
+        ) : (
+        <>
+        {language === 'bg' && (
+          <button
+            type="button"
+            onClick={() => openMenu(true)}
+            className="mb-5 flex w-full items-center gap-4 bg-[#144547] px-4 py-3 text-left text-[#fffaf2] hover:bg-[#135254]"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block font-serif text-lg font-bold">Постно меню до Коледа</span>
+              <span className="block text-sm text-[#cfe5e3]">4 седмици вечери, списъци за пазаруване и 9 ястия за Бъдни вечер</span>
+            </span>
+            <span className="text-sm font-semibold text-[#fdba74]">Виж менюто →</span>
+          </button>
+        )}
         {!loading && (
           <DailyRecipe
             recipe={dailyRecipe}
@@ -399,6 +458,8 @@ function RecipeApp() {
             </div>
           )}
         </div>
+        </>
+        )}
       </main>
 
       <Footer messages={messages} language={language} />
@@ -407,7 +468,7 @@ function RecipeApp() {
       {viewRecipe && (
         <RecipeDetail
           recipe={viewRecipe}
-          onClose={() => { setViewRecipeId(null); window.history.replaceState({}, '', window.location.pathname); }}
+          onClose={() => { setViewRecipeId(null); window.history.replaceState({}, '', baseQuery || window.location.pathname); }}
           onShare={share}
           messages={messages}
         />
@@ -418,7 +479,7 @@ function RecipeApp() {
           onClose={() => {
             setShowPremium(false);
             if (new URLSearchParams(window.location.search).has('premium')) {
-              window.history.replaceState({}, '', window.location.pathname);
+              window.history.replaceState({}, '', baseQuery || window.location.pathname);
             }
             if (linkedLockedRecipe) {
               setViewRecipeId(null);
@@ -439,6 +500,7 @@ function RecipeApp() {
           loading={account.actionLoading || playBusy}
           error={playError || account.error}
           messages={messages}
+          language={language}
         />
       )}
       {showAccount && (

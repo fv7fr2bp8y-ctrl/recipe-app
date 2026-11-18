@@ -137,3 +137,32 @@ test('the session says when a trial still needs a card', async () => {
   await me({ method: 'GET', headers: {} }, res);
   assert.equal(res.body.cardNeeded, false);
 });
+
+test('Black Friday gives only the monthly plan the first-month coupon, 27 to 30 November', async () => {
+  const blackFriday = Date.UTC(2026, 10, 28, 12, 0);
+  mock.timers.enable({ apis: ['Date'], now: blackFriday });
+  try {
+    entitlement = null;
+    await checkout(request({ plan: 'monthly' }), response());
+    let { params, options } = calls.subscriptions.at(-1);
+    assert.deepEqual(params.discounts, [{ coupon: 'CHERENPETAK2026' }]);
+    assert.equal(params.metadata.tm_promo, 'CHERENPETAK2026');
+    assert.equal(options.idempotencyKey, 'tm-trial-u1-monthly-promo');
+
+    await checkout(request({ plan: 'yearly' }), response());
+    ({ params } = calls.subscriptions.at(-1));
+    assert.equal(params.discounts, undefined);
+
+    entitlement = { status: 'canceled', stripe_subscription_id: 'sub_old', current_period_end: null };
+    await checkout(request({ plan: 'monthly' }), response());
+    assert.deepEqual(calls.checkouts.at(-1).discounts, [{ coupon: 'CHERENPETAK2026' }]);
+    assert.equal(calls.checkouts.at(-1).allow_promotion_codes, undefined);
+
+    mock.timers.setTime(Date.UTC(2026, 10, 30, 22, 0)); // 1.12 00:00 Sofia: over
+    entitlement = null;
+    await checkout(request({ plan: 'monthly' }), response());
+    assert.equal(calls.subscriptions.at(-1).params.discounts, undefined);
+  } finally {
+    mock.timers.reset();
+  }
+});

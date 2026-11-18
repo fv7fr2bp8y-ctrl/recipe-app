@@ -7,6 +7,7 @@ import { stripe, subscriptionPeriodEnd } from '../../server/stripe.js';
 import { STRIPE_PRICES, TRIAL_DAYS } from '../../server/config.js';
 import { playSubscriptionId, verifyPlayPurchase } from '../../server/play.js';
 import { attributionMetadata, sanitizeAttribution } from '../../server/attribution.js';
+import { PROMO, promoActive } from '../../src/promo.js';
 
 async function linkPlayPurchase(res, userId, entitlement, purchaseToken) {
   if (typeof purchaseToken !== 'string' || !purchaseToken || purchaseToken.length > 4096) {
@@ -90,7 +91,12 @@ export default async function handler(req, res) {
     }
 
     const origin = getOrigin(req);
-    const metadata = { tm_user_id: user.id, tm_plan: plan, ...sourceMetadata };
+    // Black Friday: monthly plans started 27 to 30 November pay 1,99 € for the first month.
+    const promo = plan === PROMO.plan && promoActive();
+    const discounts = promo ? [{ coupon: PROMO.coupon }] : undefined;
+    const metadata = {
+      tm_user_id: user.id, tm_plan: plan, ...(promo ? { tm_promo: PROMO.coupon } : {}), ...sourceMetadata,
+    };
 
     // New accounts start the trial right here, without a card and without a Stripe page.
     // A card is added later from the billing portal; without one Stripe cancels the
@@ -102,8 +108,13 @@ export default async function handler(req, res) {
         trial_period_days: TRIAL_DAYS,
         trial_settings: { end_behavior: { missing_payment_method: 'cancel' } },
         payment_settings: { save_default_payment_method: 'on_subscription' },
+        ...(discounts ? { discounts } : {}),
         metadata,
-      }, { idempotencyKey: `tm-trial-${user.id}-${plan}` });
+      }, { idempotencyKey: `tm-trial-${user.id}-${plan}${promo ? '-promo' : ''}` });
+      if (promo && !subscription.discounts?.length) {
+        // The coupon should wait for the first paid invoice; if the €0 trial invoice used it, say so.
+        console.warn('promo_discount_missing_after_trial_start', subscription.id);
+      }
       await saveEntitlement({
         userId: user.id,
         subscriptionId: subscription.id,
@@ -132,7 +143,8 @@ export default async function handler(req, res) {
       customer: customerId,
       client_reference_id: user.id,
       line_items: [{ price: STRIPE_PRICES[plan], quantity: 1 }],
-      allow_promotion_codes: true,
+      // Stripe takes either a fixed discount or the promotion code field, not both.
+      ...(discounts ? { discounts } : { allow_promotion_codes: true }),
       success_url: `${origin}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?checkout=cancelled`,
       // Returning accounts (trial already used) pay right away.

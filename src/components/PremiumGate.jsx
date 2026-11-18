@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FREE_RECIPE_LIMIT } from '../hooks/useFreemiumAccess';
 import { track } from '../track';
+import { PROMO, promoActive, promoCopy } from '../promo';
 
 const PLANS = {
   monthly: { price: '€4.99', periodKey: 'perMonth' },
@@ -25,8 +26,12 @@ export default function PremiumGate({
   loading,
   error,
   messages,
+  language,
 }) {
-  const [plan, setPlan] = useState('yearly');
+  // Black Friday offer for the web monthly plan (Stripe coupon); Google Play keeps its own prices.
+  const promo = !playPlans && promoActive();
+  const promoText = promoCopy(language);
+  const [plan, setPlan] = useState(promo ? PROMO.plan : 'yearly');
   const plans = playPlans
     ? Object.fromEntries(Object.entries(PLANS).map(([key, option]) => [key, { ...option, price: playPlans[key].price, monthlyEquivalent: undefined }]))
     : PLANS;
@@ -86,6 +91,12 @@ export default function PremiumGate({
             : `${totalCount > FREE_RECIPE_LIMIT ? fill(messages.freeOfTotal, { total: totalCount, free: FREE_RECIPE_LIMIT }) : fill(messages.freeOnly, { free: FREE_RECIPE_LIMIT })} ${messages.premiumCopy}`}
         </p>
 
+        {promo && !premium && !consumptionOnly && (
+          <p className="mt-4 bg-orange-600 px-3 py-2 text-sm font-semibold text-white">
+            {promoText.badge}: {promoText.headline}
+          </p>
+        )}
+
         {!premium && !consumptionOnly && (
           <div className="mt-5 grid grid-cols-2 gap-3" role="radiogroup" aria-label="Premium">
             {Object.entries(plans).map(([key, option]) => (
@@ -99,18 +110,29 @@ export default function PremiumGate({
                   plan === key ? 'border-orange-500 bg-white ring-1 ring-orange-500' : 'border-stone-200 bg-white/60 hover:border-orange-300'
                 }`}
               >
-                {key === 'yearly' && (
+                {(key === 'yearly' || (promo && key === PROMO.plan)) && (
                   <span className="absolute -top-2.5 right-2 bg-orange-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                    {messages.save}
+                    {key === 'yearly' ? messages.save : promoText.badge}
                   </span>
                 )}
                 <span className="block text-xs text-stone-500">{key === 'yearly' ? messages.planYearly : messages.planMonthly}</span>
-                <strong className="mt-1 block text-lg text-stone-900">{option.price}</strong>
-                <span className="block text-[11px] text-stone-500">
-                  {option.monthlyEquivalent
-                    ? fill(messages.yearlyEquivalent, { price: option.monthlyEquivalent })
-                    : messages[option.periodKey]}
-                </span>
+                {promo && key === PROMO.plan ? (
+                  <>
+                    <strong className="mt-1 block text-lg text-stone-900">
+                      {PROMO.price} <s className="text-sm font-normal text-stone-400">{option.price}</s>
+                    </strong>
+                    <span className="block text-[11px] text-stone-500">{promoText.card}</span>
+                  </>
+                ) : (
+                  <>
+                    <strong className="mt-1 block text-lg text-stone-900">{option.price}</strong>
+                    <span className="block text-[11px] text-stone-500">
+                      {option.monthlyEquivalent
+                        ? fill(messages.yearlyEquivalent, { price: option.monthlyEquivalent })
+                        : messages[option.periodKey]}
+                    </span>
+                  </>
+                )}
               </button>
             ))}
           </div>
@@ -118,7 +140,9 @@ export default function PremiumGate({
 
         {!premium && !consumptionOnly && (
           <p className="mt-3 text-xs leading-5 text-stone-500">
-            {showTrial ? `${fill(messages.trialNote, { price: priceLabel })} ` : ''}
+            {showTrial
+              ? `${promo && plan === PROMO.plan ? promoText.trialNote : fill(messages.trialNote, { price: priceLabel })} `
+              : ''}
             {playPlans || showTrial ? '' : messages.cancelAnytime}
           </p>
         )}

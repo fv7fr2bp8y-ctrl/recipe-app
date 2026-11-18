@@ -5,8 +5,8 @@ import { jsonError, methodNotAllowed, readJson } from '../server/http.js';
 import { sanitizeAttribution } from '../server/attribution.js';
 
 const CLIENT_EVENTS = new Set(['premium_view', 'plan_yearly', 'plan_monthly', 'menu_click']);
-// The PDF menu button sends which price it showed.
-const MENU_PRICES = new Set(['499', '199']);
+// The Lenten menu landing button says whether the Black Friday offer was on.
+const MENU_PLANS = new Set(['trial', 'trial_promo']);
 
 // Google Ads scheduled upload (HTTPS source). Protected by ADS_EXPORT_TOKEN, given
 // either as the password of HTTP basic auth or as ?token=. Off until the env var is set.
@@ -49,7 +49,7 @@ export default async function handler(req, res) {
       const user = await getSession(req);
       await recordFunnelEvent({
         name,
-        plan: name === 'menu_click' && MENU_PRICES.has(plan) ? plan : null,
+        plan: name === 'menu_click' && MENU_PLANS.has(plan) ? plan : null,
         userId: user?.id || null,
         attribution: sanitizeAttribution(attribution),
       });

@@ -1,5 +1,6 @@
 import { catalogForAccess } from './recipes.js';
 import { getMessages, localizeRecipe } from '../src/i18n.js';
+import { PROMO, promoActive } from '../src/promo.js';
 import {
   LENTEN_LANGUAGES, LENTEN_PATHS, MENU_PATH, SEO_LANGUAGES, hubPath, recipePath,
 } from '../src/seo-url.js';
@@ -430,19 +431,13 @@ export function renderNotFound(language) {
   });
 }
 
-// ---- Paid PDF "Постно меню до Коледа" (/bg/postno-menu) ----
+// ---- "Постно меню до Коледа" (/bg/postno-menu): landing page for the menu inside the app ----
 
-const MENU_LINKS = {
-  regular: 'https://buy.stripe.com/3cI8wP6p41ai2yn67M0RG01',
-  sale: 'https://buy.stripe.com/9B68wP9Bg06e1uj1Rw0RG02',
-};
-// Black Friday price, 27 to 30 November 2026, Sofia time (UTC+2).
-// The 1,99 € Stripe link turns on at 00:05 on 27.11, so the page waits for it.
-export const MENU_SALE_START = Date.UTC(2026, 10, 26, 22, 5);
-export const MENU_SALE_END = Date.UTC(2026, 10, 30, 22, 0);
-export const menuSaleOn = (now = Date.now()) => now >= MENU_SALE_START && now < MENU_SALE_END;
+// The menu lives in the app (?menu=postno); the landing page sends visitors to the free trial.
+const MENU_APP_LINK = '/?menu=postno&premium=1&lang=bg';
+export const menuSaleOn = (now = Date.now()) => promoActive(now);
 
-const MENU_TEASER = `      <a class="menu-teaser" href="${MENU_PATH}"><img src="/postno-menu/p-01.jpg" alt="" width="76" height="108" loading="lazy" /><div><b>Постно меню до Коледа</b><span>4 седмици вечери, списъци за пазаруване и 9 ястия за Бъдни вечер. PDF за <em>4,99 €</em></span></div></a>
+const MENU_TEASER = `      <a class="menu-teaser" href="${MENU_PATH}"><img src="/postno-menu/p-01.jpg" alt="" width="76" height="108" loading="lazy" /><div><b>Постно меню до Коледа</b><span>4 седмици вечери, списъци за пазаруване и 9 ястия за Бъдни вечер. <em>В приложението, 7 дни безплатно</em></span></div></a>
 `;
 
 const MENU_PAGES = [
@@ -465,6 +460,7 @@ const MENU_STYLE = `
       .m-price { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
       .m-price b { font: 700 40px/1 Georgia, serif; color: var(--deep); }
       .m-price s { font-size: 20px; color: var(--muted); }
+      .m-price small { display: block; width: 100%; font-size: 14px; color: var(--muted); }
       .m-price span { background: var(--accent); color: #fff; font-size: 13px; font-weight: 700; padding: 3px 10px; letter-spacing: .04em; }
       .m-buy { display: block; text-align: center; background: var(--accent); color: #fff; text-decoration: none; font: 700 21px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 18px 20px; border-radius: 12px; box-shadow: 0 8px 20px rgba(234,88,12,.35); }
       .m-buy:hover { background: var(--accent-dark); }
@@ -484,12 +480,12 @@ const MENU_STYLE = `
       .m-final .m-note { color: #cfe5e3; }
       #menu.sale .only-regular, #menu:not(.sale) .only-sale { display: none; }`;
 
-// The price switches by date on its own: the server renders today's state and the
+// The offer switches by date on its own: the server renders today's state and the
 // page script re-checks with the visitor's clock (the CDN may hold an older copy).
 const MENU_SCRIPT = `<script>
 (function () {
   var m = document.getElementById('menu'), now = Date.now();
-  m.classList.toggle('sale', now >= ${MENU_SALE_START} && now < ${MENU_SALE_END});
+  m.classList.toggle('sale', now >= ${PROMO.start} && now < ${PROMO.end});
   m.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a.m-buy');
     if (!a) return;
@@ -497,32 +493,29 @@ const MENU_SCRIPT = `<script>
     try { attribution = JSON.parse(localStorage.getItem('tm_attribution') || 'null'); } catch (err) {}
     try {
       fetch('/api/events', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'menu_click', plan: a.getAttribute('data-price'), attribution: attribution }) });
+        body: JSON.stringify({ name: 'menu_click', plan: m.classList.contains('sale') ? 'trial_promo' : 'trial', attribution: attribution }) });
     } catch (err) {}
   });
 })();
 </script>`;
 
-function menuBuy() {
-  return `<a class="m-buy only-regular" data-price="499" href="${MENU_LINKS.regular}">Купи за 4,99 €</a>`
-    + `<a class="m-buy only-sale" data-price="199" href="${MENU_LINKS.sale}">Купи за 1,99 € вместо 4,99 €</a>`;
-}
+const MENU_BUY = `<a class="m-buy" href="${MENU_APP_LINK}">Започни 7 дни безплатно, без карта</a>`;
+const MENU_NOTE = '<p class="m-note">Без карта. Ако не добавиш карта, пробата просто спира.</p>';
 
 export function renderMenuPage(now = Date.now()) {
   const sale = menuSaleOn(now);
-  const note = '<p class="m-note">Плащаш с карта през Stripe и веднага отваряш PDF-а.</p>';
   const body = `      <div id="menu"${sale ? ' class="sale"' : ''}>
 ${MENU_SCRIPT}
       <section class="m-hero">
         <img class="m-cover" src="/postno-menu/p-01.jpg" alt="Корица: Постно меню до Коледа" width="1000" height="1415" />
         <div>
-          <div class="m-kicker">PDF · 54 страници</div>
+          <div class="m-kicker">В приложението TasteMaster365</div>
           <h1>Постно меню <i>до Коледа</i></h1>
           <p class="m-lead">Какво да сготвиш тази вечер, решено за целия пост. Четири седмици постни вечери, готови списъци за пазаруване и трапеза за Бъдни вечер.</p>
-          <div class="m-price only-regular"><b>4,99 €</b></div>
-          <div class="m-price only-sale"><b>1,99 €</b><s>4,99 €</s><span>ЧЕРЕН ПЕТЪК 27–30.11</span></div>
-          ${menuBuy()}
-          ${note}
+          <div class="m-price only-regular"><b>4,99 €</b><small>на месец след 7-те безплатни дни. Или 29,99 € на година.</small></div>
+          <div class="m-price only-sale"><b>1,99 €</b><s>4,99 €</s><span>ЧЕРЕН ПЕТЪК 27–30.11</span><small>първият месец след 7-те безплатни дни, после 4,99 € на месец</small></div>
+          ${MENU_BUY}
+          ${MENU_NOTE}
         </div>
       </section>
       <h2>Какво има вътре</h2>
@@ -530,24 +523,24 @@ ${MENU_SCRIPT}
         <li><b>4 седмици</b>по 7 постни вечери и един десерт всяка седмица</li>
         <li><b>Списъци за пазаруване</b>за всяка седмица, с точни количества и отметки</li>
         <li><b>9 ястия за Бъдни вечер</b>и списък за трапезата на 24 декември</li>
-        <li><b>54 страници</b>със снимка, продукти и стъпки за всяка рецепта</li>
+        <li><b>Снимка, продукти и стъпки</b>за всяка рецепта, направо в телефона</li>
         <li><b>Изцяло постно</b>без месо, мляко, яйца и риба</li>
-        <li><b>30 до 45 минути</b>за повечето вечери</li>
+        <li><b>PDF за печат</b>с всички рецепти, за абонатите</li>
       </ul>
       <h2>Разгледай страниците</h2>
       <div class="m-pages">${MENU_PAGES.map((page) => `<figure><img src="${page.src}" alt="${esc(page.alt)}" width="1000" height="1415" loading="lazy" /><figcaption>${esc(page.alt)}</figcaption></figure>`).join('')}</div>
       <section class="m-final">
         <h2>Постът е до 24 декември</h2>
-        <p>Свали менюто днес и пазарувай веднъж седмично.</p>
-        ${menuBuy()}
-        ${note}
+        <p>Отвори менюто днес и пазарувай веднъж седмично. Освен него получаваш и всички рецепти в приложението.</p>
+        ${MENU_BUY}
+        ${MENU_NOTE}
       </section>
       </div>`;
 
   return layout({
     language: 'bg',
-    title: 'Постно меню до Коледа (PDF) · TasteMaster365',
-    description: '4 седмици постни вечери и десерти, списъци за пазаруване с количества и 9 ястия за Бъдни вечер. 54 страници PDF, без месо, мляко, яйца и риба.',
+    title: 'Постно меню до Коледа · TasteMaster365',
+    description: '4 седмици постни вечери и десерти, списъци за пазаруване с количества и 9 ястия за Бъдни вечер. В приложението TasteMaster365, 7 дни безплатно, без карта.',
     canonical: MENU_PATH,
     image: `${SITE}/postno-menu/og.jpg`,
     pathFor: () => MENU_PATH,
@@ -555,18 +548,12 @@ ${MENU_SCRIPT}
     extraStyle: MENU_STYLE,
     structuredData: {
       '@context': 'https://schema.org',
-      '@type': 'Product',
+      '@type': 'WebPage',
       name: 'Постно меню до Коледа',
-      description: '4 седмици постни вечери и десерти, списъци за пазаруване и 9 ястия за Бъдни вечер. PDF, 54 страници.',
+      description: '4 седмици постни вечери и десерти, списъци за пазаруване и 9 ястия за Бъдни вечер в приложението TasteMaster365.',
+      inLanguage: 'bg',
       image: `${SITE}/postno-menu/p-01.jpg`,
-      brand: { '@type': 'Brand', name: 'TasteMaster365' },
-      offers: {
-        '@type': 'Offer',
-        price: sale ? '1.99' : '4.99',
-        priceCurrency: 'EUR',
-        availability: 'https://schema.org/InStock',
-        url: `${SITE}${MENU_PATH}`,
-      },
+      url: `${SITE}${MENU_PATH}`,
     },
     body,
   });
