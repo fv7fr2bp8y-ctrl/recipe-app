@@ -1,5 +1,5 @@
 import {
-  SITE, findRecipe, publicCatalog, renderHubPage, renderLentenPage, renderNotFound, renderRecipePage, renderSitemap,
+  SITE, findRecipe, publicCatalog, renderHubPage, renderLentenPage, renderMenuPage, renderNotFound, renderRecipePage, renderSitemap,
 } from '../server/seo.js';
 import { localizeRecipe } from '../src/i18n.js';
 import {
@@ -14,6 +14,12 @@ export default async function handler(req, res) {
   const { page, lang, slug } = req.query || {};
   const language = SEO_LANGUAGES.includes(lang) ? lang : 'en';
   try {
+    if (page === 'menu') {
+      // Short cache: the price switches by date (the page script also switches it on its own).
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(renderMenuPage());
+    }
     const recipes = await publicCatalog();
     res.setHeader('Cache-Control', CACHE);
 

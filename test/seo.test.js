@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recipeIdFromSlug, recipePath, slugify } from '../src/seo-url.js';
-import { renderLentenPage, renderRecipePage, renderSitemap } from '../server/seo.js';
+import {
+  renderLentenPage, renderMenuPage, renderRecipePage, renderSitemap,
+} from '../server/seo.js';
 
 test('recipe paths transliterate titles and round-trip the id', () => {
   assert.equal(slugify('Шопска салата'), 'shopska-salata');
@@ -65,4 +67,18 @@ test('lenten page puts the picks first, lists only plant-based recipes and marks
   const urls = [...renderSitemap(recipes).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
   assert.ok(urls.includes('https://tastemaster365.com/bg/postni-recepti'));
   assert.ok(urls.includes('https://tastemaster365.com/en/lenten-recipes'));
+});
+
+test('the PDF menu page switches to the Black Friday price by Sofia date', () => {
+  const regular = renderMenuPage(Date.UTC(2026, 10, 26, 21, 59)); // 26.11 23:59 Sofia
+  const sale = renderMenuPage(Date.UTC(2026, 10, 27, 10, 0));
+  const after = renderMenuPage(Date.UTC(2026, 10, 30, 22, 0)); // 1.12 00:00 Sofia
+  assert.match(regular, /<div id="menu">/);
+  assert.match(sale, /<div id="menu" class="sale">/);
+  assert.match(after, /<div id="menu">/);
+  assert.match(regular, /href="https:\/\/buy\.stripe\.com\/3cI8wP6p41ai2yn67M0RG01">Купи за 4,99 €/);
+  assert.match(regular, /href="https:\/\/buy\.stripe\.com\/9B68wP9Bg06e1uj1Rw0RG02">Купи за 1,99 € вместо 4,99 €/);
+  assert.match(sale, /"price":"1.99"/);
+  assert.match(regular, /rel="canonical" href="https:\/\/tastemaster365\.com\/bg\/postno-menu"/);
+  assert.match(renderSitemap([]), /<loc>https:\/\/tastemaster365\.com\/bg\/postno-menu<\/loc>/);
 });

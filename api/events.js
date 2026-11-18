@@ -4,7 +4,9 @@ import { buildAdsCsv } from '../server/conversions.js';
 import { jsonError, methodNotAllowed, readJson } from '../server/http.js';
 import { sanitizeAttribution } from '../server/attribution.js';
 
-const CLIENT_EVENTS = new Set(['premium_view', 'plan_yearly', 'plan_monthly']);
+const CLIENT_EVENTS = new Set(['premium_view', 'plan_yearly', 'plan_monthly', 'menu_click']);
+// The PDF menu button sends which price it showed.
+const MENU_PRICES = new Set(['499', '199']);
 
 // Google Ads scheduled upload (HTTPS source). Protected by ADS_EXPORT_TOKEN, given
 // either as the password of HTTP basic auth or as ?token=. Off until the env var is set.
@@ -42,10 +44,15 @@ async function exportAdsConversions(req, res) {
 export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
-      const { name, attribution } = await readJson(req).catch(() => ({}));
+      const { name, attribution, plan } = await readJson(req).catch(() => ({}));
       if (!CLIENT_EVENTS.has(name)) return jsonError(res, 400, 'unknown_event', 'Unknown event.');
       const user = await getSession(req);
-      await recordFunnelEvent({ name, userId: user?.id || null, attribution: sanitizeAttribution(attribution) });
+      await recordFunnelEvent({
+        name,
+        plan: name === 'menu_click' && MENU_PRICES.has(plan) ? plan : null,
+        userId: user?.id || null,
+        attribution: sanitizeAttribution(attribution),
+      });
       return res.status(204).end();
     }
     if ((req.method === 'GET' || req.method === 'HEAD') && req.query?.export === 'gads') {
