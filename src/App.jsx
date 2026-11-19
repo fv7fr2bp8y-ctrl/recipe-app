@@ -347,7 +347,8 @@ function RecipeApp() {
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         {showMenu ? (
-          loading ? (
+          // The menu brings its own cards; it waits only for the account (locked or not).
+          account.loading ? (
             <div className="py-16 text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
             </div>

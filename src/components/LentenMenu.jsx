@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
 import MENU from '../data/postno-menu.json';
+// Title, time and a small photo per dish (scripts/build-menu-cards.mjs), so the menu shows
+// before the catalog has loaded. The catalog is needed only to open a recipe.
+import CARDS from '../data/postno-menu-cards.json';
 import { promoActive, promoCopy } from '../promo';
 
 // "Постно меню до Коледа": 4 weeks of Lenten dinners plus Christmas Eve, built from catalog
@@ -21,7 +24,7 @@ function DishCard({ label, recipe, locked, onOpen }) {
   return (
     <button
       type="button"
-      onClick={() => onOpen(recipe)}
+      onClick={() => onOpen(recipe.id)}
       className="group flex w-full gap-3 border border-stone-200 bg-white p-2 text-left transition-colors hover:border-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
     >
       <span className="relative h-20 w-24 flex-none overflow-hidden bg-primary-50">
@@ -110,7 +113,10 @@ export default function LentenMenu({
     ? MENU.badni.dishes.map((id, index) => ({ label: `Ястие ${index + 1}`, id }))
     : [...week.days.map((id, index) => ({ label: DAYS[index], id })), { label: 'Десерт на седмицата', id: week.dessert }];
   const list = badni ? MENU.badni.shopping : week.shopping;
-  const open = (recipe) => (unlocked ? onOpenRecipe(recipe) : onTrial(recipe));
+  const open = (id) => {
+    const recipe = byId.get(id) || { id, ...CARDS[id] };
+    return unlocked ? onOpenRecipe(recipe) : onTrial(recipe);
+  };
 
   return (
     <section aria-labelledby="postno-menu-title">
@@ -161,7 +167,8 @@ export default function LentenMenu({
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {dishes.map(({ label, id }) => {
-          const recipe = byId.get(id);
+          const card = CARDS[id];
+          const recipe = card ? { id, ...card } : null;
           return <DishCard key={id} label={label} recipe={recipe} locked={!unlocked} onOpen={open} />;
         })}
       </div>
