@@ -82,3 +82,36 @@ test('the Lenten menu page sends visitors to the trial and shows the Black Frida
   assert.match(regular, /rel="canonical" href="https:\/\/tastemaster365\.com\/bg\/postno-menu"/);
   assert.match(renderSitemap([]), /<loc>https:\/\/tastemaster365\.com\/bg\/postno-menu<\/loc>/);
 });
+
+test('the Bulgarian topic pages are complete, linked and in the sitemap', async () => {
+  const { TOPICS } = await import('../server/topics.js');
+  const { renderTopicPage } = await import('../server/seo.js');
+  const { readFileSync } = await import('node:fs');
+  const vercel = readFileSync(new URL('../vercel.json', import.meta.url), 'utf8');
+  const sitemap = renderSitemap([]);
+  assert.equal(TOPICS.length, 10);
+  for (const topic of TOPICS) {
+    assert.ok(topic.title.length <= 60, topic.slug);
+    assert.ok(topic.description.length <= 155, topic.slug);
+    const words = topic.intro.join(' ').split(/\s+/).length;
+    assert.ok(words >= 150 && words <= 250, `${topic.slug}: ${words} words`);
+    assert.ok(topic.ids.length >= 12 && topic.ids.length <= 24, topic.slug);
+    assert.ok(!/—/.test(JSON.stringify(topic)), topic.slug);
+    assert.match(vercel, new RegExp(`[(|]${topic.slug}[|)]`));
+    assert.match(sitemap, new RegExp(`<loc>https://tastemaster365\\.com/bg/${topic.slug}</loc>`));
+  }
+  const recipes = TOPICS[1].ids.map((id) => ({
+    id, title: `Супа ${id}`, image: 'https://example.com/a.jpg', time: '30', translations: { bg: { title: `Супа ${id}` } },
+  }));
+  const html = renderTopicPage(recipes, 'postni-supi');
+  assert.match(html, /<h1>Постни супи<\/h1>/);
+  assert.match(html, /"@type":"BreadcrumbList"/);
+  assert.match(html, /"@type":"ItemList","numberOfItems":19/);
+  assert.match(html, /rel="canonical" href="https:\/\/tastemaster365\.com\/bg\/postni-supi"/);
+  assert.match(html, /href="\/bg\/postno-menu"/);
+  assert.match(html, /href="\/bg\/badni-vecher"/);
+  assert.doesNotMatch(html, /<li><a href="\/bg\/postni-supi">/);
+  assert.equal(renderTopicPage(recipes, 'nyama-takava'), null);
+  assert.match(renderMenuPage(), /href="\/bg\/postni-supi"/);
+  assert.match(renderLentenPage([], 'bg'), /href="\/bg\/postni-salati"/);
+});

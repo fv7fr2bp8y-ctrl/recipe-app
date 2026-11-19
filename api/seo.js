@@ -1,5 +1,5 @@
 import {
-  SITE, findRecipe, publicCatalog, renderHubPage, renderLentenPage, renderMenuPage, renderNotFound, renderRecipePage, renderSitemap,
+  SITE, findRecipe, publicCatalog, renderHubPage, renderLentenPage, renderMenuPage, renderTopicPage, renderNotFound, renderRecipePage, renderSitemap,
 } from '../server/seo.js';
 import { localizeRecipe } from '../src/i18n.js';
 import {
@@ -30,6 +30,10 @@ export default async function handler(req, res) {
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     if (page === 'hub') return res.status(200).send(renderHubPage(recipes, language));
+    if (page === 'topic') {
+      const html = renderTopicPage(recipes, slug);
+      return html ? res.status(200).send(html) : res.status(404).send(renderNotFound('bg'));
+    }
     if (page === 'lenten') {
       if (!LENTEN_LANGUAGES.includes(language)) return res.status(404).send(renderNotFound(language));
       return res.status(200).send(renderLentenPage(recipes, language));

@@ -8,6 +8,7 @@
     { "source": "/sitemap.xml", "destination": "/api/seo?page=sitemap" },
     { "source": "/gads-conversions.csv", "destination": "/api/events?export=gads" },
     { "source": "/bg/postni-recepti", "destination": "/api/seo?page=lenten&lang=bg" },
+    { "source": "/bg/:topic(postni-yastiya-s-bob|postni-supi|postni-deserti|badni-vecher|recepti-s-tikva|barzi-postni-vecheri|postni-yastiya-s-leshta|postni-yastiya-s-oriz|postni-yastiya-s-kartofi|postni-salati)", "destination": "/api/seo?page=topic&lang=bg&slug=:topic" },
     { "source": "/bg/postno-menu", "destination": "/api/seo?page=menu&lang=bg" },
     { "source": "/en/lenten-recipes", "destination": "/api/seo?page=lenten&lang=en" },
     { "source": "/:lang(bg|en|de|es|fr|ru)/recipes", "destination": "/api/seo?page=hub&lang=:lang" },

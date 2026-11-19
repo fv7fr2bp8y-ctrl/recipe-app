@@ -1,6 +1,7 @@
 import { catalogForAccess } from './recipes.js';
 import { getMessages, localizeRecipe } from '../src/i18n.js';
 import { PROMO, promoActive } from '../src/promo.js';
+import { TOPICS, findTopic, topicPath } from './topics.js';
 import {
   LENTEN_LANGUAGES, LENTEN_PATHS, MENU_PATH, SEO_LANGUAGES, hubPath, recipePath,
 } from '../src/seo-url.js';
@@ -369,7 +370,7 @@ export function renderLentenPage(recipes, language) {
         <p style="margin:0">${esc(fill(copy.boxCopy, { free }))}</p>
         <a class="cta" href="${esc(premiumLink)}">${esc(messages.trialCta)}</a>
       </section>
-${language === 'bg' ? MENU_TEASER : ''}      <h2>${esc(copy.picks)}</h2>
+${language === 'bg' ? MENU_TEASER : ''}${language === 'bg' ? topicLinks() : ''}      <h2>${esc(copy.picks)}</h2>
       <div class="grid">${picks.map(card).join('')}</div>
       <h2>${esc(copy.all)} (${count})</h2>
       <div class="filters" role="group" aria-label="${esc(copy.filterLabel)}"><button type="button" data-meal="" aria-pressed="true">${esc(copy.filterAll)} · ${count}</button>${meals.map(([key, total]) => `<button type="button" data-meal="${esc(key)}" aria-pressed="false">${esc(MEAL_TYPES[key][language])} · ${total}</button>`).join('')}</div>
@@ -384,7 +385,7 @@ ${LENTEN_FILTER_SCRIPT}`;
     canonical: LENTEN_PATHS[language],
     pathFor: (code) => LENTEN_PATHS[code],
     languages: LENTEN_LANGUAGES,
-    extraStyle: LENTEN_STYLE,
+    extraStyle: language === 'bg' ? `${LENTEN_STYLE}${TOPIC_LINKS_STYLE}` : LENTEN_STYLE,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
@@ -406,7 +407,7 @@ ${LENTEN_FILTER_SCRIPT}`;
 }
 
 export function renderSitemap(recipes) {
-  const urls = [`${SITE}/`, `${SITE}${MENU_PATH}`, ...LENTEN_LANGUAGES.map((language) => `${SITE}${LENTEN_PATHS[language]}`)];
+  const urls = [`${SITE}/`, `${SITE}${MENU_PATH}`, ...TOPICS.map((topic) => `${SITE}${topicPath(topic)}`), ...LENTEN_LANGUAGES.map((language) => `${SITE}${LENTEN_PATHS[language]}`)];
   for (const language of SEO_LANGUAGES) {
     urls.push(`${SITE}${hubPath(language)}`);
     for (const recipe of recipes) urls.push(`${SITE}${recipePath(localizeRecipe(recipe, language), language)}`);
@@ -529,7 +530,7 @@ ${MENU_SCRIPT}
       </ul>
       <h2>Разгледай страниците</h2>
       <div class="m-pages">${MENU_PAGES.map((page) => `<figure><img src="${page.src}" alt="${esc(page.alt)}" width="1000" height="1415" loading="lazy" /><figcaption>${esc(page.alt)}</figcaption></figure>`).join('')}</div>
-      <section class="m-final">
+${topicLinks('Още постни теми')}      <section class="m-final">
         <h2>Постът е до 24 декември</h2>
         <p>Отвори менюто днес и пазарувай веднъж седмично. Освен него получаваш и всички рецепти в приложението.</p>
         ${MENU_BUY}
@@ -545,7 +546,7 @@ ${MENU_SCRIPT}
     image: `${SITE}/postno-menu/og.jpg`,
     pathFor: () => MENU_PATH,
     languages: ['bg'],
-    extraStyle: MENU_STYLE,
+    extraStyle: `${MENU_STYLE}${TOPIC_LINKS_STYLE}`,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'WebPage',
@@ -555,6 +556,95 @@ ${MENU_SCRIPT}
       image: `${SITE}/postno-menu/p-01.jpg`,
       url: `${SITE}${MENU_PATH}`,
     },
+    body,
+  });
+}
+
+// ---- Bulgarian topic pages (/bg/postni-supi and the rest, see server/topics.js) ----
+
+const TOPIC_LINKS_STYLE = `
+      .topics { margin: 24px 0; }
+      .topics h2 { margin: 0 0 10px; }
+      .topics ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+      .topics a { display: inline-block; border: 1px solid var(--line); background: var(--card); padding: 6px 12px; font-size: 14px; text-decoration: none; border-radius: 999px; }
+      .topics a:hover { border-color: var(--accent); color: var(--accent-dark); }`;
+
+function topicLinks(heading = 'Постни рецепти по теми', current = null) {
+  const items = TOPICS.filter((topic) => topic.slug !== current)
+    .map((topic) => `<li><a href="${topicPath(topic)}">${esc(topic.nav)}</a></li>`).join('');
+  return `      <nav class="topics" aria-label="${esc(heading)}"><h2>${esc(heading)}</h2><ul>${items}</ul></nav>
+`;
+}
+
+const TOPIC_STYLE = `${TOPIC_LINKS_STYLE}
+      .crumbs { font-size: 13px; color: var(--muted); margin-top: 18px; }
+      .crumbs a { color: var(--muted); }
+      .intro p { margin: 0 0 12px; color: #44403c; }
+      .card .time { display: block; padding: 0 10px 10px; margin-top: -6px; font-size: 12px; color: var(--muted); }
+      .menu-box { display: flex; gap: 16px; align-items: center; text-decoration: none; background: #144547; color: #fffaf2; padding: 14px 16px; margin: 28px 0; }
+      .menu-box img { width: 70px; height: auto; flex: none; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+      .menu-box b { display: block; font: 700 19px Georgia, serif; }
+      .menu-box span { font-size: 14px; color: #cfe5e3; }
+      .menu-box em { font-style: normal; color: #fdba74; font-weight: 600; }`;
+
+const MENU_BOX = `      <a class="menu-box" href="${MENU_PATH}"><img src="/postno-menu/p-01.jpg" alt="" width="70" height="99" loading="lazy" /><div><b>Постно меню до Коледа</b><span>4 седмици вечери, списъци за пазаруване и 9 ястия за Бъдни вечер. <em>7 дни безплатно, без карта</em></span></div></a>
+`;
+
+export function renderTopicPage(recipes, slug) {
+  const topic = findTopic(slug);
+  if (!topic) return null;
+  const byId = new Map(recipes.map((recipe) => [recipe.id.toUpperCase(), recipe]));
+  const picked = topic.ids.map((id) => byId.get(id)).filter(Boolean).map((recipe) => localizeRecipe(recipe, 'bg'));
+  const path = topicPath(topic);
+  const card = (recipe) => {
+    const minutes = Number(recipe.time) || null;
+    return `<a class="card" href="${esc(recipePath(recipe, 'bg'))}"><img src="${esc(recipe.image)}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span>${minutes ? `<small class="time">${minutes} мин.</small>` : ''}</a>`;
+  };
+  const body = `      <nav class="crumbs" aria-label="Навигация"><a href="/?lang=bg">Начало</a> › <a href="${LENTEN_PATHS.bg}">Постни рецепти</a> › ${esc(topic.h1)}</nav>
+      <h1>${esc(topic.h1)}</h1>
+      <div class="intro">${topic.intro.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}</div>
+${MENU_BOX}      <h2>Рецепти (${picked.length})</h2>
+      <div class="grid">${picked.map(card).join('')}</div>
+${topicLinks('Още теми', topic.slug)}      <p><a class="cta" href="${LENTEN_PATHS.bg}">Всички постни рецепти</a></p>`;
+
+  return layout({
+    language: 'bg',
+    title: topic.title,
+    description: topic.description,
+    canonical: path,
+    image: picked[0]?.image,
+    pathFor: () => path,
+    languages: ['bg'],
+    extraStyle: TOPIC_STYLE,
+    structuredData: [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: topic.h1,
+        description: topic.description,
+        inLanguage: 'bg',
+        url: `${SITE}${path}`,
+        mainEntity: {
+          '@type': 'ItemList',
+          numberOfItems: picked.length,
+          itemListElement: picked.map((recipe, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `${SITE}${recipePath(recipe, 'bg')}`,
+            name: recipe.title,
+          })),
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Начало', item: `${SITE}/` },
+          { '@type': 'ListItem', position: 2, name: 'Постни рецепти', item: `${SITE}${LENTEN_PATHS.bg}` },
+          { '@type': 'ListItem', position: 3, name: topic.h1, item: `${SITE}${path}` },
+        ],
+      },
+    ],
     body,
   });
 }
