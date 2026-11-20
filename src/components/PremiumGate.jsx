@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FREE_RECIPE_LIMIT } from '../hooks/useFreemiumAccess';
 import { track } from '../track';
 import { PROMO, promoActive, promoCopy } from '../promo';
+import { photo, PHOTO } from '../photo';
 
 const PLANS = {
   monthly: { price: '€4.99', periodKey: 'perMonth' },
@@ -66,7 +67,7 @@ export default function PremiumGate({
           <div className="mt-5 flex gap-4 border border-orange-100 bg-white p-3">
             {recipe.image && (
               <img
-                src={recipe.image}
+                src={photo(recipe.image, PHOTO.thumb)}
                 alt=""
                 onError={(event) => { event.currentTarget.hidden = true; }}
                 className="h-20 w-20 flex-none object-cover"

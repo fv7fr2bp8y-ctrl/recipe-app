@@ -1,4 +1,5 @@
 import { Share2 } from 'lucide-react';
+import { photo, PHOTO } from '../photo';
 
 export default function DailyRecipe({ recipe, onOpen, onShare, locked, language, messages }) {
   if (!recipe) return null;
@@ -11,7 +12,7 @@ export default function DailyRecipe({ recipe, onOpen, onShare, locked, language,
       <div className="grid md:grid-cols-[1.2fr_0.8fr]">
         <div className="relative aspect-[4/3] bg-stone-100 md:aspect-auto md:min-h-[390px]">
           {recipe.image ? (
-            <img src={recipe.image} alt={recipe.title} className="absolute inset-0 h-full w-full object-cover" />
+            <img src={photo(recipe.image, PHOTO.hero)} alt={recipe.title} className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-stone-400">{messages.imagePending}</div>
           )}

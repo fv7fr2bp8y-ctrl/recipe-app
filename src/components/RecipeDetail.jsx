@@ -1,4 +1,5 @@
 import { Share2, X } from 'lucide-react';
+import { photo, PHOTO } from '../photo';
 
 const DIFFICULTY_COLORS = {
   'Лесно': 'bg-green-100 text-green-700',
@@ -19,7 +20,7 @@ export default function RecipeDetail({ recipe, onClose, onShare, messages }) {
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 py-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <div className="my-auto mx-4 w-full max-w-xl overflow-hidden bg-white shadow-xl">
         <div className="relative aspect-[4/3] bg-stone-100">
-          {recipe.image ? <img src={recipe.image} alt={recipe.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.2em] text-stone-400">{messages.imagePending}</div>}
+          {recipe.image ? <img src={photo(recipe.image, PHOTO.hero)} alt={recipe.title} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-xs uppercase tracking-[0.2em] text-stone-400">{messages.imagePending}</div>}
           <div className="absolute right-3 top-3 flex gap-2">
             <button type="button" onClick={() => onShare(recipe)} className="flex h-10 w-10 items-center justify-center bg-white/95 text-stone-700 shadow" aria-label={messages.share}><Share2 size={18} strokeWidth={1.5} /></button>
             <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center bg-white/95 text-stone-700 shadow" aria-label="Close"><X size={20} strokeWidth={1.5} /></button>

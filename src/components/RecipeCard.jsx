@@ -1,3 +1,5 @@
+import { photo, PHOTO } from '../photo';
+
 const DIFFICULTY_COLORS = {
   'Лесно': 'bg-green-100 text-green-700',
   'Средно': 'bg-yellow-100 text-yellow-700',
@@ -20,7 +22,7 @@ export default function RecipeCard({ recipe, onClick, locked = false, messages }
     >
       <div className="relative h-44 bg-gradient-to-br from-primary-100 to-orange-50 flex items-center justify-center overflow-hidden">
         {recipe.image ? (
-          <img src={recipe.image} alt={recipe.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+          <img src={photo(recipe.image, PHOTO.card)} alt={recipe.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         ) : (
           <div className="text-center px-4">
             <span className="block text-xs uppercase tracking-[0.22em] text-primary-700/70 mb-2">{messages.imagePending}</span>

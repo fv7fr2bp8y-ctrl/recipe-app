@@ -2,6 +2,7 @@ import { catalogForAccess } from './recipes.js';
 import { getMessages, localizeRecipe } from '../src/i18n.js';
 import { PROMO, promoActive } from '../src/promo.js';
 import { TOPICS, findTopic, topicPath } from './topics.js';
+import { photo, PHOTO } from '../src/photo.js';
 import {
   LENTEN_LANGUAGES, LENTEN_PATHS, MENU_PATH, SEO_LANGUAGES, hubPath, recipePath,
 } from '../src/seo-url.js';
@@ -210,11 +211,11 @@ export function renderRecipePage(source, recipes, language) {
         ${recipe.country ? `<span>${esc(recipe.country)}</span>` : ''}
       </div>
       ${dietChips ? `<div class="chips">${dietChips}</div>` : ''}
-      <img class="hero" src="${esc(recipe.image)}" alt="${esc(recipe.title)}" width="1200" height="675" />
+      <img class="hero" src="${esc(photo(recipe.image, PHOTO.hero))}" alt="${esc(recipe.title)}" width="1200" height="675" />
 ${content}
       </article>
       ${related.length ? `<h2>${esc(messages.relatedRecipes)}</h2>
-      <div class="grid">${related.map((item) => `<a class="card" href="${esc(recipePath(item, language))}"><img src="${esc(item.image)}" alt="" loading="lazy" width="400" height="300" /><span>${esc(item.title)}</span></a>`).join('')}</div>` : ''}`;
+      <div class="grid">${related.map((item) => `<a class="card" href="${esc(recipePath(item, language))}"><img src="${esc(photo(item.image, PHOTO.card))}" alt="" loading="lazy" width="400" height="300" /><span>${esc(item.title)}</span></a>`).join('')}</div>` : ''}`;
 
   return layout({
     language,
@@ -359,7 +360,7 @@ export function renderLentenPage(recipes, language) {
     const tag = recipe.locked
       ? `<em class="tag">${esc(copy.locked)}</em>`
       : `<em class="tag free">${esc(copy.free)}</em>`;
-    return `<a class="card" data-meal="${esc(mealKey(source))}" href="${esc(recipePath(recipe, language))}">${tag}<img src="${esc(recipe.image)}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span></a>`;
+    return `<a class="card" data-meal="${esc(mealKey(source))}" href="${esc(recipePath(recipe, language))}">${tag}<img src="${esc(photo(recipe.image, PHOTO.card))}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span></a>`;
   };
   const premiumLink = `/?premium=1&lang=${language}`;
   const body = `      <h1>${esc(copy.title)}</h1>
@@ -598,7 +599,7 @@ export function renderTopicPage(recipes, slug) {
   const path = topicPath(topic);
   const card = (recipe) => {
     const minutes = Number(recipe.time) || null;
-    return `<a class="card" href="${esc(recipePath(recipe, 'bg'))}"><img src="${esc(recipe.image)}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span>${minutes ? `<small class="time">${minutes} мин.</small>` : ''}</a>`;
+    return `<a class="card" href="${esc(recipePath(recipe, 'bg'))}"><img src="${esc(photo(recipe.image, PHOTO.card))}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span>${minutes ? `<small class="time">${minutes} мин.</small>` : ''}</a>`;
   };
   const body = `      <nav class="crumbs" aria-label="Навигация"><a href="/?lang=bg">Начало</a> › <a href="${LENTEN_PATHS.bg}">Постни рецепти</a> › ${esc(topic.h1)}</nav>
       <h1>${esc(topic.h1)}</h1>

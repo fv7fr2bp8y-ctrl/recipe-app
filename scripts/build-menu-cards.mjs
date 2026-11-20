@@ -3,6 +3,7 @@
 // Run again if a menu recipe gets a new title or photo:
 //   node scripts/build-menu-cards.mjs [https://tastemaster365.com]
 import { readFile, writeFile } from 'node:fs/promises';
+import { photo, PHOTO } from '../src/photo.js';
 
 const base = process.argv[2] || 'https://tastemaster365.com';
 const menu = JSON.parse(await readFile(new URL('../src/data/postno-menu.json', import.meta.url), 'utf8'));
@@ -23,8 +24,8 @@ for (const id of ids) {
   cards[id] = {
     title: recipe.translations?.bg?.title || recipe.title,
     time: recipe.time || null,
-    // The cards are 96 px wide; the catalog photo is 1200 px (about 1.6 MB).
-    image: recipe.image ? recipe.image.replace(/sz=w\d+/, 'sz=w300') : '',
+    // The cards are 96 px wide: a 300 px JPEG (src/photo.js).
+    image: photo(recipe.image, PHOTO.thumb) || '',
   };
 }
 
