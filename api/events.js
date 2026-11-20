@@ -4,7 +4,8 @@ import { buildAdsCsv } from '../server/conversions.js';
 import { jsonError, methodNotAllowed, readJson } from '../server/http.js';
 import { sanitizeAttribution } from '../server/attribution.js';
 
-const CLIENT_EVENTS = new Set(['premium_view', 'plan_yearly', 'plan_monthly', 'menu_click']);
+// ad_landing: the first page view of a new Google Ads click (with its gclid).
+const CLIENT_EVENTS = new Set(['premium_view', 'plan_yearly', 'plan_monthly', 'menu_click', 'ad_landing']);
 // The Lenten menu landing button says whether the Black Friday offer was on.
 const MENU_PLANS = new Set(['trial', 'trial_promo']);
 

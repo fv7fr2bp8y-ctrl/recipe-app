@@ -33,6 +33,16 @@ export function captureAttribution(search = window.location.search) {
   } catch {
     // Storage blocked: nothing to remember.
   }
+  // A new ad click that landed straight in the app (the landing pages log their own).
+  if (clickId(next)) {
+    fetch('/api/events', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'ad_landing', attribution: next }),
+      keepalive: true,
+    }).catch(() => {});
+  }
   return next;
 }
 
