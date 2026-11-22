@@ -1,6 +1,7 @@
 // Black Friday 2026: the first year of the yearly plan costs 19,99 € instead of 29,99 €.
 // 27 to 30 November, Sofia time (UTC+2). The Stripe coupon TM_BF2026_YEAR (10 € off,
-// TasteMaster365 Premium only) can be redeemed until 30.11.2026 23:59:59 Sofia time.
+// TasteMaster365 Premium only) can be redeemed until 30.11.2026 23:59:00 Sofia time
+// (Stripe redeem_by 1796075940), and the offer here ends at that same minute.
 // The server adds it only to the yearly price and only on these dates, never as a code.
 // It lasts one month (not "once"): a new account first gets 7 free days, and the
 // discount has to reach the first paid invoice after them.
@@ -8,7 +9,7 @@ export const PROMO = {
   coupon: 'TM_BF2026_YEAR',
   plan: 'yearly',
   start: Date.UTC(2026, 10, 26, 22, 0),
-  end: Date.UTC(2026, 10, 30, 22, 0),
+  end: Date.UTC(2026, 10, 30, 21, 59),
   price: '€19.99',
   regularPrice: '€29.99',
 };

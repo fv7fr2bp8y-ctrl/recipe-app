@@ -161,12 +161,12 @@ test('Black Friday gives only the yearly plan the first-year coupon, 27 to 30 No
     await checkout(request({ plan: 'monthly' }), response());
     assert.equal(calls.checkouts.at(-1).discounts, undefined);
 
-    mock.timers.setTime(Date.UTC(2026, 10, 30, 21, 59, 59)); // 30.11 23:59:59 Sofia: still on
+    mock.timers.setTime(Date.UTC(2026, 10, 30, 21, 58, 59)); // 30.11 23:58:59 Sofia: still on
     entitlement = null;
     await checkout(request({ plan: 'yearly' }), response());
     assert.deepEqual(calls.subscriptions.at(-1).params.discounts, [{ coupon: 'TM_BF2026_YEAR' }]);
 
-    mock.timers.setTime(Date.UTC(2026, 10, 30, 22, 0)); // 1.12 00:00 Sofia: over
+    mock.timers.setTime(Date.UTC(2026, 10, 30, 21, 59)); // 30.11 23:59 Sofia: the coupon has expired
     await checkout(request({ plan: 'yearly' }), response());
     assert.equal(calls.subscriptions.at(-1).params.discounts, undefined);
   } finally {
