@@ -90,6 +90,8 @@ function layout({
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-tastemaster-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-tastemaster.png" />
     <script>${ATTRIBUTION_SCRIPT}${APP_LINK_SCRIPT}</script>
+    <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+    <script defer src="/_vercel/insights/script.js"></script>
     <meta name="theme-color" content="#169f9e" />
     ${structuredData ? `<script type="application/ld+json">${jsonLd(structuredData)}</script>` : ''}
     <style>

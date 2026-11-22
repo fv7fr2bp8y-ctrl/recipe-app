@@ -48,11 +48,14 @@ export default async function handler(req, res) {
       const { name, attribution, plan } = await readJson(req).catch(() => ({}));
       if (!CLIENT_EVENTS.has(name)) return jsonError(res, 400, 'unknown_event', 'Unknown event.');
       const user = await getSession(req);
+      const clean = sanitizeAttribution(attribution);
       await recordFunnelEvent({
         name,
         plan: name === 'menu_click' && MENU_PLANS.has(plan) ? plan : null,
         userId: user?.id || null,
-        attribution: sanitizeAttribution(attribution),
+        attribution: clean,
+        // The page an ad click landed on, so the campaign report can group by it.
+        ref: name === 'ad_landing' ? clean?.landing || null : null,
       });
       return res.status(204).end();
     }
