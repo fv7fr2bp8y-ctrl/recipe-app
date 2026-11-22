@@ -20,6 +20,8 @@ import { detectPlayApp } from './platform';
 import { track } from './track';
 import { initAds, trackConversion } from './ads';
 import { buyPlayPlan, loadPlayPlans, restorePlayPurchases } from './playBilling';
+import { promoActive } from './promo';
+import PromoBar from './components/PromoBar';
 
 async function loadCheckoutSummary(sessionId) {
   try {
@@ -300,6 +302,16 @@ function RecipeApp() {
 
   return (
     <div className="min-h-screen bg-[#f6fbfa]">
+      {!playApp && !account.premium && promoActive() && (
+        <PromoBar
+          language={language}
+          onTake={() => {
+            setPremiumRecipe(null);
+            setShowPremium(true);
+            track('premium_view');
+          }}
+        />
+      )}
       <Header
         driveConnected={!!accessToken}
         onDriveSignIn={signIn}

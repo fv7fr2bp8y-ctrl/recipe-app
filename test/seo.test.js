@@ -78,7 +78,8 @@ test('the Lenten menu page sends visitors to the trial and shows the Black Frida
   assert.match(after, /<div id="menu">/);
   assert.doesNotMatch(regular, /buy\.stripe\.com/);
   assert.match(regular, /href="\/\?menu=postno&premium=1&lang=bg">Започни 7 дни безплатно, без карта/);
-  assert.match(regular, /<b>1,99 €<\/b><s>4,99 €<\/s>/);
+  assert.match(regular, /<b>19,99 €<\/b><s>29,99 €<\/s>/);
+  assert.match(regular, /id="bf" hidden/);
   assert.match(regular, /rel="canonical" href="https:\/\/tastemaster365\.com\/bg\/postno-menu"/);
   assert.match(renderSitemap([]), /<loc>https:\/\/tastemaster365\.com\/bg\/postno-menu<\/loc>/);
 });

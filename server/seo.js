@@ -1,6 +1,6 @@
 import { catalogForAccess } from './recipes.js';
 import { getMessages, localizeRecipe } from '../src/i18n.js';
-import { PROMO, promoActive } from '../src/promo.js';
+import { PROMO, promoActive, promoCopy } from '../src/promo.js';
 import { TOPICS, findTopic, topicPath } from './topics.js';
 import { photo, PHOTO } from '../src/photo.js';
 import {
@@ -66,6 +66,24 @@ const APP_LINK_SCRIPT = "document.addEventListener('DOMContentLoaded',function()
 // so the funnel shows how many Google Ads clicks reached the site with a click id.
 const ATTRIBUTION_SCRIPT = "(function(){try{var p=new URLSearchParams(location.search),k='tm_attribution',f=['gclid','gbraid','wbraid','utm_source','utm_medium','utm_campaign'],o={},n=0;f.forEach(function(x){var v=p.get(x);if(v){o[x]=v.slice(0,200);n++;}});if(!n)return;var s=localStorage.getItem(k),c=o.gclid||o.gbraid||o.wbraid;if(s&&!c)return;if(s&&c){var t=JSON.parse(s);if((t.gclid||t.gbraid||t.wbraid)===c)return;}o.landing=location.pathname.slice(0,200);o.at=new Date().toISOString();localStorage.setItem(k,JSON.stringify(o));if(c)fetch('/api/events',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'ad_landing',attribution:o}),keepalive:true}).catch(function(){});}catch(e){}})();";
 
+// The Black Friday strip: rendered hidden and shown by the visitor's clock, because the
+// CDN may keep a copy made before or after the offer. promoActive(0) is true only on a
+// preview deployment with PROMO_PREVIEW=1.
+const PROMO_CHECK = promoActive(0) ? 'true' : `now >= ${PROMO.start} && now < ${PROMO.end}`;
+const PROMO_BAR_STYLE = `
+      .bf { background: #0c0a09; color: #fff; }
+      .bf .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 16px; padding-top: 10px; padding-bottom: 10px; text-align: center; font-size: 14px; line-height: 1.4; }
+      .bf p { margin: 0; }
+      .bf a { background: #ea580c; color: #fff; text-decoration: none; font-weight: 600; padding: 6px 12px; white-space: nowrap; }
+      .bf a:hover { background: #c2410c; }`;
+
+function promoBar(language) {
+  const copy = promoCopy(language);
+  return `    <div class="bf" id="bf" hidden><div class="wrap"><p>${esc(copy.banner)}</p><a href="/?premium=1&amp;lang=${language}">${esc(copy.bannerButton)}</a></div></div>
+    <script>(function(){var now=Date.now();if(${PROMO_CHECK})document.getElementById('bf').hidden=false;})();</script>
+`;
+}
+
 function layout({
   language, title, description, canonical, image, ogType = 'website', pathFor, languages = SEO_LANGUAGES, structuredData, body, extraStyle = '',
 }) {
@@ -127,11 +145,11 @@ function layout({
       .list { columns: 2 260px; margin: 0; padding-left: 18px; } .list li { margin: 3px 0; break-inside: avoid; }
       .badge { font-size: 11px; color: var(--accent); margin-left: 4px; }
       footer { margin-top: 48px; border-top: 1px solid var(--line); padding: 24px 0 40px; color: var(--muted); font-size: 13px; }
-      footer .langs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }${extraStyle}
+      footer .langs { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; }${PROMO_BAR_STYLE}${extraStyle}
     </style>
   </head>
   <body>
-    <header><div class="wrap">
+${promoBar(language)}    <header><div class="wrap">
       <a class="brand" href="/?lang=${language}"><img src="/tastemaster-mark.svg" alt="" width="36" height="36" />TasteMaster365</a>
       <a class="nav" href="${hubPath(language)}">${esc(messages.allRecipes)}</a>
     </div></header>
@@ -491,7 +509,7 @@ const MENU_STYLE = `
 const MENU_SCRIPT = `<script>
 (function () {
   var m = document.getElementById('menu'), now = Date.now();
-  m.classList.toggle('sale', now >= ${PROMO.start} && now < ${PROMO.end});
+  m.classList.toggle('sale', ${PROMO_CHECK});
   m.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a.m-buy');
     if (!a) return;
@@ -519,7 +537,7 @@ ${MENU_SCRIPT}
           <h1>Постно меню <i>до Коледа</i></h1>
           <p class="m-lead">Какво да сготвиш тази вечер, решено за целия пост. Четири седмици постни вечери, готови списъци за пазаруване и трапеза за Бъдни вечер.</p>
           <div class="m-price only-regular"><b>4,99 €</b><small>на месец след 7-те безплатни дни. Или 29,99 € на година.</small></div>
-          <div class="m-price only-sale"><b>1,99 €</b><s>4,99 €</s><span>ЧЕРЕН ПЕТЪК 27–30.11</span><small>първият месец след 7-те безплатни дни, после 4,99 € на месец</small></div>
+          <div class="m-price only-sale"><b>19,99 €</b><s>29,99 €</s><span>ЧЕРЕН ПЕТЪК 27–30.11</span><small>за цяла година след 7-те безплатни дни, по-малко от 1,70 € на месец. После 29,99 € на година.</small></div>
           ${MENU_BUY}
           ${MENU_NOTE}
         </div>

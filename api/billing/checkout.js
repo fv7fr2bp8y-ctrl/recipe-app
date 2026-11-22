@@ -91,7 +91,7 @@ export default async function handler(req, res) {
     }
 
     const origin = getOrigin(req);
-    // Black Friday: monthly plans started 27 to 30 November pay 1,99 € for the first month.
+    // Black Friday: yearly plans started 27 to 30 November pay 19,99 € for the first year.
     const promo = plan === PROMO.plan && promoActive();
     const discounts = promo ? [{ coupon: PROMO.coupon }] : undefined;
     const metadata = {

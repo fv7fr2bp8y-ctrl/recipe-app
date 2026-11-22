@@ -29,7 +29,7 @@ export default function PremiumGate({
   messages,
   language,
 }) {
-  // Black Friday offer for the web monthly plan (Stripe coupon); Google Play keeps its own prices.
+  // Black Friday offer for the web yearly plan (Stripe coupon); Google Play keeps its own prices.
   const promo = !playPlans && promoActive();
   const promoText = promoCopy(language);
   const [plan, setPlan] = useState(promo ? PROMO.plan : 'yearly');
@@ -93,8 +93,8 @@ export default function PremiumGate({
         </p>
 
         {promo && !premium && !consumptionOnly && (
-          <p className="mt-4 bg-orange-600 px-3 py-2 text-sm font-semibold text-white">
-            {promoText.badge}: {promoText.headline}
+          <p className="mt-4 bg-orange-600 px-3 py-2 text-sm font-semibold leading-snug text-white">
+            {promoText.pitch}
           </p>
         )}
 
@@ -113,7 +113,7 @@ export default function PremiumGate({
               >
                 {(key === 'yearly' || (promo && key === PROMO.plan)) && (
                   <span className="absolute -top-2.5 right-2 bg-orange-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                    {key === 'yearly' ? messages.save : promoText.badge}
+                    {promo && key === PROMO.plan ? promoText.badge : messages.save}
                   </span>
                 )}
                 <span className="block text-xs text-stone-500">{key === 'yearly' ? messages.planYearly : messages.planMonthly}</span>
