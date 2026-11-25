@@ -5,7 +5,7 @@ import LENTEN from '../data/postno-menu.json';
 // scripts/build-menu-cards.mjs), so the menu shows before the catalog has loaded.
 import CARDS from '../data/praznichno-menu-cards.json';
 import LENTEN_CARDS from '../data/postno-menu-cards.json';
-import { DishCard, ShoppingList } from './LentenMenu';
+import { DishCard, ShoppingList, largePhoto } from './LentenMenu';
 
 // "Празнично меню": Christmas Eve (the nine Lenten dishes), Christmas and New Year, with a
 // day-by-day plan and shopping lists. Same access rules as the Lenten menu: everyone sees
@@ -13,6 +13,13 @@ import { DishCard, ShoppingList } from './LentenMenu';
 export const FESTIVE_PARAM = 'praznichno';
 const CHECKS_KEY = 'tm-praznichno-menu-checks';
 const ALL_CARDS = { ...LENTEN_CARDS, ...CARDS };
+
+// The big photo in the header: our own festive photos at full size (1200 px), the
+// catalog's Drive photos at 1200 px.
+function heroImage(id) {
+  const image = ALL_CARDS[id]?.image || '';
+  return image.startsWith('/praznichno-menu/w300/') ? image.replace('/w300/', '/') : largePhoto(image, 1200);
+}
 
 function tabContent(tab) {
   if (!tab.fromLenten) return tab;
@@ -38,20 +45,33 @@ export default function FestiveMenu({
     <section aria-labelledby="praznichno-menu-title">
       <button type="button" onClick={onBack} className="text-sm text-primary-700 hover:underline">← Всички рецепти</button>
 
-      <div className="mt-3 bg-[#7f1d1d] px-5 py-6 text-[#fffaf2] sm:px-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fcd34d]">24 декември · 25 декември · 31 декември</p>
-        <h1 id="praznichno-menu-title" className="mt-2 font-serif text-3xl font-bold leading-tight">
-          Празнично меню <i className="text-[#fcd34d]">за Коледа и Нова година</i>
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-[#fde2e2]">
-          Бъдни вечер, коледна трапеза и новогодишна вечеря за 6 до 8 души. План какво да сготвиш по дни
-          и списъци за пазаруване с количества.
-        </p>
-        {!unlocked && (
-          <button type="button" onClick={() => onTrial(null)} className="mt-4 bg-orange-600 px-5 py-3 text-sm font-semibold text-white hover:bg-orange-700">
-            Започни 7 дни безплатно, без карта
-          </button>
+      <div className="mt-3 overflow-hidden bg-[#7f1d1d] text-[#fffaf2] sm:grid sm:grid-cols-[1.05fr_1fr]">
+        {tab.hero && (
+          <div className="relative aspect-[3/2] sm:order-2 sm:aspect-auto sm:min-h-[300px]">
+            <img
+              key={tab.hero}
+              src={heroImage(tab.hero)}
+              alt={ALL_CARDS[tab.hero]?.title || ''}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <span className="absolute inset-0 bg-gradient-to-t from-[#7f1d1d]/50 via-transparent to-transparent sm:bg-gradient-to-r sm:from-[#7f1d1d] sm:via-transparent" />
+          </div>
         )}
+        <div className="px-5 py-6 sm:px-8 sm:py-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fcd34d]">24 декември · 25 декември · 31 декември</p>
+          <h1 id="praznichno-menu-title" className="mt-2 font-serif text-3xl font-bold leading-tight sm:text-4xl">
+            Празнично меню <i className="text-[#fcd34d]">за Коледа и Нова година</i>
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-[#fde2e2]">
+            Бъдни вечер, коледна трапеза и новогодишна вечеря за 6 до 8 души. План какво да сготвиш по дни
+            и списъци за пазаруване с количества.
+          </p>
+          {!unlocked && (
+            <button type="button" onClick={() => onTrial(null)} className="mt-4 bg-orange-600 px-5 py-3 text-sm font-semibold text-white hover:bg-orange-700">
+              Започни 7 дни безплатно, без карта
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-5 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Празници">
@@ -71,7 +91,7 @@ export default function FestiveMenu({
 
       <p className="mt-4 max-w-3xl text-sm leading-6 text-stone-700">{tab.intro}</p>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {tab.dishes.map(({ label, id }) => {
           const card = ALL_CARDS[id];
           const recipe = card ? { id, ...card } : null;

@@ -19,25 +19,38 @@ function readChecks(storageKey) {
   try { return JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { return {}; }
 }
 
+// The cards keep 300 px thumbnails (so the menu shows before the catalog loads); the big
+// card asks for the 600 px copy of the same photo.
+export const largePhoto = (url, width = 600) => (url || '')
+  .replace(/\/w300\//, `/w${width}/`)
+  .replace(/=w300-rj$/, `=w${width}-rj`);
+
 export function DishCard({ label, recipe, locked, onOpen }) {
   if (!recipe) return null;
   return (
     <button
       type="button"
       onClick={() => onOpen(recipe.id)}
-      className="group flex w-full gap-3 border border-stone-200 bg-white p-2 text-left transition-colors hover:border-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
+      className="group flex w-full flex-col overflow-hidden border border-stone-200 bg-white text-left transition-colors hover:border-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400"
     >
-      <span className="relative h-20 w-24 flex-none overflow-hidden bg-primary-50">
-        {recipe.image && <img src={recipe.image} alt="" loading="lazy" className="h-full w-full object-cover" />}
+      <span className="relative block aspect-[3/2] w-full overflow-hidden bg-primary-50">
+        {recipe.image && (
+          <img
+            src={largePhoto(recipe.image)}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        )}
         {locked && (
-          <span className="absolute inset-x-0 bottom-0 bg-stone-950/60 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wider text-white">
+          <span className="absolute right-2 top-2 bg-stone-950/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
             Premium
           </span>
         )}
       </span>
-      <span className="min-w-0 py-0.5">
+      <span className="block px-3 pb-3 pt-2.5">
         <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-600">{label}</span>
-        <span className="mt-1 block font-serif text-[15px] font-semibold leading-snug text-[#144547]">{recipe.title}</span>
+        <span className="mt-1 block font-serif text-base font-semibold leading-snug text-[#144547]">{recipe.title}</span>
         {recipe.time ? <span className="mt-1 block text-xs text-stone-500">{recipe.time} мин.</span> : null}
       </span>
     </button>
@@ -169,7 +182,7 @@ export default function LentenMenu({
         ))}
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {dishes.map(({ label, id }) => {
           const card = CARDS[id];
           const recipe = card ? { id, ...card } : null;
