@@ -1,0 +1,97 @@
+{
+  "XM-C002": {
+    "title": "Пилешка супа със застройка",
+    "time": 90,
+    "image": "/praznichno-menu/w300/pileshka-supa.jpg"
+  },
+  "SEA-C074": {
+    "title": "Полска салата с херинга, цвекло и ябълка",
+    "time": 25,
+    "image": "https://lh3.googleusercontent.com/d/1lMGCTekH6CjFrKJR9WfNuw0KejnCw4Z2=w300-rj"
+  },
+  "XM-C003": {
+    "title": "Сарми с кайма в кисело зеле",
+    "time": 150,
+    "image": "/praznichno-menu/w300/sarmi.jpg"
+  },
+  "XM-C004": {
+    "title": "Пуйка с кисело зеле и ориз",
+    "time": 150,
+    "image": "/praznichno-menu/w300/puyka.jpg"
+  },
+  "XM-C005": {
+    "title": "Свинско с праз",
+    "time": 110,
+    "image": "/praznichno-menu/w300/svinsko-praz.jpg"
+  },
+  "XM-C006": {
+    "title": "Печени картофи с розмарин и чесън",
+    "time": 60,
+    "image": "/praznichno-menu/w300/pecheni-kartofi.jpg"
+  },
+  "XM-C007": {
+    "title": "Бисквитена торта",
+    "time": 40,
+    "image": "/praznichno-menu/w300/biskvitena-torta.jpg"
+  },
+  "FF-C066": {
+    "title": "Печени ябълки с орехи и канела",
+    "time": 28,
+    "image": "https://lh3.googleusercontent.com/d/1eq8Lpi24u4aHTG5_6jFzRqW45gSw92KX=w300-rj"
+  },
+  "SEA-C073": {
+    "title": "Финландска крем супа със сьомга и копър",
+    "time": 40,
+    "image": "https://lh3.googleusercontent.com/d/1fxJhJSUiRHVWrnk5wmHXfZvI-bvmeVGy=w300-rj"
+  },
+  "XM-C001": {
+    "title": "Баница с късмети",
+    "time": 60,
+    "image": "/praznichno-menu/w300/banica.jpg"
+  },
+  "XM-C008": {
+    "title": "Руска салата",
+    "time": 50,
+    "image": "/praznichno-menu/w300/ruska-salata.jpg"
+  },
+  "XM-C009": {
+    "title": "Салата „Снежанка“",
+    "time": 20,
+    "image": "/praznichno-menu/w300/snezhanka.jpg"
+  },
+  "SEA-C102": {
+    "title": "Белгийски крокети със сиви скариди и лимон",
+    "time": 55,
+    "image": "https://lh3.googleusercontent.com/d/1eiUoKOBs5Xp5wnenEr5A-5qxAoehOR1b=w300-rj"
+  },
+  "SEA-C092": {
+    "title": "Еквадорско севиче със скариди и домат",
+    "time": 30,
+    "image": "https://lh3.googleusercontent.com/d/1vBvuSOjBPxb_chfk32M5CrvyZHt79plN=w300-rj"
+  },
+  "BR-E011": {
+    "title": "Тост със сьомга, котидж сирене, краставица и каперси",
+    "time": 10,
+    "image": "https://lh3.googleusercontent.com/d/1rQrzhs_onafEi8k9x4Ec2v9Ln3FoR1zW=w300-rj"
+  },
+  "XM-C010": {
+    "title": "Свинско печено с картофи",
+    "time": 200,
+    "image": "/praznichno-menu/w300/svinsko-pecheno.jpg"
+  },
+  "SEA-C039": {
+    "title": "Шведска сьомга с горчица, копър и картофи",
+    "time": 35,
+    "image": "https://lh3.googleusercontent.com/d/1Yk59F9vFHKEhq2s4XD0gfsyCeOErvfm1=w300-rj"
+  },
+  "XM-C011": {
+    "title": "Домашна шоколадова торта",
+    "time": 90,
+    "image": "/praznichno-menu/w300/shokoladova-torta.jpg"
+  },
+  "XM-C012": {
+    "title": "Шкембе чорба",
+    "time": 45,
+    "image": "/praznichno-menu/w300/shkembe-chorba.jpg"
+  }
+}

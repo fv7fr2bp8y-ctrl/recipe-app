@@ -3,11 +3,18 @@ import { getMessages, localizeRecipe } from '../src/i18n.js';
 import { PROMO, promoActive, promoCopy } from '../src/promo.js';
 import { TOPICS, findTopic, topicPath } from './topics.js';
 import { photo, PHOTO } from '../src/photo.js';
+import { readFileSync } from 'node:fs';
 import {
-  LENTEN_LANGUAGES, LENTEN_PATHS, MENU_PATH, SEO_LANGUAGES, hubPath, recipePath,
+  FESTIVE_PATH, LENTEN_LANGUAGES, LENTEN_PATHS, MENU_PATH, SEO_LANGUAGES, hubPath, recipePath,
 } from '../src/seo-url.js';
 
 export const SITE = 'https://tastemaster365.com';
+
+// Photos kept in the site (public/praznichno-menu) have a relative address.
+const absolute = (url) => (url && url.startsWith('/') ? `${SITE}${url}` : url);
+
+// A recipe page exists only in the languages the recipe is written in.
+export const inLanguage = (language) => (recipe) => !recipe.availableLanguages || recipe.availableLanguages.includes(language);
 
 const LOCALES = { bg: 'bg_BG', en: 'en_GB', de: 'de_DE', es: 'es_ES', fr: 'fr_FR', ru: 'ru_RU' };
 const MEAL_TYPES = {
@@ -103,7 +110,7 @@ function layout({
     <meta property="og:title" content="${esc(title)}" />
     <meta property="og:description" content="${esc(description)}" />
     <meta property="og:url" content="${SITE}${esc(canonical)}" />
-    <meta property="og:image" content="${esc(image || `${SITE}/tastemaster-logo.png`)}" />
+    <meta property="og:image" content="${esc(absolute(image) || `${SITE}/tastemaster-logo.png`)}" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-tastemaster-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-tastemaster.png" />
@@ -187,7 +194,7 @@ export function renderRecipePage(source, recipes, language) {
     '@type': 'Recipe',
     name: recipe.title,
     description,
-    image: [recipe.image],
+    image: [absolute(recipe.image)],
     inLanguage: language,
     author: { '@type': 'Organization', name: 'TasteMaster365', url: SITE },
     publisher: { '@type': 'Organization', name: 'TasteMaster365', logo: { '@type': 'ImageObject', url: `${SITE}/tastemaster-logo.png` } },
@@ -247,6 +254,8 @@ ${content}
     image: recipe.image,
     ogType: 'article',
     pathFor: (code) => recipePath(localizeRecipe(source, code), code),
+    // The festive recipes exist only in Bulgarian: no alternates for languages they lack.
+    languages: SEO_LANGUAGES.filter((code) => !source.availableLanguages || source.availableLanguages.includes(code)),
     structuredData,
     body,
   });
@@ -393,7 +402,7 @@ export function renderLentenPage(recipes, language) {
         <p style="margin:0">${esc(fill(copy.boxCopy, { free }))}</p>
         <a class="cta" href="${esc(premiumLink)}">${esc(messages.trialCta)}</a>
       </section>
-${language === 'bg' ? MENU_TEASER : ''}${language === 'bg' ? topicLinks() : ''}      <h2>${esc(copy.picks)}</h2>
+${language === 'bg' ? FESTIVE_TEASER + MENU_TEASER : ''}${language === 'bg' ? topicLinks() : ''}      <h2>${esc(copy.picks)}</h2>
       <div class="grid">${picks.map(card).join('')}</div>
       <h2>${esc(copy.all)} (${count})</h2>
       <div class="filters" role="group" aria-label="${esc(copy.filterLabel)}"><button type="button" data-meal="" aria-pressed="true">${esc(copy.filterAll)} · ${count}</button>${meals.map(([key, total]) => `<button type="button" data-meal="${esc(key)}" aria-pressed="false">${esc(MEAL_TYPES[key][language])} · ${total}</button>`).join('')}</div>
@@ -430,10 +439,10 @@ ${LENTEN_FILTER_SCRIPT}`;
 }
 
 export function renderSitemap(recipes) {
-  const urls = [`${SITE}/`, `${SITE}${MENU_PATH}`, ...TOPICS.map((topic) => `${SITE}${topicPath(topic)}`), ...LENTEN_LANGUAGES.map((language) => `${SITE}${LENTEN_PATHS[language]}`)];
+  const urls = [`${SITE}/`, `${SITE}${FESTIVE_PATH}`, `${SITE}${MENU_PATH}`, ...TOPICS.map((topic) => `${SITE}${topicPath(topic)}`), ...LENTEN_LANGUAGES.map((language) => `${SITE}${LENTEN_PATHS[language]}`)];
   for (const language of SEO_LANGUAGES) {
     urls.push(`${SITE}${hubPath(language)}`);
-    for (const recipe of recipes) urls.push(`${SITE}${recipePath(localizeRecipe(recipe, language), language)}`);
+    for (const recipe of recipes.filter(inLanguage(language))) urls.push(`${SITE}${recipePath(localizeRecipe(recipe, language), language)}`);
   }
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -553,7 +562,7 @@ ${MENU_SCRIPT}
       </ul>
       <h2>Разгледай страниците</h2>
       <div class="m-pages">${MENU_PAGES.map((page) => `<figure><img src="${page.src}" alt="${esc(page.alt)}" width="1000" height="1415" loading="lazy" /><figcaption>${esc(page.alt)}</figcaption></figure>`).join('')}</div>
-${topicLinks('Още постни теми')}      <section class="m-final">
+${topicLinks('Още постни теми')}${FESTIVE_TEASER}      <section class="m-final">
         <h2>Постът е до 24 декември</h2>
         <p>Отвори менюто днес и пазарувай веднъж седмично. Освен него получаваш и всички рецепти в приложението.</p>
         ${MENU_BUY}
@@ -578,6 +587,101 @@ ${topicLinks('Още постни теми')}      <section class="m-final">
       inLanguage: 'bg',
       image: `${SITE}/postno-menu/p-01.jpg`,
       url: `${SITE}${MENU_PATH}`,
+    },
+    body,
+  });
+}
+
+// ---- "Празнично меню" (/bg/praznichno-menu): Christmas Eve, Christmas and New Year ----
+
+const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
+const FESTIVE_MENU = readJson('../src/data/praznichno-menu.json');
+const LENTEN_MENU = readJson('../src/data/postno-menu.json');
+const FESTIVE_APP_LINK = '/?menu=praznichno&premium=1&lang=bg';
+const FESTIVE_BUY = `<a class="m-buy" href="${FESTIVE_APP_LINK}">Започни 7 дни безплатно, без карта</a>`;
+
+// Inline styles, so the same block works on the Lenten, menu and topic pages.
+export const FESTIVE_TEASER = `      <a href="${FESTIVE_PATH}" style="display:flex;gap:16px;align-items:center;text-decoration:none;background:#7f1d1d;color:#fffaf2;padding:14px 16px;margin:24px 0"><img src="/praznichno-menu/w300/banica.jpg" alt="" width="76" height="76" loading="lazy" style="width:76px;height:76px;object-fit:cover;flex:none" /><span><b style="display:block;font:700 19px Georgia,serif">Празнично меню за Коледа и Нова година</b><span style="font-size:14px;color:#fde2e2">Бъдни вечер, коледна трапеза и новогодишна вечеря с план по дни и списъци за пазаруване. <em style="font-style:normal;color:#fcd34d;font-weight:600">В приложението, 7 дни безплатно</em></span></span></a>
+`;
+
+const FESTIVE_STYLE = `
+      .f-cover { width: 100%; height: auto; display: block; aspect-ratio: 3 / 2; object-fit: cover; box-shadow: 0 18px 40px rgba(127,29,29,.25); }
+      .f-tab { margin: 36px 0 0; }
+      .f-tab h2 { margin-bottom: 4px; }
+      .f-date { color: #7f1d1d; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; }
+      .f-plan { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+      .f-plan li { background: var(--card); border: 1px solid var(--line); border-left: 4px solid #7f1d1d; padding: 10px 14px; font-size: 14px; }
+      .f-plan b { display: block; color: #7f1d1d; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+      .grid .card small { display: block; padding: 0 10px 10px; color: var(--muted); font-size: 12px; }`;
+
+function festiveTabs() {
+  return FESTIVE_MENU.tabs.map((tab) => (tab.fromLenten
+    ? { ...tab, dishes: LENTEN_MENU.badni.dishes.map((id, index) => ({ label: `Ястие ${index + 1}`, id })) }
+    : tab));
+}
+
+export function renderFestivePage(recipes) {
+  const byId = new Map(recipes.map((recipe) => [recipe.id.toUpperCase(), recipe]));
+  const card = ({ label, id }) => {
+    const source = byId.get(id.toUpperCase());
+    if (!source) return '';
+    const recipe = localizeRecipe(source, 'bg');
+    return `<a class="card" href="${esc(recipePath(recipe, 'bg'))}"><img src="${esc(photo(recipe.image, PHOTO.card))}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span><small>${esc(label)}</small></a>`;
+  };
+  const sections = festiveTabs().map((tab) => `      <section class="f-tab">
+        <div class="f-date">${esc(tab.date)}</div>
+        <h2>${esc(tab.label)}</h2>
+        <p>${esc(tab.intro)}</p>
+        <div class="grid">${tab.dishes.map(card).join('')}</div>
+${tab.plan ? `        <ol class="f-plan">${tab.plan.map((step) => `<li><b>${esc(step.when)}</b>${step.items.map(esc).join(' ')}</li>`).join('')}</ol>
+` : ''}      </section>`).join('\n');
+
+  const body = `      <div id="menu">
+${MENU_SCRIPT}
+      <section class="m-hero">
+        <img class="f-cover" src="/praznichno-menu/banica.jpg" alt="Баница с късмети за Нова година" width="1200" height="800" />
+        <div>
+          <div class="m-kicker">В приложението TasteMaster365</div>
+          <h1>Празнично меню <i>за Коледа и Нова година</i></h1>
+          <p class="m-lead">Бъдни вечер, коледна трапеза и новогодишна вечеря за 6 до 8 души. Какво да сготвиш, кога да го приготвиш и какво да купиш, събрано на едно място.</p>
+          <div class="m-price only-regular"><b>4,99 €</b><small>на месец след 7-те безплатни дни. Или 29,99 € на година.</small></div>
+          <div class="m-price only-sale"><b>19,99 €</b><s>29,99 €</s><span>ЧЕРЕН ПЕТЪК 27–30.11</span><small>за цяла година след 7-те безплатни дни, по-малко от 1,70 € на месец. После 29,99 € на година.</small></div>
+          ${FESTIVE_BUY}
+          ${MENU_NOTE}
+        </div>
+      </section>
+      <ul class="m-facts">
+        <li><b>3 празнични трапези</b>Бъдни вечер, Коледа и Нова година</li>
+        <li><b>План по дни</b>какво се прави предния ден и какво в деня на празника</li>
+        <li><b>Списъци за пазаруване</b>с количества за 8 души и отметки в телефона</li>
+        <li><b>Баница с късмети</b>сарми, пуйка с кисело зеле, руска салата и „Снежанка“</li>
+      </ul>
+${sections}
+      <section class="m-final">
+        <h2>Празниците идват бързо</h2>
+        <p>Отвори менюто днес и пазарувай спокойно. Освен него получаваш и всички рецепти в приложението.</p>
+        ${FESTIVE_BUY}
+        ${MENU_NOTE}
+      </section>
+      </div>`;
+
+  return layout({
+    language: 'bg',
+    title: 'Празнично меню за Коледа и Нова година · TasteMaster365',
+    description: 'Меню за Бъдни вечер, Коледа и Нова година: баница с късмети, сарми, пуйка с кисело зеле, руска салата. План по дни и списъци за пазаруване за 8 души.',
+    canonical: FESTIVE_PATH,
+    image: `${SITE}/praznichno-menu/banica.jpg`,
+    pathFor: () => FESTIVE_PATH,
+    languages: ['bg'],
+    extraStyle: `${MENU_STYLE}${FESTIVE_STYLE}`,
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Празнично меню за Коледа и Нова година',
+      description: 'Меню за Бъдни вечер, Коледа и Нова година с план по дни и списъци за пазаруване в приложението TasteMaster365.',
+      inLanguage: 'bg',
+      image: `${SITE}/praznichno-menu/banica.jpg`,
+      url: `${SITE}${FESTIVE_PATH}`,
     },
     body,
   });
@@ -626,7 +730,7 @@ export function renderTopicPage(recipes, slug) {
   const body = `      <nav class="crumbs" aria-label="Навигация"><a href="/?lang=bg">Начало</a> › <a href="${LENTEN_PATHS.bg}">Постни рецепти</a> › ${esc(topic.h1)}</nav>
       <h1>${esc(topic.h1)}</h1>
       <div class="intro">${topic.intro.map((paragraph) => `<p>${esc(paragraph)}</p>`).join('')}</div>
-${MENU_BOX}      <h2>Рецепти (${picked.length})</h2>
+${topic.slug === 'badni-vecher' ? FESTIVE_TEASER : ''}${MENU_BOX}      <h2>Рецепти (${picked.length})</h2>
       <div class="grid">${picked.map(card).join('')}</div>
 ${topicLinks('Още теми', topic.slug)}      <p><a class="cta" href="${LENTEN_PATHS.bg}">Всички постни рецепти</a></p>`;
 

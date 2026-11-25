@@ -12,6 +12,7 @@ import AccountDialog from './components/AccountDialog';
 import Footer from './components/Footer';
 import ConsentBanner from './components/ConsentBanner';
 import LentenMenu, { MENU_PARAM } from './components/LentenMenu';
+import FestiveMenu, { FESTIVE_PARAM } from './components/FestiveMenu';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
@@ -22,6 +23,10 @@ import { initAds, trackConversion } from './ads';
 import { buyPlayPlan, loadPlayPlans, restorePlayPurchases } from './playBilling';
 import { promoActive } from './promo';
 import PromoBar from './components/PromoBar';
+
+const MENU_KEYS = [MENU_PARAM, FESTIVE_PARAM];
+// The Lenten menu banner stays until Christmas Eve (Sofia time); the menu itself stays reachable.
+const lentenMenuOn = (now = Date.now()) => now < Date.UTC(2026, 11, 24, 22, 0);
 
 async function loadCheckoutSummary(sessionId) {
   try {
@@ -86,8 +91,12 @@ function RecipeApp() {
   const [showPremium, setShowPremium] = useState(() => new URLSearchParams(window.location.search).get('premium') === '1');
   const [premiumRecipe, setPremiumRecipe] = useState(null);
   // ?menu=postno opens the Lenten menu (the /bg/postno-menu landing page links here).
-  const [showMenu, setShowMenu] = useState(() => new URLSearchParams(window.location.search).get('menu') === MENU_PARAM);
-  const baseQuery = showMenu ? `?menu=${MENU_PARAM}` : '';
+  // ?menu=praznichno opens the Christmas and New Year menu (/bg/praznichno-menu links there).
+  const [showMenu, setShowMenu] = useState(() => {
+    const requested = new URLSearchParams(window.location.search).get('menu');
+    return MENU_KEYS.includes(requested) ? requested : null;
+  });
+  const baseQuery = showMenu ? `?menu=${showMenu}` : '';
   const [showAccount, setShowAccount] = useState(false);
   // Plan picked in PremiumGate before sign-up; the trial starts right after registration.
   const [pendingPlan, setPendingPlan] = useState(null);
@@ -184,8 +193,8 @@ function RecipeApp() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('premium') !== '1') return;
     track('premium_view');
-    if (params.get('menu') === MENU_PARAM) {
-      try { sessionStorage.setItem('tm-after-premium', 'menu'); } catch { /* private mode */ }
+    if (MENU_KEYS.includes(params.get('menu'))) {
+      try { sessionStorage.setItem('tm-after-premium', params.get('menu')); } catch { /* private mode */ }
     }
   }, []);
 
@@ -212,13 +221,15 @@ function RecipeApp() {
       }
       if (status?.premium || attempts >= 8) {
         window.clearInterval(timer);
-        let backToMenu = false;
+        let backToMenu = null;
         try {
-          backToMenu = sessionStorage.getItem('tm-after-premium') === 'menu';
+          const stored = sessionStorage.getItem('tm-after-premium');
+          // 'menu' is what the Lenten menu stored before the festive menu existed.
+          backToMenu = stored === 'menu' ? MENU_PARAM : (MENU_KEYS.includes(stored) ? stored : null);
           sessionStorage.removeItem('tm-after-premium');
         } catch { /* private mode */ }
-        if (backToMenu) setShowMenu(true);
-        window.history.replaceState({}, '', backToMenu ? `?menu=${MENU_PARAM}` : window.location.pathname);
+        if (backToMenu) setShowMenu(backToMenu);
+        window.history.replaceState({}, '', backToMenu ? `?menu=${backToMenu}` : window.location.pathname);
       }
     }, 1500);
     return () => window.clearInterval(timer);
@@ -263,15 +274,16 @@ function RecipeApp() {
     window.history.replaceState({}, '', `${baseQuery ? `${baseQuery}&` : '?'}recipe=${encodeURIComponent(recipe.id)}`);
   };
 
-  const openMenu = (open) => {
-    setShowMenu(open);
-    window.history.replaceState({}, '', open ? `?menu=${MENU_PARAM}` : window.location.pathname);
+  // key: MENU_PARAM, FESTIVE_PARAM or null to go back to the catalog.
+  const openMenu = (key) => {
+    setShowMenu(key);
+    window.history.replaceState({}, '', key ? `?menu=${key}` : window.location.pathname);
     window.scrollTo(0, 0);
   };
 
   const askForTrial = (recipe) => {
     // Bring the visitor back to the menu once the trial has started.
-    try { sessionStorage.setItem('tm-after-premium', 'menu'); } catch { /* private mode */ }
+    try { sessionStorage.setItem('tm-after-premium', showMenu || MENU_PARAM); } catch { /* private mode */ }
     setPremiumRecipe(recipe || null);
     setShowPremium(true);
     track('premium_view');
@@ -364,13 +376,21 @@ function RecipeApp() {
             <div className="py-16 text-center">
               <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary-500 border-t-transparent" />
             </div>
+          ) : showMenu === FESTIVE_PARAM ? (
+            <FestiveMenu
+              recipes={recipes}
+              unlocked={premiumActive}
+              onOpenRecipe={openRecipe}
+              onTrial={askForTrial}
+              onBack={() => openMenu(null)}
+            />
           ) : (
             <LentenMenu
               recipes={recipes}
               unlocked={premiumActive}
               onOpenRecipe={openRecipe}
               onTrial={askForTrial}
-              onBack={() => openMenu(false)}
+              onBack={() => openMenu(null)}
               language={language}
             />
           )
@@ -379,7 +399,20 @@ function RecipeApp() {
         {language === 'bg' && (
           <button
             type="button"
-            onClick={() => openMenu(true)}
+            onClick={() => openMenu(FESTIVE_PARAM)}
+            className="mb-3 flex w-full items-center gap-4 bg-[#7f1d1d] px-4 py-3 text-left text-[#fffaf2] hover:bg-[#991b1b]"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block font-serif text-lg font-bold">Празнично меню за Коледа и Нова година</span>
+              <span className="block text-sm text-[#fde2e2]">Бъдни вечер, коледна трапеза и новогодишна вечеря с план и списъци за пазаруване</span>
+            </span>
+            <span className="text-sm font-semibold text-[#fcd34d]">Виж менюто →</span>
+          </button>
+        )}
+        {language === 'bg' && lentenMenuOn() && (
+          <button
+            type="button"
+            onClick={() => openMenu(MENU_PARAM)}
             className="mb-5 flex w-full items-center gap-4 bg-[#144547] px-4 py-3 text-left text-[#fffaf2] hover:bg-[#135254]"
           >
             <span className="min-w-0 flex-1">

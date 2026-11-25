@@ -36,3 +36,6 @@ export const LENTEN_LANGUAGES = Object.keys(LENTEN_PATHS);
 
 // Paid PDF "Постно меню до Коледа" (Bulgarian only).
 export const MENU_PATH = '/bg/postno-menu';
+
+// "Празнично меню": Christmas Eve, Christmas and New Year (Bulgarian only).
+export const FESTIVE_PATH = '/bg/praznichno-menu';

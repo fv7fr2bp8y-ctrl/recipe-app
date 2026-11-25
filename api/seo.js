@@ -1,5 +1,5 @@
 import {
-  SITE, findRecipe, publicCatalog, renderHubPage, renderLentenPage, renderMenuPage, renderTopicPage, renderNotFound, renderRecipePage, renderSitemap,
+  SITE, findRecipe, inLanguage, publicCatalog, renderFestivePage, renderHubPage, renderLentenPage, renderMenuPage, renderTopicPage, renderNotFound, renderRecipePage, renderSitemap,
 } from '../server/seo.js';
 import { localizeRecipe } from '../src/i18n.js';
 import {
@@ -29,7 +29,8 @@ export default async function handler(req, res) {
     }
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    if (page === 'hub') return res.status(200).send(renderHubPage(recipes, language));
+    if (page === 'hub') return res.status(200).send(renderHubPage(recipes.filter(inLanguage(language)), language));
+    if (page === 'festive') return res.status(200).send(renderFestivePage(recipes));
     if (page === 'topic') {
       const html = renderTopicPage(recipes, slug);
       return html ? res.status(200).send(html) : res.status(404).send(renderNotFound('bg'));
@@ -41,12 +42,13 @@ export default async function handler(req, res) {
 
     const recipe = findRecipe(recipes, recipeIdFromSlug(slug));
     if (!recipe) return res.status(404).send(renderNotFound(language));
-    const canonical = recipePath(localizeRecipe(recipe, language), language);
+    const pageLanguage = inLanguage(language)(recipe) ? language : 'bg';
+    const canonical = recipePath(localizeRecipe(recipe, pageLanguage), pageLanguage);
     if (`/${language}/recipe/${slug}` !== canonical) {
       res.setHeader('Location', `${SITE}${canonical}`);
       return res.status(301).end();
     }
-    return res.status(200).send(renderRecipePage(recipe, recipes, language));
+    return res.status(200).send(renderRecipePage(recipe, recipes.filter(inLanguage(language)), language));
   } catch (error) {
     console.error('seo_render_failed', error);
     res.setHeader('Cache-Control', 'no-store');

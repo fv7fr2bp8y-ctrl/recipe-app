@@ -15,11 +15,11 @@ const DAYS = ['Понеделник', 'Вторник', 'Сряда', 'Четв�
 const TABS = [...MENU.weeks.map((_, index) => `Седмица ${index + 1}`), 'Бъдни вечер'];
 const CHECKS_KEY = 'tm-postno-menu-checks';
 
-function readChecks() {
-  try { return JSON.parse(localStorage.getItem(CHECKS_KEY) || '{}'); } catch { return {}; }
+function readChecks(storageKey) {
+  try { return JSON.parse(localStorage.getItem(storageKey) || '{}'); } catch { return {}; }
 }
 
-function DishCard({ label, recipe, locked, onOpen }) {
+export function DishCard({ label, recipe, locked, onOpen }) {
   if (!recipe) return null;
   return (
     <button
@@ -44,12 +44,15 @@ function DishCard({ label, recipe, locked, onOpen }) {
   );
 }
 
-function ShoppingList({ tabIndex, list, unlocked, onTrial }) {
-  const [checks, setChecks] = useState(readChecks);
+// Also used by the festive menu, which keeps its ticks under its own storageKey.
+export function ShoppingList({
+  tabIndex, list, unlocked, onTrial, storageKey = CHECKS_KEY,
+}) {
+  const [checks, setChecks] = useState(() => readChecks(storageKey));
   const toggle = (key) => {
     setChecks((previous) => {
       const next = { ...previous, [key]: !previous[key] };
-      try { localStorage.setItem(CHECKS_KEY, JSON.stringify(next)); } catch { /* private mode */ }
+      try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* private mode */ }
       return next;
     });
   };
@@ -77,7 +80,8 @@ function ShoppingList({ tabIndex, list, unlocked, onTrial }) {
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-700">{group.name}</p>
           <ul className="mt-2 space-y-1">
             {group.items.map(([name, amount]) => {
-              const key = `${tabIndex}:${name}`;
+              // The festive lists repeat a product in several groups, so their ticks include the group.
+              const key = storageKey === CHECKS_KEY ? `${tabIndex}:${name}` : `${tabIndex}:${group.name}:${name}`;
               return (
                 <li key={name}>
                   <label className="flex cursor-pointer items-baseline gap-2 text-sm text-stone-700">

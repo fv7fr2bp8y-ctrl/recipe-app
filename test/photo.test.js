@@ -14,3 +14,9 @@ test('other addresses and empty values stay as they are', () => {
   assert.equal(photo('', 600), '');
   assert.equal(photo(undefined, 600), undefined);
 });
+
+test('photos stored in the site get their small copies', () => {
+  assert.equal(photo('/praznichno-menu/sarmi.jpg', 300), '/praznichno-menu/w300/sarmi.jpg');
+  assert.equal(photo('/praznichno-menu/sarmi.jpg', 600), '/praznichno-menu/w600/sarmi.jpg');
+  assert.equal(photo('/praznichno-menu/sarmi.jpg', 1200), '/praznichno-menu/sarmi.jpg');
+});

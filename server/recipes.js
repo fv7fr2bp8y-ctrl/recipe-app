@@ -1,4 +1,9 @@
 import { FREE_RECIPE_IDS, MASTER_SHEET_CSV_URL } from './config.js';
+import { readFileSync } from 'node:fs';
+
+// The Christmas and New Year recipes (Bulgarian only) live in the repository, not in the
+// master sheet, so they go live with a deploy. Same columns as the sheet.
+const FESTIVE_ROWS = JSON.parse(readFileSync(new URL('./data/praznichni-recepti.json', import.meta.url), 'utf8'));
 
 const LANGUAGES = ['bg', 'en', 'de', 'es', 'fr', 'ru'];
 
@@ -272,7 +277,11 @@ async function fetchMasterRecipes() {
     .filter((row) => row.global_id && row.canonical_name_bg)
     .filter((row) => row.status === 'ready' && row.recipe_quality === 'curated')
     .map(mapRow);
-  const recipes = orderRecipesForCatalog(mappedRecipes).map((recipe) => {
+  const sheetIds = new Set(mappedRecipes.map((recipe) => recipe.id));
+  const festive = FESTIVE_ROWS
+    .filter((row) => !sheetIds.has(row.global_id))
+    .map((row, index) => mapRow(row, -1 - index));
+  const recipes = orderRecipesForCatalog([...mappedRecipes, ...festive]).map((recipe) => {
     const publicRecipe = { ...recipe };
     delete publicRecipe._sourceOrder;
     return publicRecipe;

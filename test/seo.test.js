@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recipeIdFromSlug, recipePath, slugify } from '../src/seo-url.js';
 import {
-  renderLentenPage, renderMenuPage, renderRecipePage, renderSitemap,
+  renderLentenPage, renderMenuPage, renderFestivePage, renderRecipePage, renderSitemap,
 } from '../server/seo.js';
 
 test('recipe paths transliterate titles and round-trip the id', () => {
@@ -115,4 +115,24 @@ test('the Bulgarian topic pages are complete, linked and in the sitemap', async 
   assert.equal(renderTopicPage(recipes, 'nyama-takava'), null);
   assert.match(renderMenuPage(), /href="\/bg\/postni-supi"/);
   assert.match(renderLentenPage([], 'bg'), /href="\/bg\/postni-salati"/);
+});
+
+test('the festive menu page lists all three holidays and links to the trial', () => {
+  const recipes = [
+    { id: 'XM-C001', title: 'Баница с късмети', image: '/praznichno-menu/banica.jpg', time: 60, availableLanguages: ['bg'], translations: { bg: { title: 'Баница с късмети' } } },
+    { id: 'PB-C102', title: 'Тава с чушки', image: 'https://drive.google.com/thumbnail?id=abc&sz=w1200', time: 55, translations: { bg: { title: 'Тава с чушки' } } },
+  ];
+  const html = renderFestivePage(recipes);
+  for (const text of ['Бъдни вечер', 'Коледа', 'Нова година', 'Баница с късмети', 'Тава с чушки']) assert.match(html, new RegExp(text));
+  assert.match(html, /href="\/\?menu=praznichno&premium=1&lang=bg"/);
+  assert.match(html, /src="\/praznichno-menu\/w600\/banica\.jpg"/);
+  assert.match(html, /rel="canonical" href="https:\/\/tastemaster365\.com\/bg\/praznichno-menu"/);
+  assert.match(html, /og:image" content="https:\/\/tastemaster365\.com\/praznichno-menu\/banica\.jpg"/);
+});
+
+test('a Bulgarian-only recipe is in the sitemap only in Bulgarian', () => {
+  const xml = renderSitemap([{ id: 'XM-C001', title: 'Баница с късмети', availableLanguages: ['bg'], translations: { bg: { title: 'Баница с късмети' } } }]);
+  assert.match(xml, /\/bg\/recipe\/[^<]*xm-c001/i);
+  assert.doesNotMatch(xml, /\/en\/recipe\/[^<]*xm-c001/i);
+  assert.match(xml, /\/bg\/praznichno-menu</);
 });
