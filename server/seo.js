@@ -610,7 +610,9 @@ const FESTIVE_STYLE = `
       .f-plan { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
       .f-plan li { background: var(--card); border: 1px solid var(--line); border-left: 4px solid #7f1d1d; padding: 10px 14px; font-size: 14px; }
       .f-plan b { display: block; color: #7f1d1d; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
-      .grid .card small { display: block; padding: 0 10px 10px; color: var(--muted); font-size: 12px; }`;
+      .grid .card small { display: block; padding: 0 10px 10px; color: var(--muted); font-size: 12px; }
+      .f-tab .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      @media (min-width: 760px) { .f-tab .grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); } }`;
 
 function festiveTabs() {
   return FESTIVE_MENU.tabs.map((tab) => (tab.fromLenten
