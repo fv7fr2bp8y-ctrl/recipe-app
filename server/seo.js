@@ -3,7 +3,8 @@ import { getMessages, localizeRecipe } from '../src/i18n.js';
 import { PROMO, promoActive, promoCopy } from '../src/promo.js';
 import { TOPICS, findTopic, topicPath } from './topics.js';
 import { photo, PHOTO } from '../src/photo.js';
-import { readFileSync } from 'node:fs';
+import FESTIVE_MENU from '../src/data/praznichno-menu.json' with { type: 'json' };
+import LENTEN_MENU from '../src/data/postno-menu.json' with { type: 'json' };
 import {
   FESTIVE_PATH, LENTEN_LANGUAGES, LENTEN_PATHS, MENU_PATH, SEO_LANGUAGES, hubPath, recipePath,
 } from '../src/seo-url.js';
@@ -594,9 +595,6 @@ ${topicLinks('Още постни теми')}${FESTIVE_TEASER}      <section cla
 
 // ---- "Празнично меню" (/bg/praznichno-menu): Christmas Eve, Christmas and New Year ----
 
-const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
-const FESTIVE_MENU = readJson('../src/data/praznichno-menu.json');
-const LENTEN_MENU = readJson('../src/data/postno-menu.json');
 const FESTIVE_APP_LINK = '/?menu=praznichno&premium=1&lang=bg';
 const FESTIVE_BUY = `<a class="m-buy" href="${FESTIVE_APP_LINK}">Започни 7 дни безплатно, без карта</a>`;
 

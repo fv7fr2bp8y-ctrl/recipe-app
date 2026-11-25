@@ -1,9 +1,8 @@
 import { FREE_RECIPE_IDS, MASTER_SHEET_CSV_URL } from './config.js';
-import { readFileSync } from 'node:fs';
-
 // The Christmas and New Year recipes (Bulgarian only) live in the repository, not in the
-// master sheet, so they go live with a deploy. Same columns as the sheet.
-const FESTIVE_ROWS = JSON.parse(readFileSync(new URL('./data/praznichni-recepti.json', import.meta.url), 'utf8'));
+// master sheet, so they go live with a deploy. Same columns as the sheet. Imported (not
+// read from disk) so the function bundle includes the file.
+import FESTIVE_ROWS from './data/praznichni-recepti.json' with { type: 'json' };
 
 const LANGUAGES = ['bg', 'en', 'de', 'es', 'fr', 'ru'];
 
