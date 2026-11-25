@@ -159,11 +159,6 @@
     "time": 55,
     "image": "https://lh3.googleusercontent.com/d/1_dzB2CozGomDDiq-0seb1hWTw7brdXuD=w300-rj"
   },
-  "PB-C102": {
-    "title": "Българска тава с чушки, домати, ориз и червен боб",
-    "time": 55,
-    "image": "https://lh3.googleusercontent.com/d/1RUzgU8p0wu8tIvMqHg-alfybZHLmNeoq=w300-rj"
-  },
   "PB-C038": {
     "title": "Зелеви сарми с ориз и леща в доматен сос",
     "time": 70,
@@ -194,14 +189,19 @@
     "time": 35,
     "image": "https://lh3.googleusercontent.com/d/145bCIg00vxjnnU-8DfoV1VPD7ogoXd1a=w300-rj"
   },
-  "PB-C134": {
-    "title": "Северна салата от ечемик, цвекло, ябълка и лешници",
-    "time": 45,
-    "image": "https://lh3.googleusercontent.com/d/1BMGJFfHO8BDNsqUbcgSx66-aAlF4YtxX=w300-rj"
-  },
   "BR-E080": {
     "title": "Печени круши с овес и орехи",
     "time": 35,
     "image": "https://lh3.googleusercontent.com/d/1H21Yy3WvCK6NozNlo7Y8z3ZU8yYfCZ_p=w300-rj"
+  },
+  "XM-C013": {
+    "title": "Боб в гърне",
+    "time": 150,
+    "image": "/praznichno-menu/w300/bob-v-garne.jpg"
+  },
+  "XM-C014": {
+    "title": "Постен тиквеник",
+    "time": 70,
+    "image": "/praznichno-menu/w300/tikvenik.jpg"
   }
 }

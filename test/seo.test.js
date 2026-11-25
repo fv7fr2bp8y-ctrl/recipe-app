@@ -120,7 +120,7 @@ test('the Bulgarian topic pages are complete, linked and in the sitemap', async 
 test('the festive menu page lists all three holidays and links to the trial', () => {
   const recipes = [
     { id: 'XM-C001', title: 'Баница с късмети', image: '/praznichno-menu/banica.jpg', time: 60, availableLanguages: ['bg'], translations: { bg: { title: 'Баница с късмети' } } },
-    { id: 'PB-C102', title: 'Тава с чушки', image: 'https://drive.google.com/thumbnail?id=abc&sz=w1200', time: 55, translations: { bg: { title: 'Тава с чушки' } } },
+    { id: 'XM-C013', title: 'Тава с чушки', image: 'https://drive.google.com/thumbnail?id=abc&sz=w1200', time: 55, translations: { bg: { title: 'Тава с чушки' } } },
   ];
   const html = renderFestivePage(recipes);
   for (const text of ['Бъдни вечер', 'Коледа', 'Нова година', 'Баница с късмети', 'Тава с чушки']) assert.match(html, new RegExp(text));
