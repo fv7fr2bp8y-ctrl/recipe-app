@@ -12,6 +12,15 @@ import {
 export const SITE = 'https://tastemaster365.com';
 
 // Photos kept in the site (public/praznichno-menu) have a relative address.
+// Google Analytics 4 on the server pages, with the app's consent rule: denied until the
+// visitor accepts in the app (tm_consent in localStorage), so only cookieless pings.
+const GA_ID = 'G-26ZF2MNZWJ';
+const GA_SCRIPT = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}`
+  + `var c=null;try{c=localStorage.getItem('tm_consent');}catch(e){}`
+  + `var d=c==='granted'?'granted':'denied';`
+  + `gtag('consent','default',{ad_storage:d,ad_user_data:d,ad_personalization:d,analytics_storage:d});`
+  + `gtag('js',new Date());gtag('config','${GA_ID}');`;
+
 const absolute = (url) => (url && url.startsWith('/') ? `${SITE}${url}` : url);
 
 // A recipe page exists only in the languages the recipe is written in.
@@ -118,6 +127,8 @@ function layout({
     <script>${ATTRIBUTION_SCRIPT}${APP_LINK_SCRIPT}</script>
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
     <script defer src="/_vercel/insights/script.js"></script>
+    <script>${GA_SCRIPT}</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script>
     <meta name="theme-color" content="#169f9e" />
     ${structuredData ? `<script type="application/ld+json">${jsonLd(structuredData)}</script>` : ''}
     <style>

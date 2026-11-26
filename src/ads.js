@@ -2,6 +2,8 @@
 // IDs are public (they are visible in the page tag); env vars can override them.
 // Until the visitor accepts, Google gets only cookieless pings (consent denied).
 const ADS_ID = import.meta.env.VITE_GADS_ID ?? 'AW-18278475994';
+// Google Analytics 4 (same gtag.js, same consent).
+const GA_ID = import.meta.env.VITE_GA_ID ?? 'G-26ZF2MNZWJ';
 const TRIAL_LABEL = import.meta.env.VITE_GADS_TRIAL_LABEL ?? 'RVtTCIHNzbYdENrR7YtE';
 const LABELS = {
   trial_started: TRIAL_LABEL,
@@ -53,6 +55,7 @@ export function initAds() {
   gtag('set', 'url_passthrough', true);
   gtag('js', new Date());
   gtag('config', ADS_ID);
+  if (GA_ID) gtag('config', GA_ID);
   const script = document.createElement('script');
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(ADS_ID)}`;
