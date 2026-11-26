@@ -318,8 +318,8 @@ const LENTEN_PHOTO_FIRST = [
 
 // Bulgarian landing page (Google Ads, 26.11.2026): Bulgarian classics first. The first
 // three are in FREE_RECIPE_IDS and open in full without an account.
-export const LENTEN_CLASSICS = ['XM-C013', 'PB-C038', 'PB-C122', 'XM-C014', 'PB-C102', 'PB-C006'];
-// A dish outside the six cards, so the photo above them is not repeated below.
+export const LENTEN_CLASSICS = ['XM-C013', 'PB-C038', 'PB-C122', 'BR-C018', 'PB-C102', 'XM-C014', 'PB-C006', 'BR-C054'];
+// A dish outside the cards, so the photo above them is not repeated below.
 const LENTEN_HERO_ID = 'PB-C005';
 
 const LANDING_STYLE = `
