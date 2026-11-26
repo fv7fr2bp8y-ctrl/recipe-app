@@ -173,7 +173,8 @@ ${body}
 }
 
 function relatedRecipes(recipe, recipes) {
-  const others = recipes.filter((item) => item.id !== recipe.id);
+  // A Lenten recipe suggests only Lenten ones.
+  const others = recipes.filter((item) => item.id !== recipe.id && (!recipe.diets?.plantBased || item.diets?.plantBased));
   const sameCountry = others.filter((item) => item.countryKey === recipe.countryKey);
   const sameCollection = others.filter((item) => item.collection === recipe.collection && item.countryKey !== recipe.countryKey);
   const start = Math.abs([...recipe.id].reduce((sum, char) => sum + char.charCodeAt(0), 0)) % Math.max(sameCollection.length, 1);
@@ -315,6 +316,64 @@ const LENTEN_PHOTO_FIRST = [
   'PB-C085', 'PB-C038', 'PB-C065', 'PB-C058', 'PB-C119', 'PB-C112',
 ];
 
+// Bulgarian landing page (Google Ads, 26.11.2026): Bulgarian classics first. The first
+// three are in FREE_RECIPE_IDS and open in full without an account.
+export const LENTEN_CLASSICS = ['XM-C013', 'PB-C038', 'PB-C122', 'XM-C014', 'PB-C102', 'PB-C006'];
+const LENTEN_HERO_ID = 'XM-C013';
+
+const LANDING_STYLE = `
+      .l-hero { margin: 20px 0 8px; }
+      .l-hero h1 { margin: 0 0 8px; }
+      .l-hero .lead { margin: 0 0 14px; }
+      .l-hero img { width: 100%; aspect-ratio: 3 / 2; max-height: 480px; object-fit: cover; display: block; background: var(--line); }
+      .classics { grid-template-columns: repeat(2, 1fr); }
+      @media (min-width: 640px) { .classics { grid-template-columns: repeat(3, 1fr); } }
+      .offer { border: 2px solid var(--accent); background: var(--card); padding: 20px; margin: 28px 0; }
+      .offer h2 { margin: 0 0 6px; }
+      .offer p { margin: 0 0 12px; }
+      .offer .bfline { background: #0c0a09; color: #fff; padding: 8px 12px; font-size: 15px; }
+      .offer form { display: grid; gap: 10px; max-width: 420px; }
+      .offer label { font-size: 14px; color: var(--muted); }
+      .offer input { display: block; width: 100%; margin-top: 4px; font: inherit; padding: 12px; border: 1px solid #d6d3d1; background: #fff; }
+      .offer button { font: 600 18px system-ui, -apple-system, "Segoe UI", sans-serif; background: var(--accent); color: #fff; border: 0; padding: 14px 18px; cursor: pointer; }
+      .offer button:hover { background: var(--accent-dark); }
+      .offer button[disabled] { opacity: .6; cursor: default; }
+      .offer .note { font-size: 13px; color: var(--muted); margin: 0; }
+      .offer .err { color: #b91c1c; font-size: 14px; margin: 0; }`;
+
+// Registration right on the page: account, then the 7-day trial (no card), then the app
+// with the Lenten menu. Same calls as the app: /api/auth/register and /api/billing/checkout.
+const LANDING_SCRIPT = `<script>
+(function () {
+  var now = Date.now(), sale = ${PROMO_CHECK};
+  var line = document.getElementById('offer-bf');
+  if (line && sale) line.hidden = false;
+  var form = document.getElementById('offer-form');
+  if (!form) return;
+  var err = document.getElementById('offer-err');
+  function attribution() { try { return JSON.parse(localStorage.getItem('tm_attribution') || 'null'); } catch (e) { return null; } }
+  function post(url, body) {
+    return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, status: r.status, data: d }; }); });
+  }
+  function fail(html) { err.innerHTML = html; err.hidden = false; form.querySelector('button').disabled = false; }
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    err.hidden = true;
+    form.querySelector('button').disabled = true;
+    var a = attribution();
+    post('/api/auth/register', { email: form.email.value, password: form.password.value, attribution: a }).then(function (reg) {
+      if (reg.status === 409) return fail('Вече има профил с този имейл. <a href="/?premium=1&menu=postno&lang=bg">Влез оттук</a>.');
+      if (!reg.ok) return fail((reg.data.error && reg.data.error.message) || reg.data.message || 'Профилът не можа да бъде създаден. Опитай пак.');
+      return post('/api/billing/checkout', { plan: 'yearly', attribution: a }).then(function (c) {
+        try { sessionStorage.setItem('tm-after-premium', 'postno'); } catch (x) {}
+        location.href = c.ok && c.data.url ? c.data.url : '/?menu=postno&lang=bg';
+      });
+    }).catch(function () { fail('Няма връзка. Опитай пак.'); });
+  });
+})();
+</script>`;
+
 const LENTEN_COPY = {
   bg: {
     title: 'Постни рецепти за Коледните пости',
@@ -368,6 +427,39 @@ document.querySelectorAll('.filters button').forEach(function (button) {
 });
 </script>`;
 
+function landingBody({ lenten, card, ordered, count, meals, copy }) {
+  const byId = (id) => lenten.find((recipe) => recipe.id.toUpperCase() === id);
+  const classics = LENTEN_CLASSICS.map(byId).filter(Boolean);
+  const free = classics.filter((recipe) => !recipe.locked).length;
+  const hero = byId(LENTEN_HERO_ID);
+  const classicIds = new Set(classics.map((recipe) => recipe.id));
+  const rest = ordered.filter((recipe) => !classicIds.has(recipe.id));
+  return `      <section class="l-hero">
+        <h1>${count} постни рецепти до Коледа</h1>
+        <p class="lead">Без месо, мляко и яйца. Започни с ${free}-те безплатни долу: отварят се цели, без регистрация.</p>
+        ${hero ? `<img src="${esc(photo(hero.image, PHOTO.hero))}" alt="${esc(localizeRecipe(hero, 'bg').title)}" width="1200" height="800" />` : ''}
+      </section>
+      <h2>Български постни класики</h2>
+      <div class="grid classics">${classics.map(card).join('')}</div>
+      <section class="offer" id="proba">
+        <h2>Хареса ли ти?</h2>
+        <p>Още ${count - free} рецепти и постно меню до Коледа, 7 дни безплатно, без карта.</p>
+        <p class="bfline" id="offer-bf" hidden>Черен петък до 30 ноември: годината е 19,99 € вместо 29,99 €, 10 € отстъпка.</p>
+        <form id="offer-form" novalidate>
+          <label>Имейл<input name="email" type="email" required autocomplete="email" inputmode="email" /></label>
+          <label>Парола, поне 10 знака<input name="password" type="password" required minlength="10" autocomplete="new-password" /></label>
+          <button type="submit">Започни 7 дни безплатно</button>
+          <p class="err" id="offer-err" role="alert" hidden></p>
+          <p class="note">Без карта. Ако не добавиш карта, пробата просто спира. Имаш профил? <a href="/?premium=1&amp;menu=postno&amp;lang=bg">Влез</a>.</p>
+        </form>
+      </section>
+${FESTIVE_TEASER}${MENU_TEASER}${topicLinks()}      <h2>${esc(copy.all)} (${count})</h2>
+      <div class="filters" role="group" aria-label="${esc(copy.filterLabel)}"><button type="button" data-meal="" aria-pressed="true">${esc(copy.filterAll)} · ${count}</button>${meals.map(([key, total]) => `<button type="button" data-meal="${esc(key)}" aria-pressed="false">${esc(MEAL_TYPES[key].bg)} · ${total}</button>`).join('')}</div>
+      <div class="grid" id="all">${[...classics, ...rest].map(card).join('')}</div>
+      <a class="cta" href="#proba">Започни 7 дни безплатно</a>
+${LENTEN_FILTER_SCRIPT}${LANDING_SCRIPT}`;
+}
+
 export function renderLentenPage(recipes, language) {
   const messages = getMessages(language);
   const copy = LENTEN_COPY[language];
@@ -395,7 +487,7 @@ export function renderLentenPage(recipes, language) {
     return `<a class="card" data-meal="${esc(mealKey(source))}" href="${esc(recipePath(recipe, language))}">${tag}<img src="${esc(photo(recipe.image, PHOTO.card))}" alt="" loading="lazy" width="400" height="300" /><span>${esc(recipe.title)}</span></a>`;
   };
   const premiumLink = `/?premium=1&lang=${language}`;
-  const body = `      <h1>${esc(copy.title)}</h1>
+  const body = language === 'bg' ? landingBody({ lenten, card, ordered, count, meals, copy }) : `      <h1>${esc(copy.title)}</h1>
       <p class="lead">${esc(fill(copy.lead, { count }))}</p>
       <section class="box">
         <div class="label">Premium</div>
@@ -418,7 +510,8 @@ ${LENTEN_FILTER_SCRIPT}`;
     canonical: LENTEN_PATHS[language],
     pathFor: (code) => LENTEN_PATHS[code],
     languages: LENTEN_LANGUAGES,
-    extraStyle: language === 'bg' ? `${LENTEN_STYLE}${TOPIC_LINKS_STYLE}` : LENTEN_STYLE,
+    extraStyle: language === 'bg' ? `${LENTEN_STYLE}${TOPIC_LINKS_STYLE}${LANDING_STYLE}` : LENTEN_STYLE,
+    image: language === 'bg' ? lenten.find((recipe) => recipe.id === LENTEN_HERO_ID)?.image : undefined,
     structuredData: {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',

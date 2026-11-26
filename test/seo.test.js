@@ -54,14 +54,16 @@ test('lenten page puts the picks first, lists only plant-based recipes and marks
   });
   const recipes = [make('PB-C900', true, false), make('BR-C001', false, false), make('PB-C128', true, true, 'вечеря')];
   const html = renderLentenPage(recipes, 'bg');
-  assert.match(html, /<h1>Постни рецепти за Коледните пости<\/h1>/);
+  assert.match(html, /<h1>2 постни рецепти до Коледа<\/h1>/);
+  assert.match(html, /<form id="offer-form"/);
+  assert.match(html, /href="#proba"/);
   assert.match(html, /rel="canonical" href="https:\/\/tastemaster365\.com\/bg\/postni-recepti"/);
   assert.match(html, /hreflang="en" href="https:\/\/tastemaster365\.com\/en\/lenten-recipes"/);
   assert.doesNotMatch(html, /hreflang="de"/);
   assert.doesNotMatch(html, /BR-C001/i);
   assert.match(html, /Всички постни рецепти \(2\)/);
   assert.match(html, /Premium · 7 дни безплатно/);
-  assert.match(html, /\?premium=1&amp;lang=bg/);
+  assert.match(renderLentenPage(recipes, 'en'), /\?premium=1&amp;lang=en/);
   const allGrid = html.split('id="all"')[1];
   assert.ok(allGrid.indexOf('pb-c128') < allGrid.indexOf('pb-c900'));
   const urls = [...renderSitemap(recipes).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
@@ -135,4 +137,29 @@ test('a Bulgarian-only recipe is in the sitemap only in Bulgarian', () => {
   assert.match(xml, /\/bg\/recipe\/[^<]*xm-c001/i);
   assert.doesNotMatch(xml, /\/en\/recipe\/[^<]*xm-c001/i);
   assert.match(xml, /\/bg\/praznichno-menu</);
+});
+
+test('the Bulgarian Lenten page opens with the Bulgarian classics, free ones first', () => {
+  const make = (id, locked) => ({
+    id, title: id, image: 'https://example.com/a.jpg', mealType: 'вечеря', diets: { plantBased: true }, availableLanguages: ['bg'],
+    translations: { bg: { title: `Рецепта ${id}` } }, locked,
+  });
+  const recipes = [make('PB-C140', true), make('PB-C122', false), make('XM-C013', false), make('XM-C014', true)];
+  const html = renderLentenPage(recipes, 'bg');
+  const classics = html.split('class="grid classics"')[1].split('</div>')[0];
+  assert.ok(classics.indexOf('xm-c013') < classics.indexOf('pb-c122'));
+  assert.ok(classics.indexOf('pb-c122') < classics.indexOf('xm-c014'));
+  assert.doesNotMatch(classics, /pb-c140/);
+  assert.match(html, /Започни с 2-те безплатни/);
+  assert.match(html, /Още 2 рецепти/);
+});
+
+test('a Lenten recipe suggests only Lenten recipes', () => {
+  const make = (id, plantBased) => ({
+    id, title: id, image: 'https://example.com/a.jpg', countryKey: 'bg', collection: 'c', diets: { plantBased }, locked: true,
+  });
+  const recipes = [make('PB-C901', true), make('PB-C902', true), make('SEA-C901', false)];
+  const more = renderRecipePage(recipes[0], recipes, 'bg').split('<article>')[1].split('</article>')[1];
+  assert.match(more, /pb-c902/);
+  assert.doesNotMatch(more, /sea-c901/);
 });

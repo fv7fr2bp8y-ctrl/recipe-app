@@ -25,7 +25,8 @@ global.fetch = async () => ({
   text: async () => [
     headers.join(','),
     row(1, 'LOCKED-FIRST'),
-    ...FREE_RECIPE_IDS.map((id, index) => row(index + 2, id)),
+    // Free festive recipes (XM-) come from server/data, not from the sheet.
+    ...FREE_RECIPE_IDS.filter((id) => !id.startsWith('XM-')).map((id, index) => row(index + 2, id)),
     row(14, 'LOCKED-LAST'),
   ].join('\n'),
 });
@@ -33,8 +34,8 @@ global.fetch = async () => ({
 test('free catalog exposes full details for 12 recipes only', async () => {
   const { catalogForAccess } = await import('../server/recipes.js');
   const catalog = await catalogForAccess(false);
-  // 14 sheet rows plus the 14 festive recipes from server/data (all locked).
-  assert.equal(catalog.length, 28);
+  // 13 sheet rows plus the 14 festive recipes from server/data.
+  assert.equal(catalog.length, 27);
   assert.equal(catalog.filter((recipe) => !recipe.locked).length, 12);
   assert.deepEqual(catalog[0].ingredients, ['2 яйца', '1 щипка сол']);
   assert.deepEqual(catalog.filter((recipe) => !recipe.locked).map((recipe) => recipe.id), FREE_RECIPE_IDS);
@@ -49,7 +50,7 @@ test('free catalog exposes full details for 12 recipes only', async () => {
 test('premium catalog exposes every recipe', async () => {
   const { catalogForAccess } = await import('../server/recipes.js');
   const catalog = await catalogForAccess(true);
-  assert.equal(catalog.length, 28);
+  assert.equal(catalog.length, 27);
   const festive = catalog.filter((recipe) => recipe.id.startsWith('XM-'));
   assert.equal(festive.length, 14);
   assert.equal(festive.every((recipe) => recipe.availableLanguages.join() === 'bg' && recipe.collection === 'Празнично'), true);

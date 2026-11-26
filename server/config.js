@@ -6,13 +6,15 @@ export const FREE_RECIPE_IDS = [
   'BR-E008',
   'BR-E011',
   'BR-C001',
-  'BR-C002',
   'BR-C003',
   'BR-C005',
   'BR-C008',
   'BR-C012',
-  'FF-C003',
-  'FF-C004',
+  // Lenten landing page (/bg/postni-recepti): three Bulgarian classics open in full,
+  // in place of the Thai curry, the tagine and the masala dosa (still 12 free in all).
+  'XM-C013',
+  'PB-C038',
+  'PB-C122',
 ];
 
 export const STRIPE_PRICES = {
