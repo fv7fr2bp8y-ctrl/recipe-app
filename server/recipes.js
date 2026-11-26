@@ -163,7 +163,14 @@ function imageFromRow(row) {
   return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200` : row.image_url || null;
 }
 
-function mapRow(row, sourceOrder) {
+// Corrections on top of the master sheet, kept here so they reach the site without
+// editing the sheet: field values by recipe id.
+export const ROW_FIXES = {
+  'BR-C018': { canonical_name_bg: 'Качамак с гъби, праз и орехи' },
+};
+
+function mapRow(sheetRow, sourceOrder) {
+  const row = ROW_FIXES[sheetRow.global_id] ? { ...sheetRow, ...ROW_FIXES[sheetRow.global_id] } : sheetRow;
   const time = Number(row.time_min) || 30;
   const collection = APP_LABELS[row.app_primary] || row.app_primary || row.meal_type || 'Рецепти';
   const diets = {
