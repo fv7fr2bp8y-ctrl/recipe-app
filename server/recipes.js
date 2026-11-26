@@ -167,6 +167,8 @@ function imageFromRow(row) {
 // editing the sheet: field values by recipe id.
 export const ROW_FIXES = {
   'BR-C018': { canonical_name_bg: 'Качамак с гъби, праз и орехи' },
+  // The sheet photo looked like an egg topping; this one has baked potatoes on top.
+  'PB-C122': { image_drive_id: '', image_url: '/praznichno-menu/musaka-leshta.jpg' },
 };
 
 function mapRow(sheetRow, sourceOrder) {
