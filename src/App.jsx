@@ -14,7 +14,7 @@ import ConsentBanner from './components/ConsentBanner';
 import LentenMenu, { MENU_PARAM } from './components/LentenMenu';
 import FestiveMenu, { FESTIVE_PARAM } from './components/FestiveMenu';
 import { useFreemiumAccess } from './hooks/useFreemiumAccess';
-import { useAccount } from './hooks/useAccount';
+import { NEW_SIGNUP_KEY, useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
 import { SEO_LANGUAGES, recipePath } from './seo-url';
 import { detectPlayApp } from './platform';
@@ -186,7 +186,16 @@ function RecipeApp() {
   }, [recipes, premiumActive]);
 
   useEffect(() => {
-    if (!playApp) initAds();
+    if (playApp) return;
+    initAds();
+    // A new account made on a server page (the Lenten landing form) counts here, once
+    // the tag is loaded. Same transaction id (the user id) as the app's own sign-up.
+    let newSignup = null;
+    try {
+      newSignup = sessionStorage.getItem(NEW_SIGNUP_KEY);
+      sessionStorage.removeItem(NEW_SIGNUP_KEY);
+    } catch { /* private mode */ }
+    if (newSignup) trackConversion('trial_started', { transactionId: newSignup });
   }, [playApp]);
 
   useEffect(() => {
@@ -209,7 +218,7 @@ function RecipeApp() {
       const status = await refreshAccount();
       if (status?.premium) window.clearInterval(timer);
       if (status?.premium && status.subscriptionStatus === 'trialing') {
-        trackConversion('trial_started', { transactionId: checkoutSessionId });
+        trackConversion('trial_started', { transactionId: status.user?.id || checkoutSessionId });
       } else if (status?.premium && checkoutSessionId) {
         // Paid right away (no trial for accounts that subscribed before).
         const summary = await loadCheckoutSummary(checkoutSessionId);

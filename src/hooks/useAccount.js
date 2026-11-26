@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { getAttribution } from '../attribution';
 import { readConsent, trackConversion } from '../ads';
 
+// Set by the Lenten landing page (server/seo.js) after it creates an account.
+export const NEW_SIGNUP_KEY = 'tm-new-signup';
+
 export function useAccount() {
   const [user, setUser] = useState(null);
   const [premium, setPremium] = useState(false);
@@ -50,6 +53,11 @@ export function useAccount() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Входът не беше потвърден.');
+      // A new account counts as a Google Ads sign-up (the 7-day trial needs no card).
+      // The user id is the transaction id, so the trial start later does not count twice.
+      if (path === '/api/auth/register' && data.user?.id) {
+        await trackConversion('trial_started', { transactionId: data.user.id });
+      }
       await refresh();
       return true;
     } catch (authError) {

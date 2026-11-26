@@ -367,6 +367,7 @@ const LANDING_SCRIPT = `<script>
     post('/api/auth/register', { email: form.email.value, password: form.password.value, attribution: a }).then(function (reg) {
       if (reg.status === 409) return fail('Вече има профил с този имейл. <a href="/?premium=1&menu=postno&lang=bg">Влез оттук</a>.');
       if (!reg.ok) return fail((reg.data.error && reg.data.error.message) || reg.data.message || 'Профилът не можа да бъде създаден. Опитай пак.');
+      try { if (reg.data.user && reg.data.user.id) sessionStorage.setItem('tm-new-signup', reg.data.user.id); } catch (x) {}
       return post('/api/billing/checkout', { plan: 'yearly', attribution: a }).then(function (c) {
         try { sessionStorage.setItem('tm-after-premium', 'postno'); } catch (x) {}
         location.href = c.ok && c.data.url ? c.data.url : '/?menu=postno&lang=bg';
