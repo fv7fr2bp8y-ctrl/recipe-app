@@ -325,7 +325,7 @@ const LANDING_STYLE = `
       .l-hero { margin: 20px 0 8px; }
       .l-hero h1 { margin: 0 0 8px; }
       .l-hero .lead { margin: 0 0 14px; }
-      .l-hero img { width: 100%; aspect-ratio: 3 / 2; max-height: 480px; object-fit: cover; display: block; background: var(--line); }
+      .l-hero img { width: 100%; height: auto; aspect-ratio: 3 / 2; max-height: 480px; object-fit: cover; display: block; background: var(--line); }
       .classics { grid-template-columns: repeat(2, 1fr); }
       @media (min-width: 640px) { .classics { grid-template-columns: repeat(3, 1fr); } }
       .offer { border: 2px solid var(--accent); background: var(--card); padding: 20px; margin: 28px 0; }
