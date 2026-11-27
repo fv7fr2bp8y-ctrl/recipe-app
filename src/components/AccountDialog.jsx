@@ -51,7 +51,7 @@ export default function AccountDialog({
           </label>
           <label className="block text-sm text-stone-700">
             {messages.password}
-            <input type="password" required minLength={10} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} className="mt-1 w-full border border-stone-300 bg-white px-3 py-3 outline-none focus:border-orange-500" />
+            <input type="password" required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} className="mt-1 w-full border border-stone-300 bg-white px-3 py-3 outline-none focus:border-orange-500" />
             {mode === 'register' ? <span className="mt-1 block text-xs text-stone-500">{messages.minChars}</span> : null}
           </label>
           {error ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}

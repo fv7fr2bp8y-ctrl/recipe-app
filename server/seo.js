@@ -474,7 +474,7 @@ function offerSection(more) {
         <p class="bfline" id="offer-bf" hidden>Черен петък до 30 ноември: годината е 19,99 € вместо 29,99 €, 10 € отстъпка.</p>
         <form id="offer-form" novalidate>
           <label>Имейл<input name="email" type="email" required autocomplete="email" inputmode="email" /></label>
-          <label>Парола, поне 10 знака<input name="password" type="password" required minlength="10" autocomplete="new-password" /></label>
+          <label>Парола, поне 8 знака<input name="password" type="password" required minlength="8" autocomplete="new-password" /></label>
           <button type="submit">Започни 7 дни безплатно</button>
           <p class="err" id="offer-err" role="alert" hidden></p>
           <p class="note">Без карта. Ако не добавиш карта, пробата просто спира. Имаш профил? <a href="/?premium=1&amp;menu=postno&amp;lang=bg">Влез</a>.</p>

@@ -5,8 +5,8 @@ const scrypt = promisify(scryptCallback);
 const KEY_LENGTH = 64;
 
 export function validatePassword(password) {
-  if (typeof password !== 'string' || password.length < 10) {
-    throw new Error('Паролата трябва да съдържа поне 10 знака.');
+  if (typeof password !== 'string' || password.length < 8) {
+    throw new Error('Паролата трябва да съдържа поне 8 знака.');
   }
   if (password.length > 200) throw new Error('Паролата е прекалено дълга.');
 }

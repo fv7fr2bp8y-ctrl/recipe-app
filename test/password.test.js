@@ -11,5 +11,5 @@ test('password hashes are salted and verifiable', async () => {
 });
 
 test('short passwords are rejected', () => {
-  assert.throws(() => validatePassword('short'), /10 знака/);
+  assert.throws(() => validatePassword('short'), /8 знака/);
 });
