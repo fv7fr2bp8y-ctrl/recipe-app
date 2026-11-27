@@ -201,6 +201,8 @@ export function renderRecipePage(source, recipes, language) {
   const dietChips = diets.filter((key) => DIET_LABEL_KEYS[key]).map((key) => `<span class="chip">${esc(messages[DIET_LABEL_KEYS[key]])}</span>`).join('');
   const minutes = Number(recipe.time) || null;
   const appLink = `/?recipe=${encodeURIComponent(recipe.id)}&lang=${language}`;
+  // Free Bulgarian recipe: the sign-up box under the steps (same as the Lenten page).
+  const signup = language === 'bg' && !recipe.locked;
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -240,7 +242,7 @@ export function renderRecipePage(source, recipes, language) {
       <ul class="ing">${(recipe.ingredients || []).map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
       <h2>${esc(messages.steps)}</h2>
       <ol class="steps">${(recipe.steps || []).map((step) => `<li>${esc(step)}</li>`).join('')}</ol>
-      <a class="cta" href="${esc(appLink)}">${esc(messages.openInApp)}</a>`;
+${signup ? offerSection(recipes.filter((item) => item.locked).length) : `      <a class="cta" href="${esc(appLink)}">${esc(messages.openInApp)}</a>`}`;
 
   const related = relatedRecipes(source, recipes).map((item) => localizeRecipe(item, language));
   const body = `      <article>
@@ -270,8 +272,14 @@ ${content}
     // The festive recipes exist only in Bulgarian: no alternates for languages they lack.
     languages: SEO_LANGUAGES.filter((code) => !source.availableLanguages || source.availableLanguages.includes(code)),
     structuredData,
-    body,
+    body: signup ? `${body}\n${freeRecipeScript(source.id)}${LANDING_SCRIPT}` : body,
+    extraStyle: signup ? OFFER_STYLE : '',
   });
+}
+
+// free_recipe_open: a free recipe page was opened (the recipe id goes in plan).
+function freeRecipeScript(id) {
+  return `<script>(function(){var a=null;try{a=JSON.parse(localStorage.getItem('tm_attribution')||'null');}catch(e){}try{fetch('/api/events',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'free_recipe_open',plan:${JSON.stringify(String(id).toUpperCase())},attribution:a})});}catch(e){}})();</script>`;
 }
 
 export function renderHubPage(recipes, language) {
@@ -333,14 +341,8 @@ export const LENTEN_CLASSICS = ['XM-C013', 'PB-C038', 'PB-C122', 'BR-C018', 'PB-
 // A dish outside the cards, so the photo above them is not repeated below.
 const LENTEN_HERO_ID = 'PB-C005';
 
-const LANDING_STYLE = `
-      .l-hero { margin: 20px 0 8px; }
-      .l-hero h1 { margin: 0 0 8px; }
-      .l-hero .lead { margin: 0 0 14px; }
-      .l-hero img { width: 100%; height: auto; aspect-ratio: 3 / 2; max-height: 480px; object-fit: cover; display: block; background: var(--line); }
-      .card img { height: auto; }
-      .classics { grid-template-columns: repeat(2, 1fr); }
-      @media (min-width: 640px) { .classics { grid-template-columns: repeat(3, 1fr); } }
+// The sign-up box: Lenten landing page and under every free Bulgarian recipe.
+const OFFER_STYLE = `
       .offer { border: 2px solid var(--accent); background: var(--card); padding: 20px; margin: 28px 0; }
       .offer h2 { margin: 0 0 6px; }
       .offer p { margin: 0 0 12px; }
@@ -354,6 +356,15 @@ const LANDING_STYLE = `
       .offer .note { font-size: 13px; color: var(--muted); margin: 0; }
       .offer .err { color: #b91c1c; font-size: 14px; margin: 0; }`;
 
+const LANDING_STYLE = `
+      .l-hero { margin: 20px 0 8px; }
+      .l-hero h1 { margin: 0 0 8px; }
+      .l-hero .lead { margin: 0 0 14px; }
+      .l-hero img { width: 100%; height: auto; aspect-ratio: 3 / 2; max-height: 480px; object-fit: cover; display: block; background: var(--line); }
+      .card img { height: auto; }
+      .classics { grid-template-columns: repeat(2, 1fr); }
+      @media (min-width: 640px) { .classics { grid-template-columns: repeat(3, 1fr); } }${OFFER_STYLE}`;
+
 // Registration right on the page: account, then the 7-day trial (no card), then the app
 // with the Lenten menu. Same calls as the app: /api/auth/register and /api/billing/checkout.
 const LANDING_SCRIPT = `<script>
@@ -363,6 +374,20 @@ const LANDING_SCRIPT = `<script>
   if (line && sale) line.hidden = false;
   var form = document.getElementById('offer-form');
   if (!form) return;
+  // Where people drop off: the box came into view (once per visit) and the button was pressed.
+  var kind = location.pathname.indexOf('/recipe/') > 0 ? 'recipe' : 'landing';
+  function ev(name) {
+    try { fetch('/api/events', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name, plan: kind, attribution: attribution() }) }); } catch (x) {}
+  }
+  if ('IntersectionObserver' in window) {
+    var seen = new IntersectionObserver(function (entries) {
+      if (!entries.some(function (e) { return e.isIntersecting; })) return;
+      seen.disconnect();
+      try { if (sessionStorage.getItem('tm-form-seen')) return; sessionStorage.setItem('tm-form-seen', '1'); } catch (x) {}
+      ev('signup_form_view');
+    });
+    seen.observe(form);
+  }
   var err = document.getElementById('offer-err');
   function attribution() { try { return JSON.parse(localStorage.getItem('tm_attribution') || 'null'); } catch (e) { return null; } }
   function post(url, body) {
@@ -372,6 +397,7 @@ const LANDING_SCRIPT = `<script>
   function fail(html) { err.innerHTML = html; err.hidden = false; form.querySelector('button').disabled = false; }
   form.addEventListener('submit', function (e) {
     e.preventDefault();
+    ev('signup_submit');
     err.hidden = true;
     form.querySelector('button').disabled = true;
     var a = attribution();
@@ -441,6 +467,22 @@ document.querySelectorAll('.filters button').forEach(function (button) {
 });
 </script>`;
 
+function offerSection(more) {
+  return `      <section class="offer" id="proba">
+        <h2>Хареса ли ти?</h2>
+        <p>Още ${more} рецепти и постно меню до Коледа, 7 дни безплатно, без карта.</p>
+        <p class="bfline" id="offer-bf" hidden>Черен петък до 30 ноември: годината е 19,99 € вместо 29,99 €, 10 € отстъпка.</p>
+        <form id="offer-form" novalidate>
+          <label>Имейл<input name="email" type="email" required autocomplete="email" inputmode="email" /></label>
+          <label>Парола, поне 10 знака<input name="password" type="password" required minlength="10" autocomplete="new-password" /></label>
+          <button type="submit">Започни 7 дни безплатно</button>
+          <p class="err" id="offer-err" role="alert" hidden></p>
+          <p class="note">Без карта. Ако не добавиш карта, пробата просто спира. Имаш профил? <a href="/?premium=1&amp;menu=postno&amp;lang=bg">Влез</a>.</p>
+        </form>
+      </section>
+`;
+}
+
 function landingBody({ lenten, card, ordered, count, meals, copy }) {
   const byId = (id) => lenten.find((recipe) => recipe.id.toUpperCase() === id);
   const classics = LENTEN_CLASSICS.map(byId).filter(Boolean);
@@ -455,19 +497,7 @@ function landingBody({ lenten, card, ordered, count, meals, copy }) {
       </section>
       <h2>Български постни класики</h2>
       <div class="grid classics">${classics.map(card).join('')}</div>
-      <section class="offer" id="proba">
-        <h2>Хареса ли ти?</h2>
-        <p>Още ${count - free} рецепти и постно меню до Коледа, 7 дни безплатно, без карта.</p>
-        <p class="bfline" id="offer-bf" hidden>Черен петък до 30 ноември: годината е 19,99 € вместо 29,99 €, 10 € отстъпка.</p>
-        <form id="offer-form" novalidate>
-          <label>Имейл<input name="email" type="email" required autocomplete="email" inputmode="email" /></label>
-          <label>Парола, поне 10 знака<input name="password" type="password" required minlength="10" autocomplete="new-password" /></label>
-          <button type="submit">Започни 7 дни безплатно</button>
-          <p class="err" id="offer-err" role="alert" hidden></p>
-          <p class="note">Без карта. Ако не добавиш карта, пробата просто спира. Имаш профил? <a href="/?premium=1&amp;menu=postno&amp;lang=bg">Влез</a>.</p>
-        </form>
-      </section>
-${FESTIVE_TEASER}${MENU_TEASER}${topicLinks()}      <h2>${esc(copy.all)} (${count})</h2>
+${offerSection(count - free)}${FESTIVE_TEASER}${MENU_TEASER}${topicLinks()}      <h2>${esc(copy.all)} (${count})</h2>
       <div class="filters" role="group" aria-label="${esc(copy.filterLabel)}"><button type="button" data-meal="" aria-pressed="true">${esc(copy.filterAll)} · ${count}</button>${meals.map(([key, total]) => `<button type="button" data-meal="${esc(key)}" aria-pressed="false">${esc(MEAL_TYPES[key].bg)} · ${total}</button>`).join('')}</div>
       <div class="grid" id="all">${[...classics, ...rest].map(card).join('')}</div>
       <a class="cta" href="#proba">Започни 7 дни безплатно</a>

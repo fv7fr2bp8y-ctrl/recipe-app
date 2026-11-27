@@ -163,3 +163,18 @@ test('a Lenten recipe suggests only Lenten recipes', () => {
   assert.match(more, /pb-c902/);
   assert.doesNotMatch(more, /sea-c901/);
 });
+
+test('a free Bulgarian recipe ends with the sign-up box and logs the open', () => {
+  const free = {
+    id: 'BR-C902', title: 'Тест', image: 'https://example.com/a.jpg', ingredients: ['1'], steps: ['a'],
+    translations: { bg: { title: 'Тест', ingredients: ['1'], steps: ['a'] }, en: { title: 'Test', ingredients: ['1'], steps: ['a'] } },
+  };
+  const locked = { id: 'BR-C903', title: 'Друго', image: 'https://example.com/b.jpg', translations: { bg: { title: 'Друго' } }, locked: true };
+  const html = renderRecipePage(free, [free, locked], 'bg');
+  assert.match(html, /id="offer-form"/);
+  assert.match(html, /Още 1 рецепти/);
+  assert.match(html, /"free_recipe_open",plan:"BR-C902"|name:'free_recipe_open',plan:"BR-C902"/);
+  assert.match(html, /signup_form_view/);
+  assert.doesNotMatch(renderRecipePage(locked, [free, locked], 'bg'), /offer-form|free_recipe_open/);
+  assert.doesNotMatch(renderRecipePage(free, [free, locked], 'en'), /offer-form/);
+});

@@ -5,7 +5,21 @@ import { jsonError, methodNotAllowed, readJson } from '../server/http.js';
 import { sanitizeAttribution } from '../server/attribution.js';
 
 // ad_landing: the first page view of a new Google Ads click (with its gclid).
-const CLIENT_EVENTS = new Set(['premium_view', 'plan_yearly', 'plan_monthly', 'menu_click', 'ad_landing']);
+const CLIENT_EVENTS = new Set([
+  'premium_view', 'plan_yearly', 'plan_monthly', 'menu_click', 'ad_landing',
+  // Sign-up funnel on the server pages: a free recipe opened (its id in plan), the
+  // sign-up box seen (once per visit) and its button pressed (plan: landing or recipe).
+  'free_recipe_open', 'signup_form_view', 'signup_submit',
+]);
+const FORM_PAGES = new Set(['landing', 'recipe']);
+const RECIPE_ID = /^[A-Z]{2,4}-[A-Z]\d{3}$/;
+
+function eventPlan(name, plan) {
+  if (name === 'menu_click') return MENU_PLANS.has(plan) ? plan : null;
+  if (name === 'free_recipe_open') return RECIPE_ID.test(plan) ? plan : null;
+  if (name === 'signup_form_view' || name === 'signup_submit') return FORM_PAGES.has(plan) ? plan : null;
+  return null;
+}
 // The Lenten menu landing button says whether the Black Friday offer was on.
 const MENU_PLANS = new Set(['trial', 'trial_promo']);
 
@@ -51,7 +65,7 @@ export default async function handler(req, res) {
       const clean = sanitizeAttribution(attribution);
       await recordFunnelEvent({
         name,
-        plan: name === 'menu_click' && MENU_PLANS.has(plan) ? plan : null,
+        plan: eventPlan(name, plan),
         userId: user?.id || null,
         attribution: clean,
         // The page an ad click landed on, so the campaign report can group by it.
