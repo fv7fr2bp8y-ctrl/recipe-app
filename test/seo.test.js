@@ -178,3 +178,14 @@ test('a free Bulgarian recipe ends with the sign-up box and logs the open', () =
   assert.doesNotMatch(renderRecipePage(locked, [free, locked], 'bg'), /offer-form|free_recipe_open/);
   assert.doesNotMatch(renderRecipePage(free, [free, locked], 'en'), /offer-form/);
 });
+
+test('server pages load Google Analytics only outside the Play app, and the Black Friday bar sends ad visitors to the trial', () => {
+  const recipe = { id: 'BR-C904', title: 'Тест', image: 'https://example.com/a.jpg', translations: { bg: { title: 'Тест' } }, locked: true };
+  const html = renderRecipePage(recipe, [recipe], 'bg');
+  assert.doesNotMatch(html, /<script async src="https:\/\/www\.googletagmanager\.com/);
+  assert.match(html, /android-app:\/\//);
+  assert.match(html, /if\(!tmPlay\)\{/);
+  assert.match(html, /Започни безплатно/);
+  assert.match(html, /getElementById\('proba'\)/);
+  assert.match(html, /\|\|tmPlay\)return/);
+});

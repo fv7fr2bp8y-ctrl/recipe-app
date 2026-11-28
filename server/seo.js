@@ -15,11 +15,17 @@ export const SITE = 'https://tastemaster365.com';
 // Google Analytics 4 on the server pages, with the app's consent rule: denied until the
 // visitor accepts in the app (tm_consent in localStorage), so only cookieless pings.
 const GA_ID = 'G-26ZF2MNZWJ';
-const GA_SCRIPT = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}`
+// Never inside the Play app (TWA): same check as src/platform.js. The app opens
+// /?platform=play, its first page has an android-app:// referrer, and the tab remembers it.
+const PLAY_CHECK = `var tmPlay=false;try{var pk='tastemaster-play-app';`
+  + `if(/[?&]platform=play(&|$)/.test(location.search)||document.referrer.indexOf('android-app://')===0)sessionStorage.setItem(pk,'1');`
+  + `tmPlay=sessionStorage.getItem(pk)==='1'||matchMedia('(display-mode: standalone)').matches;}catch(e){}`;
+const GA_SCRIPT = `${PLAY_CHECK}if(!tmPlay){window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};`
   + `var c=null;try{c=localStorage.getItem('tm_consent');}catch(e){}`
   + `var d=c==='granted'?'granted':'denied';`
   + `gtag('consent','default',{ad_storage:d,ad_user_data:d,ad_personalization:d,analytics_storage:d});`
-  + `gtag('js',new Date());gtag('config','${GA_ID}');`;
+  + `gtag('js',new Date());gtag('config','${GA_ID}');`
+  + `var g=document.createElement('script');g.async=true;g.src='https://www.googletagmanager.com/gtag/js?id=${GA_ID}';document.head.appendChild(g);}`;
 
 const absolute = (url) => (url && url.startsWith('/') ? `${SITE}${url}` : url);
 
@@ -96,8 +102,17 @@ const PROMO_BAR_STYLE = `
 
 function promoBar(language) {
   const copy = promoCopy(language);
-  return `    <div class="bf" id="bf" hidden><div class="wrap"><p>${esc(copy.banner)}</p><a href="/?premium=1&amp;lang=${language}">${esc(copy.bannerButton)}</a></div></div>
-    <script>(function(){var now=Date.now();if(${PROMO_CHECK})document.getElementById('bf').hidden=false;})();</script>
+  // Visitors from an ad (click id or utm_source=google) get the free trial first: the
+  // sign-up form on the page when there is one, else the trial dialog in the app.
+  // Hidden inside the Play app, where the Play prices apply.
+  return `    <div class="bf" id="bf" hidden><div class="wrap"><p id="bf-text">${esc(copy.banner)}</p><a id="bf-go" href="/?premium=1&amp;lang=${language}">${esc(copy.bannerButton)}</a></div></div>
+    <script>(function(){var now=Date.now();if(!(${PROMO_CHECK})||tmPlay)return;var b=document.getElementById('bf');b.hidden=false;`
+    + `var a=null;try{a=JSON.parse(localStorage.getItem('tm_attribution')||'null');}catch(e){}`
+    + `if(!(a&&(a.gclid||a.gbraid||a.wbraid||/^google/i.test(a.utm_source||''))))return;`
+    + `document.getElementById('bf-text').textContent=${JSON.stringify(copy.adBanner)};`
+    + `var go=document.getElementById('bf-go');go.textContent=${JSON.stringify(copy.adBannerButton)};`
+    + `go.addEventListener('click',function(e){var f=document.getElementById('proba');if(f){e.preventDefault();f.scrollIntoView({behavior:'smooth'});var m=f.querySelector('input');if(m)m.focus({preventScroll:true});}});`
+    + `})();</script>
 `;
 }
 
@@ -128,7 +143,6 @@ function layout({
     <script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
     <script defer src="/_vercel/insights/script.js"></script>
     <script>${GA_SCRIPT}</script>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=${GA_ID}"></script>
     <meta name="theme-color" content="#169f9e" />
     ${structuredData ? `<script type="application/ld+json">${jsonLd(structuredData)}</script>` : ''}
     <style>

@@ -17,7 +17,8 @@ import { useFreemiumAccess } from './hooks/useFreemiumAccess';
 import { NEW_SIGNUP_KEY, useAccount } from './hooks/useAccount';
 import { getMessages, localizeRecipe } from './i18n';
 import { SEO_LANGUAGES, recipePath } from './seo-url';
-import { detectPlayApp } from './platform';
+import { detectPlayApp, googleTagsAllowed } from './platform';
+import { cameFromAd } from './attribution';
 import { track } from './track';
 import { initAds, trackConversion } from './ads';
 import { buyPlayPlan, loadPlayPlans, restorePlayPurchases } from './playBilling';
@@ -46,6 +47,7 @@ const PAGE_SIZE = 48;
 
 function RecipeApp() {
   const playApp = useMemo(() => detectPlayApp(), []);
+  const googleTags = useMemo(() => googleTagsAllowed(), []);
   const [playPlans, setPlayPlans] = useState(null);
   const [playError, setPlayError] = useState('');
   const [playBusy, setPlayBusy] = useState(false);
@@ -186,7 +188,7 @@ function RecipeApp() {
   }, [recipes, premiumActive]);
 
   useEffect(() => {
-    if (playApp) return;
+    if (!googleTags) return;
     initAds();
     // A new account made on a server page (the Lenten landing form) counts here, once
     // the tag is loaded. Same transaction id (the user id) as the app's own sign-up.
@@ -196,7 +198,7 @@ function RecipeApp() {
       sessionStorage.removeItem(NEW_SIGNUP_KEY);
     } catch { /* private mode */ }
     if (newSignup) trackConversion('trial_started', { transactionId: newSignup });
-  }, [playApp]);
+  }, [googleTags]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -326,7 +328,16 @@ function RecipeApp() {
       {!playApp && !account.premium && promoActive() && (
         <PromoBar
           language={language}
+          fromAd={cameFromAd()}
           onTake={() => {
+            // Visitors from an ad go straight to the free trial: a new profile starts the
+            // 7 days on the yearly plan, with the Black Friday price for the first year.
+            if (cameFromAd() && !account.user) {
+              setPendingPlan('yearly');
+              setShowAccount(true);
+              track('premium_view');
+              return;
+            }
             setPremiumRecipe(null);
             setShowPremium(true);
             track('premium_view');
@@ -518,7 +529,7 @@ function RecipeApp() {
       </main>
 
       <Footer messages={messages} language={language} />
-      {playApp ? null : <ConsentBanner language={language} />}
+      {googleTags ? <ConsentBanner language={language} /> : null}
 
       {viewRecipe && (
         <RecipeDetail

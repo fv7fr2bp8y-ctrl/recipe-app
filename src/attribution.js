@@ -49,3 +49,8 @@ export function captureAttribution(search = window.location.search) {
 export function getAttribution() {
   return readStored() || undefined;
 }
+
+// A visit that came from an ad: a Google Ads click id or utm_source=google.
+export function cameFromAd(record = readStored()) {
+  return Boolean(record && (record.gclid || record.gbraid || record.wbraid || /^google/i.test(record.utm_source || '')));
+}
