@@ -189,3 +189,15 @@ test('server pages load Google Analytics only outside the Play app, and the Blac
   assert.match(html, /getElementById\('proba'\)/);
   assert.match(html, /\|\|tmPlay\)return/);
 });
+
+test('recipe pages show calories per serving and declare them for Google', () => {
+  const recipe = {
+    id: 'XM-C012', title: 'Шкембе чорба', image: 'https://example.com/a.jpg', servings: 6, locked: true,
+    nutrition: { kcal: 298, protein: 24, carbs: 9, fat: 18 }, translations: { bg: { title: 'Шкембе чорба' }, en: { title: 'Tripe soup' } },
+  };
+  const html = renderRecipePage(recipe, [recipe], 'bg');
+  assert.match(html, /около 298 ккал на порция/);
+  assert.match(html, /белтъчини 24 г · въглехидрати 9 г · мазнини 18 г/);
+  assert.match(html, /"nutrition":\{"@type":"NutritionInformation","calories":"298 calories"/);
+  assert.match(renderRecipePage(recipe, [recipe], 'en'), /about 298 kcal per serving/);
+});

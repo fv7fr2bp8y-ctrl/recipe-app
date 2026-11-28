@@ -1,6 +1,8 @@
 import { Share2, X } from 'lucide-react';
 import { photo, PHOTO } from '../photo';
 
+const fill = (template, values) => template.replace(/\{(\w+)\}/g, (_, key) => values[key] ?? '');
+
 const DIFFICULTY_COLORS = {
   'Лесно': 'bg-green-100 text-green-700',
   'Средно': 'bg-yellow-100 text-yellow-700',
@@ -35,9 +37,11 @@ export default function RecipeDetail({ recipe, onClose, onShare, messages }) {
             <span className="bg-gray-100 px-3 py-1 text-xs text-gray-600">{recipe.time} {messages.minutes}</span>
             <span className="bg-gray-100 px-3 py-1 text-xs text-gray-600">{recipe.servings} {messages.servings}</span>
             {recipe.country && <span className="bg-stone-100 px-3 py-1 text-xs text-stone-700">{recipe.country}</span>}
+            {recipe.nutrition && <span className="bg-orange-50 px-3 py-1 text-xs text-orange-800">{fill(messages.kcalPerServing, recipe.nutrition)}</span>}
             {badges.map((badge) => <span key={badge} className="bg-emerald-50 px-3 py-1 text-xs text-emerald-700">{badge}</span>)}
           </div>
 
+          {recipe.nutrition && <p className="-mt-2 mb-5 text-xs text-stone-500">{fill(messages.macros, recipe.nutrition)}</p>}
           <section className="mb-6 border-t border-orange-100 pt-5">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">{messages.ingredients}</h3>
             <ul className="space-y-2">

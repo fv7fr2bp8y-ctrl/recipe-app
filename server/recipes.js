@@ -3,6 +3,16 @@ import { FREE_RECIPE_IDS, MASTER_SHEET_CSV_URL } from './config.js';
 // master sheet, so they go live with a deploy. Same columns as the sheet. Imported (not
 // read from disk) so the function bundle includes the file.
 import FESTIVE_ROWS from './data/praznichni-recepti.json' with { type: 'json' };
+// Calories and macros per serving, estimated from the ingredients (scripts/estimate-nutrition):
+// { id: [kcal, protein g, carbs g, fat g] }. Approximate, so the pages say "about".
+import NUTRITION from './data/nutrition.json' with { type: 'json' };
+
+function nutritionFor(id) {
+  const values = NUTRITION[id];
+  if (!values) return undefined;
+  const [kcal, protein, carbs, fat] = values;
+  return { kcal, protein, carbs, fat };
+}
 
 const LANGUAGES = ['bg', 'en', 'de', 'es', 'fr', 'ru'];
 
@@ -228,6 +238,7 @@ function mapRow(sheetRow, sourceOrder) {
     tag: row.tag,
     allergenNotes: row.allergen_notes,
     nutritionNotes: row.nutrition_notes,
+    nutrition: nutritionFor(row.global_id),
     translations,
     availableLanguages,
   };
@@ -250,6 +261,7 @@ function lockedPreview(recipe) {
     diets: recipe.diets,
     sections: recipe.sections,
     tag: recipe.tag,
+    nutrition: recipe.nutrition,
     teaserIngredients: (recipe.ingredients || []).slice(0, TEASER_INGREDIENTS),
     ingredientCount: (recipe.ingredients || []).length,
     stepCount: (recipe.steps || []).length,

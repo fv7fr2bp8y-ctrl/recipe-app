@@ -161,6 +161,7 @@ function layout({
       .hero { width: 100%; aspect-ratio: 16 / 9; max-height: 460px; object-fit: cover; display: block; margin-top: 8px; background: var(--line); }
       .lead { font-size: 18px; color: #44403c; margin: 0; }
       .meta { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 16px 0; color: var(--muted); font-size: 14px; }
+      .macros { margin: -8px 0 14px; color: var(--muted); font-size: 13px; }
       .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
       .chip { background: #ecfdf5; color: var(--green); border-radius: 999px; padding: 2px 10px; font-size: 13px; }
       ul.ing { padding-left: 20px; } ul.ing li { margin: 4px 0; }
@@ -218,6 +219,7 @@ export function renderRecipePage(source, recipes, language) {
   // Free Bulgarian recipe: the sign-up box under the steps (same as the Lenten page).
   const signup = language === 'bg' && !recipe.locked;
 
+  const nutrition = source.nutrition;
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Recipe',
@@ -232,6 +234,13 @@ export function renderRecipePage(source, recipes, language) {
     keywords: recipe.tag || undefined,
     totalTime: minutes ? `PT${minutes}M` : undefined,
     recipeYield: recipe.servings ? String(recipe.servings) : undefined,
+    nutrition: nutrition ? {
+      '@type': 'NutritionInformation',
+      calories: `${nutrition.kcal} calories`,
+      proteinContent: `${nutrition.protein} g`,
+      carbohydrateContent: `${nutrition.carbs} g`,
+      fatContent: `${nutrition.fat} g`,
+    } : undefined,
     url: `${SITE}${canonical}`,
   };
   const schemaDiets = diets.map((key) => SCHEMA_DIETS[key]).filter(Boolean);
@@ -267,7 +276,9 @@ ${signup ? offerSection(recipes.filter((item) => item.locked).length) : `      <
         ${recipe.servings ? `<span>${esc(recipe.servings)} ${esc(messages.servings)}</span>` : ''}
         ${recipe.difficulty ? `<span>${esc(recipe.difficulty)}</span>` : ''}
         ${recipe.country ? `<span>${esc(recipe.country)}</span>` : ''}
+        ${nutrition ? `<span>${esc(fill(messages.kcalPerServing, nutrition))}</span>` : ''}
       </div>
+      ${nutrition ? `<p class="macros">${esc(fill(messages.macros, nutrition))}</p>` : ''}
       ${dietChips ? `<div class="chips">${dietChips}</div>` : ''}
       <img class="hero" src="${esc(photo(recipe.image, PHOTO.hero))}" alt="${esc(recipe.title)}" width="1200" height="675" />
 ${content}
